@@ -1,0 +1,355 @@
+/**
+ * Seller Main CSS - Glassmorphism UI Extensions
+ * Tro365 - Website thuê trọ
+ * Mobile-first responsive design with enhanced glassmorphism
+ */
+
+/* Import base glassmorphism system */
+@import url('../client/glass-morphism.css');
+@import url('../client/main.css');
+
+/* ===== SELLER-SPECIFIC CSS VARIABLES ===== */
+:root {
+    /* Seller Brand Colors */
+    --seller-primary: #667eea;
+    --seller-secondary: #764ba2;
+    --seller-success: #10b981;
+    --seller-warning: #f59e0b;
+    --seller-danger: #ef4444;
+    --seller-info: #3b82f6;
+    
+    /* Enhanced Glass Variables for Seller */
+    --seller-glass-bg: rgba(255, 255, 255, 0.15);
+    --seller-glass-bg-strong: rgba(255, 255, 255, 0.25);
+    --seller-glass-border: rgba(255, 255, 255, 0.2);
+    --seller-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --seller-glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
+    
+    /* Seller Spacing */
+    --seller-spacing-xs: 0.5rem;
+    --seller-spacing-sm: 1rem;
+    --seller-spacing-md: 1.5rem;
+    --seller-spacing-lg: 2rem;
+    --seller-spacing-xl: 3rem;
+    
+    /* Seller Border Radius */
+    --seller-radius-sm: 12px;
+    --seller-radius-md: 16px;
+    --seller-radius-lg: 20px;
+    --seller-radius-xl: 24px;
+}
+
+/* Dark Mode Seller Variables */
+[data-theme="dark"] {
+    --seller-glass-bg: rgba(255, 255, 255, 0.08);
+    --seller-glass-bg-strong: rgba(255, 255, 255, 0.12);
+    --seller-glass-border: rgba(255, 255, 255, 0.15);
+    --seller-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --seller-glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== SELLER GLASS COMPONENTS ===== */
+
+/* Seller Glass Container - Enhanced base container */
+.seller-glass-container {
+    background: var(--seller-glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-lg);
+    box-shadow: var(--seller-glass-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    padding: var(--seller-spacing-lg);
+    margin: var(--seller-spacing-md) 0;
+}
+
+/* Enhanced border visibility for Light Mode */
+[data-theme="light"] .seller-glass-container,
+:root:not([data-theme="dark"]) .seller-glass-container {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .seller-glass-container {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-glass-container:hover {
+    background: var(--seller-glass-bg-strong);
+    border-color: var(--seller-glass-border);
+    box-shadow: var(--seller-glass-shadow-hover);
+    transform: translateY(-2px);
+}
+
+/* Seller Stat Card - Statistics display with glass effect */
+.seller-stat-card {
+    background: var(--seller-glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-md);
+    box-shadow: var(--seller-glass-shadow);
+    padding: var(--seller-spacing-lg);
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Enhanced borders for Light Mode */
+[data-theme="light"] .seller-stat-card,
+:root:not([data-theme="dark"]) .seller-stat-card {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .seller-stat-card {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-stat-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--seller-glass-shadow-hover);
+}
+
+.seller-stat-card .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--seller-primary);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.seller-stat-card .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.seller-stat-card .stat-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    opacity: 0.3;
+    color: var(--seller-primary);
+}
+
+/* Seller Action Grid - Quick actions layout */
+.seller-action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--seller-spacing-lg);
+    margin: var(--seller-spacing-xl) 0;
+}
+
+.seller-action-card {
+    background: var(--seller-glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-md);
+    box-shadow: var(--seller-glass-shadow);
+    padding: var(--seller-spacing-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: block;
+}
+
+/* Enhanced borders for Light Mode */
+[data-theme="light"] .seller-action-card,
+:root:not([data-theme="dark"]) .seller-action-card {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .seller-action-card {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--seller-glass-shadow-hover);
+    text-decoration: none;
+    color: inherit;
+}
+
+.seller-action-card .action-icon {
+    font-size: 2rem;
+    color: var(--seller-primary);
+    margin-bottom: var(--seller-spacing-sm);
+    display: block;
+}
+
+.seller-action-card .action-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.seller-action-card .action-description {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* Seller Stats Grid - Statistics layout */
+.seller-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--seller-spacing-lg);
+    margin: var(--seller-spacing-lg) 0;
+}
+
+/* ===== RESPONSIVE DESIGN - MOBILE FIRST ===== */
+
+/* Mobile First - 320px to 768px */
+@media (max-width: 768px) {
+    .seller-glass-container {
+        padding: var(--seller-spacing-md);
+        margin: var(--seller-spacing-sm) 0;
+        border-radius: var(--seller-radius-md);
+    }
+    
+    .seller-stat-card {
+        padding: var(--seller-spacing-md);
+    }
+    
+    .seller-stat-card .stat-number {
+        font-size: 2rem;
+    }
+    
+    .seller-action-grid {
+        grid-template-columns: 1fr;
+        gap: var(--seller-spacing-md);
+    }
+    
+    .seller-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--seller-spacing-md);
+    }
+    
+    .seller-action-card {
+        padding: var(--seller-spacing-md);
+    }
+}
+
+/* Small Mobile - 320px to 480px */
+@media (max-width: 480px) {
+    .seller-glass-container {
+        padding: var(--seller-spacing-sm);
+        border-radius: var(--seller-radius-sm);
+    }
+    
+    .seller-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .seller-stat-card .stat-number {
+        font-size: 1.8rem;
+    }
+    
+    .seller-action-card .action-icon {
+        font-size: 1.5rem;
+    }
+}
+
+/* Tablet - 768px to 992px */
+@media (min-width: 768px) and (max-width: 992px) {
+    .seller-action-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .seller-stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Desktop - 992px+ */
+@media (min-width: 992px) {
+    .seller-glass-container:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+    
+    .seller-stat-card:hover {
+        transform: translateY(-6px) scale(1.03);
+    }
+    
+    .seller-action-card:hover {
+        transform: translateY(-6px) scale(1.02);
+    }
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Seller Glass Utilities */
+.seller-glass-light {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.seller-glass-medium {
+    background: var(--seller-glass-bg);
+}
+
+.seller-glass-strong {
+    background: var(--seller-glass-bg-strong);
+}
+
+/* Seller Color Utilities */
+.seller-text-primary {
+    color: var(--seller-primary) !important;
+}
+
+.seller-text-success {
+    color: var(--seller-success) !important;
+}
+
+.seller-text-warning {
+    color: var(--seller-warning) !important;
+}
+
+.seller-text-danger {
+    color: var(--seller-danger) !important;
+}
+
+/* Seller Animation Utilities */
+.seller-fade-in {
+    animation: sellerFadeIn 0.6s ease-out;
+}
+
+@keyframes sellerFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.seller-slide-up {
+    animation: sellerSlideUp 0.5s ease-out;
+}
+
+@keyframes sellerSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

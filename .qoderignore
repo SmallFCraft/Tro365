@@ -1,0 +1,3 @@
+# Specify files or folders to ignore during indexing. Use commas to separate entries. Glob patterns like *.log，my-security/ are supported.
+./vendor/
+./public/uploads

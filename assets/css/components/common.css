@@ -1,0 +1,152 @@
+/**
+ * Custom Components CSS - Tro365
+ * Only contains custom utilities NOT available in Bootstrap
+ */
+
+/* Custom button group spacing */
+.btn-group-custom .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group-custom .btn:last-child {
+    margin-right: 0;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.status-indicator.online {
+    background-color: #198754;
+}
+
+.status-indicator.offline {
+    background-color: #6c757d;
+}
+
+.status-indicator.busy {
+    background-color: #ffc107;
+}
+
+.status-indicator.away {
+    background-color: #fd7e14;
+}
+
+/* Custom loading spinner (Bootstrap has .spinner-border-sm) */
+.spinner-xs {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-width: 0.1em;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Hover effects */
+.hover-shadow {
+    transition: box-shadow 0.2s ease;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.hover-lift {
+    transition: transform 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease;
+}
+
+.slide-in-up {
+    animation: slideInUp 0.3s ease;
+}
+
+.slide-in-down {
+    animation: slideInDown 0.3s ease;
+}
+
+/* ===== CUSTOM RESPONSIVE UTILITIES ===== */
+/* Bootstrap already has all these display utilities, so we only keep custom ones */
+
+/* Custom responsive text sizes */
+@media (max-width: 575.98px) {
+    .text-xs { font-size: 0.7rem !important; }
+    .text-xxs { font-size: 0.6rem !important; }
+}
+
+@media (max-width: 767.98px) {
+    .hide-on-mobile { display: none !important; }
+}
+
+@media (min-width: 768px) {
+    .show-on-mobile-only { display: none !important; }
+}

@@ -1,0 +1,37 @@
+# This is a static fallback. The dynamic version is at robots.php
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /includes/
+Disallow: /config/
+Disallow: /classes/
+Disallow: /vendor/
+Disallow: /uploads/temp/
+Disallow: /assets/temp/
+
+# Disallow search with parameters
+Disallow: /search?*
+Disallow: /*?page=*
+Disallow: /*?sort=*
+
+# Allow specific areas
+Allow: /assets/
+Allow: /uploads/posts/
+Allow: /uploads/avatars/
+
+# Sitemap location
+Sitemap: https://tro.loading99.site/sitemap.xml
+
+# Crawl delay for different bots
+User-agent: Googlebot
+Crawl-delay: 1
+
+User-agent: Bingbot
+Crawl-delay: 2
+
+User-agent: *
+Crawl-delay: 5
+

@@ -1,0 +1,417 @@
+/**
+ * Seller Contacts CSS - Glassmorphism Components
+ * Tro365 - Website thuê trọ
+ * Contacts management specific components and layouts
+ */
+
+/* ===== CONTACTS LAYOUT ===== */
+
+.seller-contacts-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--seller-spacing-lg);
+}
+
+.seller-contacts-header {
+    background: var(--seller-glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-lg);
+    box-shadow: var(--seller-glass-shadow);
+    padding: var(--seller-spacing-lg);
+    margin-bottom: var(--seller-spacing-xl);
+}
+
+/* Enhanced borders for Light Mode */
+[data-theme="light"] .seller-contacts-header,
+:root:not([data-theme="dark"]) .seller-contacts-header {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .seller-contacts-header {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-contacts-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.seller-contacts-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* ===== CONTACT CARDS ===== */
+
+.seller-contact-card {
+    background: var(--seller-glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-md);
+    box-shadow: var(--seller-glass-shadow);
+    padding: var(--seller-spacing-lg);
+    margin-bottom: var(--seller-spacing-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Enhanced borders for Light Mode */
+[data-theme="light"] .seller-contact-card,
+:root:not([data-theme="dark"]) .seller-contact-card {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .seller-contact-card {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-contact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--seller-glass-shadow-hover);
+}
+
+.seller-contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--seller-primary), var(--seller-secondary));
+    border-radius: var(--seller-radius-md) var(--seller-radius-md) 0 0;
+}
+
+.seller-contact-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: var(--seller-spacing-md);
+}
+
+.seller-contact-info {
+    flex: 1;
+}
+
+.seller-contact-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.seller-contact-email {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.seller-contact-phone {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.seller-contact-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 2px solid transparent;
+}
+
+.seller-contact-status.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--seller-warning);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.seller-contact-status.contacted {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--seller-info);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.seller-contact-status.interested {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--seller-success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.seller-contact-status.deal {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.seller-contact-status.cancelled {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--seller-danger);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.seller-contact-post {
+    background: rgba(var(--primary-rgb), 0.05);
+    border-radius: var(--seller-radius-sm);
+    padding: var(--seller-spacing-sm);
+    margin: var(--seller-spacing-sm) 0;
+}
+
+.seller-contact-post-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.seller-contact-post-title:hover {
+    color: var(--seller-primary);
+    text-decoration: none;
+}
+
+.seller-contact-post-price {
+    font-weight: 700;
+    color: var(--seller-primary);
+    font-size: 1rem;
+}
+
+.seller-contact-message {
+    background: rgba(var(--primary-rgb), 0.03);
+    border-left: 3px solid var(--seller-primary);
+    padding: var(--seller-spacing-sm);
+    margin: var(--seller-spacing-sm) 0;
+    border-radius: 0 var(--seller-radius-sm) var(--seller-radius-sm) 0;
+}
+
+.seller-contact-message-text {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.seller-contact-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--seller-spacing-sm);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.seller-contact-date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.seller-contact-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.seller-contact-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-sm);
+    background: var(--seller-glass-bg);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Enhanced borders for Light Mode */
+[data-theme="light"] .seller-contact-btn,
+:root:not([data-theme="dark"]) .seller-contact-btn {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .seller-contact-btn {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-contact-btn:hover {
+    background: var(--seller-primary);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.seller-contact-btn.primary {
+    background: var(--seller-primary);
+    color: white;
+    border-color: var(--seller-primary);
+}
+
+.seller-contact-btn.primary:hover {
+    background: var(--seller-secondary);
+    border-color: var(--seller-secondary);
+}
+
+.seller-contact-btn.success {
+    background: var(--seller-success);
+    color: white;
+    border-color: var(--seller-success);
+}
+
+.seller-contact-btn.success:hover {
+    background: #059669;
+    border-color: #059669;
+}
+
+.seller-contact-btn.danger {
+    background: var(--seller-danger);
+    color: white;
+    border-color: var(--seller-danger);
+}
+
+.seller-contact-btn.danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+/* ===== CONTACT FILTERS ===== */
+
+.seller-contacts-filters {
+    background: var(--seller-glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 2px solid var(--seller-glass-border);
+    border-radius: var(--seller-radius-md);
+    box-shadow: var(--seller-glass-shadow);
+    padding: var(--seller-spacing-lg);
+    margin-bottom: var(--seller-spacing-xl);
+}
+
+/* Enhanced borders for Light Mode */
+[data-theme="light"] .seller-contacts-filters,
+:root:not([data-theme="dark"]) .seller-contacts-filters {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .seller-contacts-filters {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seller-contacts-filter-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--seller-spacing-md);
+    align-items: end;
+}
+
+/* ===== EMPTY STATE ===== */
+
+.seller-contacts-empty {
+    text-align: center;
+    padding: var(--seller-spacing-xl);
+    color: var(--text-muted);
+}
+
+.seller-contacts-empty .empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--seller-spacing-lg);
+    opacity: 0.5;
+    color: var(--seller-primary);
+}
+
+.seller-contacts-empty .empty-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.seller-contacts-empty .empty-description {
+    margin-bottom: var(--seller-spacing-lg);
+    line-height: 1.6;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Mobile First - 320px to 768px */
+@media (max-width: 768px) {
+    .seller-contacts-container {
+        padding: var(--seller-spacing-md);
+    }
+    
+    .seller-contacts-title {
+        font-size: 1.5rem;
+    }
+    
+    .seller-contacts-filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .seller-contact-header {
+        flex-direction: column;
+        gap: var(--seller-spacing-sm);
+    }
+    
+    .seller-contact-actions {
+        flex-wrap: wrap;
+    }
+    
+    .seller-contact-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .seller-contact-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* Small Mobile - 320px to 480px */
+@media (max-width: 480px) {
+    .seller-contacts-header {
+        padding: var(--seller-spacing-md);
+    }
+    
+    .seller-contact-card {
+        padding: var(--seller-spacing-md);
+    }
+    
+    .seller-contacts-empty .empty-icon {
+        font-size: 3rem;
+    }
+}
+
+/* Desktop - 992px+ */
+@media (min-width: 992px) {
+    .seller-contact-card:hover {
+        transform: translateY(-4px) scale(1.01);
+    }
+    
+    .seller-contact-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+    }
+}
