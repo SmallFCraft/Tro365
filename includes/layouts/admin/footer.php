@@ -43,11 +43,10 @@
     </div>
 </footer>
 
-<!-- Modern JavaScript Libraries -->
+<!-- Modern JavaScript Libraries (AssetManager) -->
 <?php
-require_once __DIR__ . '/../../modern-assets.php';
-loadModernJS();
-initModernFormValidation();
+$am = new \Tro365\Assets\AssetManager(app_url(''));
+echo $am->renderFooter();
 ?>
 
 <!-- Bootstrap JS -->

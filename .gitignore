@@ -3,3 +3,11 @@
 *.zip
 .env
 /assets/uploads/*
+
+.github/
+.qoder/
+
+.env
+
+.qoderignore
+.augmentignore

@@ -30,11 +30,11 @@
     <!-- Admin CSS -->
     <link href="/assets/css/admin/admin.css" rel="stylesheet">
 
-    <!-- Modern Assets Integration -->
+    <!-- Modern Assets Integration (AssetManager) -->
     <?php
-    require_once __DIR__ . '/../../modern-assets.php';
-    addModernMetaTags();
-    loadModernCSS();
+    $am = new \Tro365\Assets\AssetManager(app_url(''));
+    $am->addMetaTags(['csrf' => csrf_token()]);
+    echo $am->renderHead();
     ?>
 
     <!-- Additional CSS for specific pages -->
