@@ -391,8 +391,211 @@ function performAction(action, id, formId) {
   return window.Tro365Common.performAction(action, id, formId);
 }
 
+/**
+ * Global toggleFavorite function for backward compatibility
+ * Used by onclick handlers in HTML templates
+ */
+function toggleFavorite(postId, buttonElement) {
+  // Check if user is logged in using global config
+  if (!window.Tro365Config || !window.Tro365Config.isLoggedIn) {
+    // Show toast notification if available
+    if (window.TroToast && typeof window.TroToast.info === "function") {
+      window.TroToast.info("Vui lòng đăng nhập để sử dụng tính năng này");
+    } else {
+      alert("Vui lòng đăng nhập để sử dụng tính năng này");
+    }
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 1500);
+    return;
+  }
+
+  // Get button element if not provided
+  if (!buttonElement) {
+    buttonElement = event?.target?.closest("button");
+  }
+
+  if (!buttonElement) {
+    console.error("Cannot find button element for favorite toggle");
+    return;
+  }
+
+  // Prevent multiple clicks
+  if (buttonElement.disabled) {
+    return;
+  }
+
+  // Store original state for rollback
+  const heartIcon = buttonElement.querySelector("i");
+  const textSpan = buttonElement.querySelector("span");
+  const originalHeartClasses = heartIcon ? heartIcon.className : "";
+  const originalText = textSpan ? textSpan.textContent : "";
+  const originalButtonClasses = buttonElement.className;
+
+  // Set loading state
+  buttonElement.disabled = true;
+  if (heartIcon) {
+    heartIcon.className = "fas fa-spinner fa-spin";
+  }
+  if (textSpan) {
+    textSpan.textContent = "Đang xử lý...";
+  }
+  buttonElement.classList.add("loading");
+
+  // AJAX call to toggle favorite
+  fetch("/api/favorites/toggle", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({ postId: parseInt(postId) }),
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update button state based on response
+        if (data.data && data.data.favorited) {
+          // Added to favorites
+          buttonElement.classList.add("favorited");
+          if (heartIcon) {
+            heartIcon.className = "fas fa-heart text-danger";
+          }
+          if (textSpan) {
+            textSpan.textContent = "Đã yêu thích";
+          }
+          buttonElement.title = "Xóa khỏi yêu thích";
+        } else {
+          // Removed from favorites
+          buttonElement.classList.remove("favorited");
+          if (heartIcon) {
+            heartIcon.className = "far fa-heart";
+          }
+          if (textSpan) {
+            textSpan.textContent = "Yêu thích";
+          }
+          buttonElement.title = "Thêm vào yêu thích";
+        }
+
+        // Show success message
+        if (window.TroToast && typeof window.TroToast.success === "function") {
+          window.TroToast.success(data.message);
+        }
+
+        // Special handling for favorites page - remove item from DOM if unfavorited
+        if (
+          window.location.hash === "#favorites" &&
+          data.data &&
+          data.data.favorited === false
+        ) {
+          const favoriteCard = buttonElement.closest(
+            ".favorite-card, .glass-container, .col-lg-6, .col-xl-4, .col-lg-4, .col-md-6"
+          );
+
+          if (favoriteCard) {
+            // Fade out animation
+            favoriteCard.style.transition =
+              "opacity 0.3s ease, transform 0.3s ease";
+            favoriteCard.style.opacity = "0";
+            favoriteCard.style.transform = "scale(0.95)";
+
+            setTimeout(() => {
+              favoriteCard.remove();
+
+              // Update favorites count in heading
+              const favoritesHeading = Array.from(
+                document.querySelectorAll("h3")
+              ).find(h3 => h3.textContent.includes("Bài đăng yêu thích"));
+              if (favoritesHeading) {
+                const currentCount = parseInt(
+                  favoritesHeading.textContent.match(/\((\d+)\)/)?.[1] || "0"
+                );
+                const newCount = Math.max(0, currentCount - 1);
+                favoritesHeading.innerHTML = favoritesHeading.innerHTML.replace(
+                  /\(\d+\)/,
+                  `(${newCount})`
+                );
+
+                // Show empty state if no favorites left
+                if (newCount === 0) {
+                  const favoritesContainer = document.querySelector(
+                    ".row.g-4.mb-4, .row"
+                  );
+                  if (favoritesContainer) {
+                    favoritesContainer.innerHTML = `
+                      <div class="col-12">
+                        <div class="glass-container text-center py-5">
+                          <div class="glass-icon mx-auto mb-3">
+                            <i class="fas fa-heart"></i>
+                          </div>
+                          <h5>Chưa có bài đăng yêu thích</h5>
+                          <p class="text-muted mb-4">Hãy tìm kiếm và lưu những bài đăng bạn quan tâm</p>
+                          <a href="/search" class="btn-glass-primary">
+                            <i class="fas fa-search me-2"></i>
+                            Tìm kiếm ngay
+                          </a>
+                        </div>
+                      </div>
+                    `;
+                  }
+                }
+              }
+            }, 300);
+          }
+        }
+      } else {
+        // Rollback on error
+        if (heartIcon) heartIcon.className = originalHeartClasses;
+        if (textSpan) textSpan.textContent = originalText;
+        buttonElement.className = originalButtonClasses;
+
+        // Show error message
+        if (window.TroToast && typeof window.TroToast.error === "function") {
+          window.TroToast.error(data.message || "Có lỗi xảy ra");
+        } else {
+          alert(data.message || "Có lỗi xảy ra");
+        }
+      }
+    })
+    .catch(error => {
+      console.error("Error toggling favorite:", error);
+
+      // Rollback on error
+      if (heartIcon) heartIcon.className = originalHeartClasses;
+      if (textSpan) textSpan.textContent = originalText;
+      buttonElement.className = originalButtonClasses;
+
+      // Show error message
+      if (window.TroToast && typeof window.TroToast.error === "function") {
+        window.TroToast.error("Có lỗi xảy ra khi xử lý yêu cầu");
+      } else {
+        alert("Có lỗi xảy ra khi xử lý yêu cầu");
+      }
+    })
+    .finally(() => {
+      // Re-enable button
+      buttonElement.disabled = false;
+      buttonElement.classList.remove("loading");
+    });
+}
+
 function redirectToLogin(returnUrl) {
   return window.Tro365Common.redirectToLogin(returnUrl);
+}
+
+/**
+ * Global showToast function for backward compatibility
+ * Used by inline JavaScript in HTML templates
+ */
+function showToast(message, type = "info") {
+  if (window.TroToast && typeof window.TroToast[type] === "function") {
+    window.TroToast[type](message);
+  } else if (window.TroToast && typeof window.TroToast.show === "function") {
+    window.TroToast.show(message, type);
+  } else {
+    // Fallback to alert
+    alert(message);
+  }
 }
 
 // toggleFavorite wrapper removed to avoid conflict with page-specific implementations

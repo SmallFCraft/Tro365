@@ -14,10 +14,7 @@
     --text-muted: #495057; /* Improved contrast - sync with layouts.css */
     --border-color: #dee2e6;
     --shadow-color: rgba(0, 0, 0, 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.25);
-    --glass-border: rgba(255, 255, 255, 0.18);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    --backdrop-filter: blur(4px);
+    /* Glass variables moved to glass-morphism.css to avoid conflicts */
 
     /* Brand Colors */
     --primary-color: #667eea;
@@ -55,9 +52,7 @@ a:hover {
     --text-muted: #9ca3af; /* Improved contrast for dark mode */
     --border-color: #404040;
     --shadow-color: rgba(0, 0, 0, 0.3);
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    /* Glass variables moved to glass-morphism.css to avoid conflicts */
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
     --gradient-hero: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
 }

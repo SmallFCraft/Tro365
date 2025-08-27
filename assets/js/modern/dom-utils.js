@@ -320,32 +320,7 @@ class DOMUtils {
     }
   }
 
-  /**
-   * Load script dynamically
-   */
-  static loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  /**
-   * Load CSS dynamically
-   */
-  static loadCSS(href) {
-    return new Promise((resolve, reject) => {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = href;
-      link.onload = resolve;
-      link.onerror = reject;
-      document.head.appendChild(link);
-    });
-  }
+  /* loadScript() and loadCSS() methods removed (unused) */
 }
 
 // Export for global use

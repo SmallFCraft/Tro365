@@ -15,10 +15,10 @@
                 <!-- Company Info -->
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="footer-brand">
-                        <h5 class="brand-title">
+                        <div class="brand-title">
                             <i class="fas fa-home me-2"></i>
                             <?= getWebsiteName() ?>
-                        </h5>
+                        </div>
                         <p class="brand-description">
                             <?= getWebsiteDescription() ?>
                         </p>
@@ -311,8 +311,8 @@ echo $am->renderFooter();
 
 <!-- Footer CSS is already included in layouts.css -->
 
-<!-- Common JavaScript Functions - Deferred for Performance -->
-<script src="<?= app_url('assets/js/common.js') ?>" defer></script>
+<!-- Common JavaScript Functions - Load immediately for global functions -->
+<script src="<?= app_url('assets/js/common.js') ?>"></script>
 
 <!-- Footer JavaScript - Deferred for Performance -->
 <script src="<?= app_url('assets/js/client/footer.js') ?>" defer></script>

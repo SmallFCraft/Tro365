@@ -630,7 +630,7 @@ class Auth
     /**
      * Enhanced register using delight-im/auth (with fallback)
      */
-    public function enhancedRegister(string $email, string $password, string $username = null, array $additionalData = []): array
+    public function enhancedRegister(string $email, string $password, ?string $username = null, array $additionalData = []): array
     {
         if (!$this->useEnhancedAuth) {
             // Fallback to legacy registration - will implement this properly

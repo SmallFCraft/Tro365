@@ -212,7 +212,5 @@ if (!class_exists('Tro365\\DataConsistency') && class_exists('Tro365\\Services\\
 if (!class_exists('Tro365\\SettingsController') && class_exists('Tro365\\Controllers\\SettingsController')) {
     class_alias('Tro365\\Controllers\\SettingsController', 'Tro365\\SettingsController');
 }
-if (!class_exists('Tro365\\DebugManager') && class_exists('Tro365\\Services\\DebugManager')) {
-    class_alias('Tro365\\Services\\DebugManager', 'Tro365\\DebugManager');
-}
+/* Tro365\DebugManager alias removed (unused) */
 

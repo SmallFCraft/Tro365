@@ -31,6 +31,19 @@ $areaTo = (int)($_GET['area_to'] ?? 0);
 // Room parameters
 $rooms = (int)($_GET['rooms'] ?? 0);
 
+// Additional filters (commented out for now to avoid errors)
+// $hasParking = isset($_GET['parking']) ? (int)$_GET['parking'] : null;
+// $hasWifi = isset($_GET['wifi']) ? (int)$_GET['wifi'] : null;
+// $hasAC = isset($_GET['ac']) ? (int)$_GET['ac'] : null;
+// $hasWasher = isset($_GET['washer']) ? (int)$_GET['washer'] : null;
+// $hasFridge = isset($_GET['fridge']) ? (int)$_GET['fridge'] : null;
+// $hasElevator = isset($_GET['elevator']) ? (int)$_GET['elevator'] : null;
+// $hasSecurity = isset($_GET['security']) ? (int)$_GET['security'] : null;
+
+// Date filters (commented out for now to avoid errors)
+// $dateFrom = cleanInput($_GET['date_from'] ?? '');
+// $dateTo = cleanInput($_GET['date_to'] ?? '');
+
 // Sorting parameters
 $sortBy = cleanInput($_GET['sort'] ?? 'newest');
 $viewMode = cleanInput($_GET['view'] ?? 'grid');
@@ -45,7 +58,7 @@ $where = "bd.TrangThai = " . POST_STATUS_APPROVED;
 $params = [];
 
 if (!empty($keyword) && trim($keyword) !== '') {
-    $where .= " AND (bd.TieuDe LIKE :keyword1 OR bd.MoTa LIKE :keyword2 OR bd.DiaChi LIKE :keyword3)";
+    $where .= " AND (bd.TieuDe LIKE :keyword1 OR bd.NoiDung LIKE :keyword2 OR bd.DiaChi LIKE :keyword3)";
     $params['keyword1'] = '%' . $keyword . '%';
     $params['keyword2'] = '%' . $keyword . '%';
     $params['keyword3'] = '%' . $keyword . '%';
@@ -108,6 +121,62 @@ if ($rooms > 0) {
         $params['rooms'] = $rooms;
     }
 }
+
+// Amenity filters (commented out for now to avoid errors)
+/*
+if ($hasParking !== null) {
+    if ($hasParking) {
+        $where .= " AND (bd.NoiDung LIKE '%chỗ đậu xe%' OR bd.NoiDung LIKE '%parking%' OR bd.NoiDung LIKE '%bãi xe%')";
+    }
+}
+
+if ($hasWifi !== null) {
+    if ($hasWifi) {
+        $where .= " AND (bd.NoiDung LIKE '%wifi%' OR bd.NoiDung LIKE '%internet%' OR bd.NoiDung LIKE '%mạng%')";
+    }
+}
+
+if ($hasAC !== null) {
+    if ($hasAC) {
+        $where .= " AND (bd.NoiDung LIKE '%điều hòa%' OR bd.NoiDung LIKE '%máy lạnh%' OR bd.NoiDung LIKE '%air%')";
+    }
+}
+
+if ($hasWasher !== null) {
+    if ($hasWasher) {
+        $where .= " AND (bd.NoiDung LIKE '%máy giặt%' OR bd.NoiDung LIKE '%giặt%' OR bd.NoiDung LIKE '%washing%')";
+    }
+}
+
+if ($hasFridge !== null) {
+    if ($hasFridge) {
+        $where .= " AND (bd.NoiDung LIKE '%tủ lạnh%' OR bd.NoiDung LIKE '%fridge%' OR bd.NoiDung LIKE '%refrigerator%')";
+    }
+}
+
+if ($hasElevator !== null) {
+    if ($hasElevator) {
+        $where .= " AND (bd.NoiDung LIKE '%thang máy%' OR bd.NoiDung LIKE '%elevator%' OR bd.NoiDung LIKE '%lift%')";
+    }
+}
+
+if ($hasSecurity !== null) {
+    if ($hasSecurity) {
+        $where .= " AND (bd.NoiDung LIKE '%bảo vệ%' OR bd.NoiDung LIKE '%an ninh%' OR bd.NoiDung LIKE '%security%')";
+    }
+}
+
+// Date filters
+if (!empty($dateFrom)) {
+    $where .= " AND bd.NgayTao >= :dateFrom";
+    $params['dateFrom'] = $dateFrom . ' 00:00:00';
+}
+
+if (!empty($dateTo)) {
+    $where .= " AND bd.NgayTao <= :dateTo";
+    $params['dateTo'] = $dateTo . ' 23:59:59';
+}
+*/
 
 // Build ORDER BY clause based on sort parameter
 $orderBy = "bd.NgayTao DESC"; // Default: newest first

@@ -450,7 +450,7 @@ try {
                                 <div class="province-overlay"></div>
                             </div>
                             <div class="province-content">
-                                <h4 class="province-name"><?= e($name) ?></h4>
+                                <div class="province-name"><?= e($name) ?></div>
                             </div>
                         </div>
                     </a>
@@ -477,7 +477,7 @@ try {
                         <a href="/search?province=<?= $province['code'] ?>" class="text-decoration-none">
                             <div class="province-stats-card glass-card">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h4 class="province-stats-name mb-0"><?= e($province['name']) ?></h4>
+                                    <div class="province-stats-name mb-0"><?= e($province['name']) ?></div>
                                     <span class="province-stats-count"><?= number_format($province['count']) ?> phòng trọ</span>
                                 </div>
                             </div>

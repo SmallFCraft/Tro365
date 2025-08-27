@@ -101,20 +101,11 @@ class ModernApp {
   }
 
   /**
-   * Show error notification
+   * Show error notification - UNIFIED with TroToast
    */
   showErrorNotification(message) {
-    // Use SweetAlert2 if available, otherwise fallback to alert
-    if (window.Swal) {
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi",
-        text: message,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 5000,
-      });
+    if (window.TroToast && typeof window.TroToast.error === "function") {
+      window.TroToast.error(message);
     } else {
       alert(message);
     }
@@ -136,11 +127,8 @@ class ModernApp {
     // Initialize search functionality
     this.initializeSearch();
 
-    // Initialize infinite scroll
-    this.initializeInfiniteScroll();
-
-    // Initialize image galleries
-    this.initializeImageGalleries();
+    // Infinite scroll removed (unused - no data-infinite-scroll elements)
+    // Image galleries handled by dedicated ImageGallery class
   }
 
   /**
@@ -409,198 +397,25 @@ class ModernApp {
       .join("");
   }
 
-  /**
-   * Initialize infinite scroll
-   */
-  initializeInfiniteScroll() {
-    const containers = DOM.$$("[data-infinite-scroll]");
+  /* initializeInfiniteScroll() method removed (unused) */
 
-    containers.forEach(container => {
-      const loadMoreUrl = container.dataset.loadMoreUrl;
-      if (!loadMoreUrl) return;
-
-      let page = 1;
-      let loading = false;
-
-      const observer = new IntersectionObserver(async entries => {
-        if (entries[0].isIntersecting && !loading) {
-          loading = true;
-          page++;
-
-          try {
-            const response = await http.get(loadMoreUrl, { params: { page } });
-
-            if (response.html) {
-              container.insertAdjacentHTML("beforeend", response.html);
-            }
-
-            if (!response.hasMore) {
-              observer.disconnect();
-            }
-          } catch (error) {
-            console.error("Infinite scroll error:", error);
-          } finally {
-            loading = false;
-          }
-        }
-      });
-
-      // Observe the last element in container
-      const lastElement = container.lastElementChild;
-      if (lastElement) {
-        observer.observe(lastElement);
-      }
-    });
-  }
-
-  /**
-   * Initialize image galleries
-   */
-  initializeImageGalleries() {
-    const galleries = DOM.$$("[data-gallery]");
-
-    galleries.forEach(gallery => {
-      const images = gallery.querySelectorAll("img[data-full]");
-
-      images.forEach((img, index) => {
-        img.addEventListener("click", () => {
-          this.openLightbox(images, index);
-        });
-      });
-    });
-  }
-
-  /**
-   * Open lightbox
-   */
-  openLightbox(images, startIndex) {
-    // Simple lightbox implementation
-    const lightbox = DOM.createElement("div", {
-      className: "lightbox-overlay",
-      innerHTML: `
-                <div class="lightbox-container">
-                    <button class="lightbox-close">&times;</button>
-                    <button class="lightbox-prev">&#8249;</button>
-                    <img class="lightbox-image" src="${
-                      images[startIndex].dataset.full
-                    }" alt="">
-                    <button class="lightbox-next">&#8250;</button>
-                    <div class="lightbox-counter">${startIndex + 1} / ${
-        images.length
-      }</div>
-                </div>
-            `,
-    });
-
-    document.body.appendChild(lightbox);
-    document.body.style.overflow = "hidden";
-
-    let currentIndex = startIndex;
-
-    // Event handlers
-    const closeBtn = lightbox.querySelector(".lightbox-close");
-    const prevBtn = lightbox.querySelector(".lightbox-prev");
-    const nextBtn = lightbox.querySelector(".lightbox-next");
-    const img = lightbox.querySelector(".lightbox-image");
-    const counter = lightbox.querySelector(".lightbox-counter");
-
-    const updateImage = index => {
-      img.src = images[index].dataset.full;
-      counter.textContent = `${index + 1} / ${images.length}`;
-    };
-
-    closeBtn.addEventListener("click", () => {
-      document.body.removeChild(lightbox);
-      document.body.style.overflow = "";
-    });
-
-    prevBtn.addEventListener("click", () => {
-      currentIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
-      updateImage(currentIndex);
-    });
-
-    nextBtn.addEventListener("click", () => {
-      currentIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
-      updateImage(currentIndex);
-    });
-
-    // Keyboard navigation
-    document.addEventListener("keydown", function keyHandler(e) {
-      if (e.key === "Escape") {
-        closeBtn.click();
-        document.removeEventListener("keydown", keyHandler);
-      } else if (e.key === "ArrowLeft") {
-        prevBtn.click();
-      } else if (e.key === "ArrowRight") {
-        nextBtn.click();
-      }
-    });
-
-    DOM.fadeIn(lightbox, 300);
-  }
+  /* initializeImageGalleries() and openLightbox() methods removed (handled by dedicated ImageGallery class) */
 
   /**
    * Setup global events
    */
   setupGlobalEvents() {
-    // Handle AJAX navigation
-    document.addEventListener("click", event => {
-      const link = event.target.closest("a[data-ajax]");
-      if (link) {
-        event.preventDefault();
-        this.handleAjaxNavigation(link.href);
-      }
-    });
-
-    // Handle back button
-    window.addEventListener("popstate", event => {
-      if (event.state && event.state.ajax) {
-        this.handleAjaxNavigation(window.location.href, false);
-      }
-    });
+    // AJAX navigation removed (unused - no data-ajax links in codebase)
   }
 
-  /**
-   * Handle AJAX navigation
-   */
-  async handleAjaxNavigation(url, pushState = true) {
-    try {
-      const response = await http.get(url, {
-        headers: { "X-PJAX": "true" },
-      });
-
-      if (response.html) {
-        const contentContainer =
-          DOM.$("#main-content") || DOM.$("main") || document.body;
-        contentContainer.innerHTML = response.html;
-
-        if (pushState) {
-          history.pushState({ ajax: true }, "", url);
-        }
-
-        // Reinitialize components for new content
-        this.initializeComponents();
-      }
-    } catch (error) {
-      // Fallback to regular navigation
-      window.location.href = url;
-    }
-  }
+  /* handleAjaxNavigation() method removed (unused) */
 
   /**
-   * Show success notification
+   * Show success notification - UNIFIED with TroToast
    */
   showSuccessNotification(message) {
-    if (window.Swal) {
-      Swal.fire({
-        icon: "success",
-        title: "Thành công",
-        text: message,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-      });
+    if (window.TroToast && typeof window.TroToast.success === "function") {
+      window.TroToast.success(message);
     } else {
       alert(message);
     }

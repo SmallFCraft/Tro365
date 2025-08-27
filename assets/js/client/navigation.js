@@ -22,9 +22,6 @@ class ModernNavigation {
   }
 
   init() {
-    // Add body padding for fixed navbar
-    document.body.style.paddingTop = "80px";
-
     // Initialize mobile bottom nav visibility
     this.updateMobileNavVisibility();
 
@@ -553,12 +550,76 @@ class ModernNavigation {
   }
 
   async fetchSearchSuggestions(query) {
-    // Search suggestions feature is disabled - API not implemented yet
-    // This prevents 404 errors and unnecessary network requests
-    if (window.TRO365_DEBUG) {
-      console.log("Search suggestions feature is currently disabled");
+    try {
+      const response = await fetch(
+        `/api/posts/suggestions?q=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+
+      if (data.success && data.data.suggestions) {
+        this.displaySearchSuggestions(data.data.suggestions);
+      } else {
+        this.clearSearchSuggestions();
+      }
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+      this.clearSearchSuggestions();
     }
-    return;
+  }
+
+  displaySearchSuggestions(suggestions) {
+    const suggestionsContainer = document.getElementById("searchSuggestions");
+    if (!suggestionsContainer) return;
+
+    if (suggestions.length === 0) {
+      this.clearSearchSuggestions();
+      return;
+    }
+
+    const suggestionsHTML = suggestions
+      .map(
+        suggestion => `
+      <div class="suggestion-item" data-suggestion="${suggestion.text}" data-type="${suggestion.type}">
+        <i class="${suggestion.icon} suggestion-icon"></i>
+        <span class="suggestion-text">${suggestion.text}</span>
+        <span class="suggestion-count">${suggestion.count}</span>
+      </div>
+    `
+      )
+      .join("");
+
+    suggestionsContainer.innerHTML = `
+      <div class="suggestions-list">
+        ${suggestionsHTML}
+      </div>
+    `;
+
+    // Add click handlers for suggestions
+    suggestionsContainer.querySelectorAll(".suggestion-item").forEach(item => {
+      item.addEventListener("click", () => {
+        const searchInput = document.querySelector(".search-input");
+        if (searchInput) {
+          searchInput.value = item.dataset.suggestion;
+          this.clearSearchSuggestions();
+
+          // Trigger search
+          const searchForm = searchInput.closest("form");
+          if (searchForm) {
+            searchForm.dispatchEvent(new Event("submit"));
+          }
+        }
+      });
+    });
+
+    suggestionsContainer.style.display = "block";
+  }
+
+  clearSearchSuggestions() {
+    const suggestionsContainer = document.getElementById("searchSuggestions");
+    if (suggestionsContainer) {
+      suggestionsContainer.innerHTML = "";
+      suggestionsContainer.style.display = "none";
+    }
   }
 
   initPriceSlider() {
@@ -752,7 +813,12 @@ class ModernNavigation {
     }
 
     // Check if HTTPS is required (geolocation requires HTTPS on most browsers)
-    if (location.protocol !== "https:" && location.hostname !== "localhost") {
+    const isLocalhost =
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1" ||
+      location.hostname === "::1";
+
+    if (location.protocol !== "https:" && !isLocalhost) {
       this.showToast(
         "Định vị yêu cầu kết nối HTTPS để đảm bảo bảo mật",
         "warning"
@@ -840,33 +906,141 @@ class ModernNavigation {
       const location = await response.json();
 
       if (location.success && location.province) {
-        const provinceSelect = document.getElementById("searchProvince");
-        if (provinceSelect) {
+        // Find all possible province dropdowns and select the best one
+        const provinceDropdowns = [
+          {
+            province: document.getElementById("searchProvince"),
+            district: document.getElementById("searchDistrict"),
+            ward: document.getElementById("searchWard"),
+            name: "searchProvince",
+          },
+          {
+            province: document.getElementById("filterProvince"),
+            district: document.getElementById("filterDistrict"),
+            ward: document.getElementById("filterWard"),
+            name: "filterProvince",
+          },
+          {
+            province: document.querySelector("select[name='province']"),
+            district: document.querySelector("select[name='district']"),
+            ward: document.querySelector("select[name='ward']"),
+            name: "generic province",
+          },
+          {
+            province: document.querySelector(".province-select"),
+            district: document.querySelector(".district-select"),
+            ward: document.querySelector(".ward-select"),
+            name: "class-based",
+          },
+        ];
+
+        let selectedDropdown = null;
+
+        // Find the best dropdown that has the required province option
+        for (const dropdown of provinceDropdowns) {
+          if (dropdown.province && dropdown.province.options) {
+            const hasOption = Array.from(dropdown.province.options).some(
+              opt => opt.value == location.province.ID
+            );
+            if (hasOption) {
+              selectedDropdown = dropdown;
+              console.log(`🎯 Found province option in ${dropdown.name}`);
+              break;
+            }
+          }
+        }
+
+        // If no dropdown has the option, use the first available dropdown with most options
+        if (!selectedDropdown) {
+          for (const dropdown of provinceDropdowns) {
+            if (
+              dropdown.province &&
+              dropdown.province.options &&
+              dropdown.province.options.length > 2
+            ) {
+              selectedDropdown = dropdown;
+              console.log(
+                `📍 Using fallback dropdown ${dropdown.name} with ${dropdown.province.options.length} options`
+              );
+              break;
+            }
+          }
+        }
+
+        if (selectedDropdown && selectedDropdown.province) {
+          const provinceSelect = selectedDropdown.province;
+          const districtSelect = selectedDropdown.district;
+          const wardSelect = selectedDropdown.ward;
+
+          // Set the province value
           provinceSelect.value = location.province.ID;
           provinceSelect.dispatchEvent(new Event("change"));
+          console.log(
+            `✅ Set province: ${location.province.TenTT} (ID: ${location.province.ID})`
+          );
 
           let locationText = location.province.TenTT;
 
           if (location.district) {
             setTimeout(() => {
-              const districtSelect = document.getElementById("searchDistrict");
               if (districtSelect) {
-                districtSelect.value = location.district.ID;
-                districtSelect.dispatchEvent(new Event("change"));
-                locationText += `, ${location.district.TenQH}`;
+                // Wait for district options to load, then set value
+                const checkDistrict = () => {
+                  if (districtSelect.options.length > 1) {
+                    const hasDistrictOption = Array.from(
+                      districtSelect.options
+                    ).some(opt => opt.value == location.district.ID);
+                    if (hasDistrictOption) {
+                      districtSelect.value = location.district.ID;
+                      districtSelect.dispatchEvent(new Event("change"));
+                      console.log(
+                        `✅ Set district: ${location.district.TenQH} (ID: ${location.district.ID})`
+                      );
+                      locationText += `, ${location.district.TenQH}`;
+                    } else {
+                      console.log(
+                        `⚠️ District option not found: ${location.district.TenQH} (ID: ${location.district.ID})`
+                      );
+                    }
+                  } else {
+                    // Retry after 500ms if options not loaded yet
+                    setTimeout(checkDistrict, 500);
+                  }
+                };
+                checkDistrict();
 
                 if (location.ward) {
                   setTimeout(() => {
-                    const wardSelect = document.getElementById("searchWard");
                     if (wardSelect) {
-                      wardSelect.value = location.ward.ID;
-                      locationText += `, ${location.ward.TenXP}`;
+                      // Wait for ward options to load, then set value
+                      const checkWard = () => {
+                        if (wardSelect.options.length > 1) {
+                          const hasWardOption = Array.from(
+                            wardSelect.options
+                          ).some(opt => opt.value == location.ward.ID);
+                          if (hasWardOption) {
+                            wardSelect.value = location.ward.ID;
+                            console.log(
+                              `✅ Set ward: ${location.ward.TenXP} (ID: ${location.ward.ID})`
+                            );
+                            locationText += `, ${location.ward.TenXP}`;
+                          } else {
+                            console.log(
+                              `⚠️ Ward option not found: ${location.ward.TenXP} (ID: ${location.ward.ID})`
+                            );
+                          }
+                        } else {
+                          // Retry after 500ms if options not loaded yet
+                          setTimeout(checkWard, 500);
+                        }
+                      };
+                      checkWard();
                     }
                     this.showToast(
                       `Đã xác định vị trí: ${locationText}`,
                       "success"
                     );
-                  }, 500);
+                  }, 2000);
                 } else {
                   this.showToast(
                     `Đã xác định vị trí: ${locationText}`,
@@ -878,6 +1052,12 @@ class ModernNavigation {
           } else {
             this.showToast(`Đã xác định vị trí: ${locationText}`, "success");
           }
+        } else {
+          console.log("❌ No suitable dropdown found for geolocation");
+          this.showToast(
+            "Không tìm thấy dropdown phù hợp để thiết lập vị trí",
+            "warning"
+          );
         }
       } else {
         this.showToast(

@@ -563,8 +563,8 @@ if (isset($_SESSION['user_id'])) {
                     <button type="button" class="voice-search" id="voiceSearch" aria-label="Tìm kiếm bằng giọng nói" title="Tìm kiếm bằng giọng nói">
                         <i class="fas fa-microphone" aria-hidden="true"></i>
                     </button>
+                    <div class="search-suggestions" id="searchSuggestions"></div>
                 </div>
-                <div class="search-suggestions" id="searchSuggestions"></div>
             </div>
 
             <div class="search-section">

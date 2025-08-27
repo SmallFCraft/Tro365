@@ -324,75 +324,7 @@
     opacity: 0.7;
 }
 
-/* Glass Icon Container */
-.glass-icon {
-    background: var(--glass-bg);
-    backdrop-filter: var(--backdrop-filter);
-    border: 1px solid var(--glass-border);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    transition: var(--glass-transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.glass-icon::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle,
-            rgba(var(--primary-rgb), 0.2) 0%,
-            transparent 70%);
-    border-radius: 50%;
-    transition: all 0.4s ease;
-    transform: translate(-50%, -50%);
-}
-
-.glass-icon:hover::before {
-    width: 100px;
-    height: 100px;
-}
-
-.glass-icon:hover {
-    transform: scale(1.1) rotate(5deg);
-    border-color: rgba(var(--primary-rgb), 0.4);
-    box-shadow: 0 10px 30px rgba(var(--primary-rgb), 0.3);
-}
-
-.glass-icon-lg {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    font-size: 2rem;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    flex-shrink: 0;
-}
-
-.glass-icon-sm {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    flex-shrink: 0;
-}
+/* Glass Icon Container - REMOVED (unused) */
 
 /* ===== LAYOUT GLASS COMPONENTS ===== */
 
@@ -481,7 +413,6 @@
 }
 
 .glass-grid-3,
-.glass-grid-4,
 .glass-grid {
     display: grid;
     gap: 2rem;
@@ -492,9 +423,7 @@
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
-.glass-grid-4 {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
+/* .glass-grid-4 removed (unused) */
 
 /* ===== RESPONSIVE DESIGN ===== */
 
@@ -538,17 +467,7 @@
         border-radius: 12px;
     }
 
-    .glass-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.25rem;
-    }
-
-    .glass-icon-lg {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-    }
+    /* Glass icon responsive rules removed (unused) */
 }
 
 /* Tablet - 768px to 992px */
@@ -670,43 +589,75 @@
     box-shadow: 0 6px 24px rgba(220, 53, 69, 0.5);
 }
 
-/* Glass Statistics/Features Components */
-.glass-stats,
-.glass-features {
+/* Glass Statistics/Features Components - REMOVED (unused) */
+
+/* Glass Social Links - REMOVED (unused) */
+
+/* Search Suggestions */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     background: var(--glass-bg);
     backdrop-filter: var(--backdrop-filter);
     border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 2rem;
+    border-radius: 12px;
     box-shadow: var(--glass-shadow);
-    position: relative;
-    z-index: 10;
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
 }
 
-/* Glass Social Links */
-.glass-social {
-    background: var(--glass-bg);
-    backdrop-filter: var(--backdrop-filter);
-    border: 1px solid var(--glass-border);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
+.suggestions-list {
+    padding: 0.5rem 0;
+}
+
+.suggestion-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--primary-color);
-    text-decoration: none;
-    font-size: 1.5rem;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(var(--glass-border-rgb), 0.1);
 }
 
-.glass-social:hover {
-    transform: scale(1.1) rotate(5deg);
-    border-color: rgba(var(--primary-rgb), 0.4);
-    box-shadow: 0 10px 30px rgba(var(--primary-rgb), 0.3);
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: rgba(var(--primary-rgb), 0.1);
+    transform: translateX(4px);
+}
+
+.suggestion-icon {
+    width: 16px;
+    margin-right: 0.75rem;
     color: var(--primary-color);
+    opacity: 0.7;
+}
+
+.suggestion-text {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.suggestion-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: rgba(var(--primary-rgb), 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Search input wrapper positioning */
+.search-input-wrapper {
+    position: relative;
 }
 
 /* Glass Search Form */

@@ -75,17 +75,21 @@ class AssetManager
     public function renderHead(): string
     {
         $out = [];
-        // Modern Meta Tags
-        $out[] = "<!-- Modern Meta Tags -->";
-        $out[] = '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">';
-        $out[] = '<meta name="theme-color" content="#667eea">';
-        // Modern PWA capability meta (apple tag is deprecated)
-        $out[] = '<meta name="mobile-web-app-capable" content="yes">';
+        $out[] = '<!-- Modern Meta Tags -->';
+        $out[] = '<meta charset="UTF-8">';
+        $out[] = '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+        $out[] = '<meta http-equiv="X-UA-Compatible" content="IE=edge">';
 
-        // CSRF token if provided
-        $csrf = $this->metaTags['csrf'] ?? (function_exists('csrf_token') ? csrf_token() : '');
-        if ($csrf) {
-            $out[] = '<meta name="csrf-token" content="' . htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') . '">';
+        // CSRF token
+        if (isset($this->metaTags['csrf'])) {
+            $out[] = '<meta name="csrf-token" content="' . htmlspecialchars($this->metaTags['csrf']) . '">';
+        }
+
+        // Other meta tags
+        foreach ($this->metaTags as $name => $content) {
+            if ($name !== 'csrf') {
+                $out[] = '<meta name="' . htmlspecialchars($name) . '" content="' . htmlspecialchars($content) . '">';
+            }
         }
 
         // Icons (avoid relying on /favicon.ico route)
@@ -217,4 +221,3 @@ JS;
         return '?v=' . rawurlencode($this->version);
     }
 }
-
