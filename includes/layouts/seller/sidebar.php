@@ -55,7 +55,7 @@ function isActive($path) {
                 <?php
                 // Get pending contact count
                 try {
-                    $contact = new \Tro365\Contact();
+                    $contact = new \Tro365\Models\Contact();
                     $pendingCount = $contact->count(['landlord_id' => $currentUser['ID'], 'status' => 'pending']);
                     if ($pendingCount > 0) {
                         echo '<span class="badge bg-warning rounded-pill float-end">' . $pendingCount . '</span>';
@@ -122,7 +122,7 @@ function isActive($path) {
                     ['user_id' => $currentUser['ID']]
                 )['total'] ?? 0;
                 
-                $contact = new \Tro365\Contact();
+                $contact = new \Tro365\Models\Contact();
                 $totalContacts = $contact->count(['landlord_id' => $currentUser['ID']]);
                 
                 $transaction = new \Tro365\Transaction();

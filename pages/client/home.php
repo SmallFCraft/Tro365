@@ -537,12 +537,23 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            const href = this.getAttribute('href');
+            // Skip empty or invalid selectors
+            if (!href || href === '#' || href.length <= 1) {
+                return;
+            }
+            try {
+                const target = document.querySelector(href);
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            } catch (error) {
+                if (window.TRO365_DEBUG) {
+                    console.warn('Invalid selector for smooth scrolling:', href, error);
+                }
             }
         });
     });
@@ -656,9 +667,9 @@ function toggleFavorite(postId, buttonElement) {
             updateFavoritesCount(data.data.favorited);
 
             // Show success message briefly
-            if (data.data.message) {
-                showToast(data.data.message, 'success');
-            }
+            const msg = (data.data && data.data.message)
+              || (data.data && data.data.favorited ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+            showToast(msg, 'success');
         } else {
             // Restore original state on error
             heartIcon.className = originalHeartClasses;
@@ -732,69 +743,14 @@ function updateFavoritesCount(isAdded) {
     }
 }
 
-// Toast notification function
-function showToast(message, type = 'info') {
-    // Remove existing toasts
-    const existingToasts = document.querySelectorAll('.toast-notification');
-    existingToasts.forEach(toast => toast.remove());
-
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast-notification toast-${type}`;
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    // Add styles
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-        border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
-        border-radius: 12px;
-        padding: 12px 16px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 9999;
-        font-size: 14px;
-        max-width: 300px;
-        animation: slideInRight 0.3s ease-out;
-    `;
-
-    // Add animation keyframes if not exists
-    if (!document.querySelector('#toast-animations')) {
-        const style = document.createElement('style');
-        style.id = 'toast-animations';
-        style.textContent = `
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-            .toast-content {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-        `;
-        document.head.appendChild(style);
+// Toast notification (unified)
+function showToast(message, type = 'info', duration = 3000) {
+    if (window.TroToast && typeof window.TroToast.show === 'function') {
+        window.TroToast.show({ message, type, duration });
+    } else {
+        // Fallback minimal alert
+        alert(message);
     }
-
-    // Add to page
-    document.body.appendChild(toast);
-
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.3s ease-in';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
 }
 </script>
 

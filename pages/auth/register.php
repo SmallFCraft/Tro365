@@ -114,11 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preload" href="<?= app_url('assets/css/client/layouts.css') ?>" as="style">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
     
-    <!-- Modern Assets Integration -->
+    <!-- Modern Assets Integration (AssetManager) -->
     <?php
-    require_once __DIR__ . '/../../includes/modern-assets.php';
-    addModernMetaTags();
-    loadModernCSS();
+    $am = new \Tro365\Assets\AssetManager(app_url(''));
+    $am->addMetaTags(['csrf' => csrf_token()]);
+    echo $am->renderHead();
     ?>
 
     <!-- Critical CSS -->
@@ -397,12 +397,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <!-- Modern JavaScript Libraries -->
+    <!-- Modern JavaScript Libraries (AssetManager) -->
     <?php
-    require_once __DIR__ . '/../../includes/modern-assets.php';
-    loadModernJS();
-    // Skip modern form validation for auth pages to avoid conflicts
-    // initModernFormValidation('#registerForm');
+    $am = new \Tro365\Assets\AssetManager(app_url(''));
+    echo $am->renderFooter();
     ?>
 
     <!-- Scripts -->

@@ -23,8 +23,8 @@ window.Tro365Settings = {
    */
   initStyles: function () {
     // Add CSS for auto-save indicator
-    const style = document.createElement("style");
-    style.textContent = `
+    const settingsStyle = document.createElement("style");
+    settingsStyle.textContent = `
             .auto-save-indicator {
                 position: fixed;
                 top: 20px;
@@ -32,7 +32,7 @@ window.Tro365Settings = {
                 z-index: 1050;
             }
         `;
-    document.head.appendChild(style);
+    document.head.appendChild(settingsStyle);
   },
 
   /**
@@ -454,7 +454,12 @@ window.Tro365Settings = {
   /**
    * Show toast notification
    */
-  showToast: function (message, type = "info") {
+  showToast: function (message, type = "info", duration = 3000) {
+    if (window.TroToast && typeof window.TroToast.show === "function") {
+      window.TroToast.show({ message, type, duration });
+      return;
+    }
+    // Fallback: Bootstrap toast
     const toastContainer =
       document.getElementById("toastContainer") || this.createToastContainer();
 
@@ -485,7 +490,8 @@ window.Tro365Settings = {
   createToastContainer: function () {
     const container = document.createElement("div");
     container.id = "toastContainer";
-    container.className = "toast-container position-fixed top-0 end-0 p-3";
+    container.className = "toast-container position-fixed end-0 p-3";
+    container.style.top = "100px";
     container.style.zIndex = "9999";
     document.body.appendChild(container);
     return container;

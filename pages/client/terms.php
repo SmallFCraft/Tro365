@@ -1660,8 +1660,14 @@ function initSmoothScrolling() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
+            const href = this.getAttribute('href');
+            // Skip empty or invalid selectors
+            if (!href || href === '#' || href.length <= 1) {
+                return;
+            }
+            try {
+                const target = document.querySelector(href);
+                if (target) {
                 const headerOffset = 80; // Account for fixed header
                 const elementPosition = target.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -1691,6 +1697,11 @@ function initSmoothScrolling() {
                 setTimeout(() => {
                     target.style.transform = 'scale(1)';
                 }, 200);
+                }
+            } catch (error) {
+                if (window.TRO365_DEBUG) {
+                    console.warn('Invalid selector for smooth scrolling:', href, error);
+                }
             }
         });
     });

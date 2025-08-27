@@ -181,10 +181,14 @@ window.Tro365Footer = {
   },
 
   /**
-   * Show notification
+   * Show notification (unified)
    */
-  showNotification: function (message, type = "info") {
-    // Create notification element
+  showNotification: function (message, type = "info", duration = 3000) {
+    if (window.TroToast && typeof window.TroToast.show === "function") {
+      window.TroToast.show({ message, type, duration });
+      return;
+    }
+    // Fallback: Bootstrap alert
     const notification = document.createElement("div");
     notification.className = `alert alert-${
       type === "error" ? "danger" : type
@@ -196,16 +200,11 @@ window.Tro365Footer = {
             min-width: 300px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         `;
-
     notification.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-
-    // Add to body
     document.body.appendChild(notification);
-
-    // Auto remove after 5 seconds
     setTimeout(() => {
       if (notification.parentNode) {
         const alert = bootstrap.Alert.getOrCreateInstance(notification);

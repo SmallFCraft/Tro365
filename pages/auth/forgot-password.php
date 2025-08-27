@@ -292,16 +292,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add shake animation keyframes
     if (!document.querySelector('#shake-animation')) {
-        const style = document.createElement('style');
-        style.id = 'shake-animation';
-        style.textContent = `
+        const shakeStyle = document.createElement('style');
+        shakeStyle.id = 'shake-animation';
+        shakeStyle.textContent = `
             @keyframes shake {
                 0%, 100% { transform: translateX(0); }
                 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
                 20%, 40%, 60%, 80% { transform: translateX(5px); }
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(shakeStyle);
     }
 
     // Auto-focus email input

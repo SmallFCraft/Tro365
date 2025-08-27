@@ -153,7 +153,7 @@ try {
         'admin/ajax/settings-handler' => 'pages/admin/ajax/settings-handler.php',
         'admin/statistics' => 'pages/admin/statistics.php',
         'admin/cache/clear' => 'router/admin/cache-clear.php',
-
+        
         // API routes
         'api/auth' => 'router/api/auth.php',
         'api/auth/refresh-session' => 'router/api/auth.php',

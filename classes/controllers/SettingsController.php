@@ -1,15 +1,18 @@
 <?php
+
+namespace Tro365\Controllers;
+
+use Exception;
+use Tro365\Core\Config;
+use Tro365\Core\Database;
+use Tro365\Core\Auth;
+
 /**
  * Settings Controller
  * Tro365 - Website thuê trọ
- * 
+ *
  * Quản lý business logic cho trang admin settings
  */
-
-namespace Tro365;
-
-require_once __DIR__ . '/../config/app.php';
-
 class SettingsController
 {
     private $config;
@@ -18,9 +21,9 @@ class SettingsController
 
     public function __construct()
     {
-        $this->config = new \Tro365\Core\Config();
-        $this->db = new \Tro365\Core\Database();
-        $this->auth = new \Tro365\Core\Auth();
+        $this->config = new Config();
+        $this->db = Database::getInstance();
+        $this->auth = new Auth();
     }
 
     /**
@@ -30,7 +33,7 @@ class SettingsController
     {
         if (!$this->auth->isLoggedIn() || !$this->auth->hasRole(ROLE_ADMIN)) {
             http_response_code(403);
-            include __DIR__ . '/../pages/errors/403.php';
+            include dirname(__DIR__, 2) . '/pages/errors/403.php';
             exit;
         }
     }
@@ -41,7 +44,7 @@ class SettingsController
     public function getAllSettings()
     {
         $settings = $this->config->getSystemSettings();
-        
+
         // Thêm các settings bổ sung
         $additionalSettings = [
             'max_upload_size' => $this->config->getValue('max_upload_size', 5),
@@ -51,7 +54,7 @@ class SettingsController
             'require_email_verification' => (bool)$this->config->getValue('require_email_verification', 0),
             'enable_maintenance_mode' => (bool)$this->config->getValue('enable_maintenance_mode', 0),
             'app_debug' => (bool)$this->config->getValue('app_debug', 0),
-            
+
             // Email settings
             'mail_driver' => $this->config->getValue('mail_driver', 'smtp'),
             'mail_host' => $this->config->getValue('mail_host', ''),
@@ -61,7 +64,7 @@ class SettingsController
             'mail_encryption' => $this->config->getValue('mail_encryption', 'tls'),
             'mail_from_address' => $this->config->getValue('mail_from_address', ''),
             'mail_from_name' => $this->config->getValue('mail_from_name', ''),
-            
+
             // SEO settings
             'meta_keywords' => $this->config->getValue('meta_keywords', ''),
             'meta_description' => $this->config->getValue('meta_description', ''),
@@ -70,10 +73,10 @@ class SettingsController
             'facebook_pixel_id' => $this->config->getValue('facebook_pixel_id', ''),
             'enable_sitemap' => (bool)$this->config->getValue('enable_sitemap', 1),
             'enable_robots_txt' => (bool)$this->config->getValue('enable_robots_txt', 1),
-            
+
             // TinyMCE settings
             'tinymce_api_key' => $this->config->getValue('tinymce_api_key', ''),
-            
+
             // Room settings
             'max_rooms_per_post' => $this->config->getValue('max_rooms_per_post', '50')
         ];
@@ -125,7 +128,7 @@ class SettingsController
             foreach ($validation['errors'] as $field => $fieldErrors) {
                 $errors = array_merge($errors, $fieldErrors);
             }
-            throw new \Exception(implode(', ', $errors));
+            throw new Exception(implode(', ', $errors));
         }
 
         $websiteSettings = [
@@ -163,11 +166,11 @@ class SettingsController
             'enable_maintenance_mode' => isset($data['enable_maintenance_mode']) ? 1 : 0,
             'app_debug' => isset($data['app_debug']) ? 1 : 0
         ];
-        
+
         foreach ($systemSettings as $key => $value) {
             $this->config->setValue($key, $value);
         }
-        
+
         return true;
     }
 
@@ -186,11 +189,11 @@ class SettingsController
             'mail_from_address' => trim($data['mail_from_address'] ?? ''),
             'mail_from_name' => trim($data['mail_from_name'] ?? '')
         ];
-        
+
         foreach ($emailSettings as $key => $value) {
             $this->config->setValue($key, $value);
         }
-        
+
         return true;
     }
 
@@ -208,11 +211,11 @@ class SettingsController
             'enable_sitemap' => isset($data['enable_sitemap']) ? 1 : 0,
             'enable_robots_txt' => isset($data['enable_robots_txt']) ? 1 : 0
         ];
-        
+
         foreach ($seoSettings as $key => $value) {
             $this->config->setValue($key, $value);
         }
-        
+
         return true;
     }
 
@@ -223,7 +226,7 @@ class SettingsController
     {
         // Validate version format
         if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-            throw new \Exception('Định dạng phiên bản không hợp lệ. Sử dụng định dạng x.y.z (ví dụ: 1.2.3)');
+            throw new Exception('Định dạng phiên bản không hợp lệ. Sử dụng định dạng x.y.z (ví dụ: 1.2.3)');
         }
 
         return setAppVersion($version, $description);
@@ -235,120 +238,139 @@ class SettingsController
     public function updateVersionDescription($version, $description)
     {
         if (empty($version) || empty($description)) {
-            throw new \Exception('Vui lòng nhập đầy đủ thông tin');
+            throw new Exception('Vui lòng nhập đầy đủ thông tin');
         }
 
-        return updateAnyVersionDescription($version, $description);
+        return updateVersionDescription($version, $description);
+    }
+
+    /**
+     * Lấy lịch sử version
+     */
+    public function getVersionHistory()
+    {
+        return getVersionHistory();
+    }
+
+    /**
+     * Xóa version khỏi lịch sử
+     */
+    public function deleteVersion($version)
+    {
+        if (empty($version)) {
+            throw new Exception('Vui lòng chỉ định phiên bản cần xóa');
+        }
+
+        return deleteVersionFromHistory($version);
     }
 
     /**
      * Test email configuration
      */
-    public function testEmail($testEmail = '')
+    public function testEmailConfig($testEmail)
     {
-        require_once __DIR__ . '/EmailService.php';
-        
-        // Validate email if provided
-        if (!empty($testEmail) && !filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
-            throw new \Exception('Địa chỉ email test không hợp lệ!');
+        if (empty($testEmail) || !filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception('Email test không hợp lệ');
         }
 
-        $emailService = new EmailService();
-        $result = $emailService->sendTestEmail($testEmail);
+        // Test email sending functionality
+        try {
+            $subject = 'Test Email Configuration - Tro365';
+            $message = 'Đây là email test để kiểm tra cấu hình email của hệ thống Tro365.';
 
-        if (!$result) {
-            $errors = $emailService->getErrors();
-            throw new \Exception('Không thể gửi email test: ' . implode(', ', $errors));
+            // Use your email sending function here
+            $result = sendTestEmail($testEmail, $subject, $message);
+
+            if ($result) {
+                return ['success' => true, 'message' => 'Email test đã được gửi thành công'];
+            } else {
+                return ['success' => false, 'message' => 'Không thể gửi email test'];
+            }
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Lỗi gửi email: ' . $e->getMessage()];
         }
-
-        return [
-            'success' => true,
-            'config_info' => $emailService->getConfigInfo()
-        ];
     }
 
     /**
-     * Test SMTP connection
+     * Get system statistics
      */
-    public function testSmtpConnection($smtpConfig)
-    {
-        require_once __DIR__ . '/EmailService.php';
-        
-        $emailService = new EmailService();
-        return $emailService->testConnection($smtpConfig);
-    }
-
-    /**
-     * Lưu TinyMCE API key
-     */
-    public function saveTinyMceApiKey($apiKey)
-    {
-        if (empty($apiKey)) {
-            throw new \Exception('TinyMCE API Key không được để trống!');
-        }
-
-        $this->config->setValue('tinymce_api_key', $apiKey);
-        return true;
-    }
-
-    /**
-     * Lưu cấu hình số phòng
-     */
-    public function saveRoomLimit($maxRooms)
-    {
-        $maxRooms = intval($maxRooms);
-        
-        if ($maxRooms < 1 || $maxRooms > 1000) {
-            throw new \Exception('Số phòng tối đa phải từ 1 đến 1000!');
-        }
-
-        $this->config->setValue('max_rooms_per_post', $maxRooms);
-        return $maxRooms;
-    }
-
-    /**
-     * Lấy thống kê số phòng
-     */
-    public function getRoomStatistics()
-    {
-        $totalPosts = $this->db->count('BaiDang', '1=1');
-        $avgRooms = $this->db->selectOne("SELECT AVG(SoPhong) as avg_rooms FROM BaiDang WHERE SoPhong > 0")['avg_rooms'] ?? 0;
-        $maxRooms = $this->db->selectOne("SELECT MAX(SoPhong) as max_rooms FROM BaiDang")['max_rooms'] ?? 0;
-        $currentLimit = $this->config->getValue('max_rooms_per_post', '50');
-
-        return [
-            'total_posts' => $totalPosts,
-            'avg_rooms' => $avgRooms,
-            'max_rooms' => $maxRooms,
-            'current_limit' => $currentLimit
-        ];
-    }
-
-    /**
-     * Auto save settings
-     */
-    public function autoSave($data)
+    public function getSystemStats()
     {
         try {
-            if (isset($data['website_settings'])) {
-                $this->updateWebsiteSettings($data);
+            $stats = [];
+
+            // User statistics
+            $stats['users'] = [
+                'total' => $this->db->count('KhachHang'),
+                'active' => $this->db->count('KhachHang', 'TrangThai = 1'),
+                'sellers' => $this->db->count('KhachHang', 'VaiTroID = ' . ROLE_SELLER),
+                'pending_sellers' => $this->db->count('DangKySeller', 'TrangThai = 0')
+            ];
+
+            // Post statistics
+            $stats['posts'] = [
+                'total' => $this->db->count('BaiDang'),
+                'active' => $this->db->count('BaiDang', 'TrangThai = 1'),
+                'pending' => $this->db->count('BaiDang', 'TrangThai = 0'),
+                'expired' => $this->db->count('BaiDang', 'NgayHetHan < NOW()')
+            ];
+
+            // Contact statistics
+            $stats['contacts'] = [
+                'total' => $this->db->count('LienHe'),
+                'pending' => $this->db->count('LienHe', 'TrangThai = 0'),
+                'resolved' => $this->db->count('LienHe', 'TrangThai = 2')
+            ];
+
+            return $stats;
+        } catch (Exception $e) {
+            error_log("Error getting system stats: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Clear system cache
+     */
+    public function clearCache()
+    {
+        try {
+            // Clear various cache types
+            $cleared = [];
+
+            // Clear file cache if exists
+            $cacheDir = dirname(__DIR__, 2) . '/cache';
+            if (is_dir($cacheDir)) {
+                $files = glob($cacheDir . '/*');
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        unlink($file);
+                    }
+                }
+                $cleared[] = 'File cache';
             }
-            
-            if (isset($data['system_settings'])) {
-                $this->updateSystemSettings($data);
+
+            // Clear session cache
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_destroy();
+                $cleared[] = 'Session cache';
             }
-            
-            if (isset($data['email_settings'])) {
-                $this->updateEmailSettings($data);
+
+            // Clear opcode cache if available
+            if (function_exists('opcache_reset')) {
+                opcache_reset();
+                $cleared[] = 'Opcode cache';
             }
-            
-            if (isset($data['seo_settings'])) {
-                $this->updateSeoSettings($data);
-            }
-            
-            return true;
-        } catch (\Exception $e) {
-            throw new \Exception('Lỗi auto-save: ' . $e->getMessage());
+
+            return [
+                'success' => true,
+                'message' => 'Cache đã được xóa: ' . implode(', ', $cleared)
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Lỗi xóa cache: ' . $e->getMessage()
+            ];
         }
     }
 }

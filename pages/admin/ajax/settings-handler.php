@@ -154,7 +154,7 @@ try {
 
             // Load EmailService
             require_once __DIR__ . '/../../../classes/services/EmailService.php';
-            $emailService = new \Tro365\EmailService();
+            $emailService = new \Tro365\Services\EmailService();
 
             // Send test email
             $result = $emailService->sendTestEmail($testEmail);
@@ -203,7 +203,7 @@ try {
 
             // Load EmailService
             require_once __DIR__ . '/../../../classes/services/EmailService.php';
-            $emailService = new \Tro365\EmailService();
+            $emailService = new \Tro365\Services\EmailService();
 
             // Test SMTP connection
             $result = $emailService->testConnection($smtpConfig);

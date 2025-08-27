@@ -3341,7 +3341,7 @@ body {
 /* ===== TOAST NOTIFICATIONS ===== */
 .toast-container {
   position: fixed;
-  top: 20px;
+  top: 100px;
   right: 20px;
   z-index: 10000;
   display: flex;
@@ -3455,7 +3455,7 @@ body {
 /* Mobile responsive toast */
 @media (max-width: 768px) {
   .toast-container {
-    top: 10px;
+    top: 90px;
     right: 10px;
     left: 10px;
     max-width: none;

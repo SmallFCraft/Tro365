@@ -182,9 +182,9 @@ const lazyLoadingCSS = `
 `;
 
 // Inject CSS
-const style = document.createElement("style");
-style.textContent = lazyLoadingCSS;
-document.head.appendChild(style);
+const lazyStyle = document.createElement("style");
+lazyStyle.textContent = lazyLoadingCSS;
+document.head.appendChild(lazyStyle);
 
 // Auto-initialize on DOM ready
 document.addEventListener("DOMContentLoaded", () => {

@@ -592,30 +592,12 @@ function generateReport() {
 function bulkUpdateStatus(status) {
     const checkedBoxes = document.querySelectorAll('.transaction-checkbox:checked');
     if (checkedBoxes.length === 0) {
-        // Show proper validation message
-        const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white bg-warning border-0 position-fixed';
-        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
-        toast.setAttribute('role', 'alert');
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Vui lòng chọn ít nhất một giao dịch
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        
-        toast.addEventListener('hidden.bs.toast', () => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        });
+        // Show proper validation message (unified)
+        if (window.TroToast && typeof window.TroToast.show === 'function') {
+            window.TroToast.show({ message: 'Vui lòng chọn ít nhất một giao dịch', type: 'warning', duration: 3000 });
+        } else {
+            alert('Vui lòng chọn ít nhất một giao dịch');
+        }
         return;
     }
 

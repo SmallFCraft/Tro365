@@ -205,57 +205,57 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
 
         <div class="team-grid">
             <div class="team-card">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"
+                <img src="/assets/images/default/avatar.svg"
                      alt="CEO" class="team-avatar">
                 <h5 class="fw-bold mb-2">Phạm Văn Huy</h5>
                 <p class="text-primary mb-2">CEO & Founder</p>
                 <p class="text-muted mb-3">10+ năm kinh nghiệm trong lĩnh vực bất động sản và công nghệ. Tốt nghiệp MBA tại ĐH Kinh tế Quốc dân.</p>
                 <div class="d-flex justify-content-center gap-2">
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fab fa-linkedin"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fab fa-twitter"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fas fa-envelope"></i>
                     </a>
                 </div>
             </div>
 
             <div class="team-card">
-                <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face"
+                <img src="/assets/images/default/avatar.svg"
                      alt="CTO" class="team-avatar">
                 <h5 class="fw-bold mb-2">Nguyễn Thị Lan</h5>
                 <p class="text-primary mb-2">CTO</p>
                 <p class="text-muted mb-3">Chuyên gia công nghệ với 8+ năm kinh nghiệm phát triển sản phẩm. Chuyên về AI/ML và kiến trúc hệ thống.</p>
                 <div class="d-flex justify-content-center gap-2">
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fab fa-github"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fab fa-linkedin"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fas fa-envelope"></i>
                     </a>
                 </div>
             </div>
 
             <div class="team-card">
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face"
+                <img src="/assets/images/default/avatar.svg"
                      alt="CMO" class="team-avatar">
                 <h5 class="fw-bold mb-2">Trần Minh Đức</h5>
                 <p class="text-primary mb-2">CMO</p>
                 <p class="text-muted mb-3">Chuyên gia marketing với kinh nghiệm xây dựng thương hiệu mạnh. Từng làm việc tại các startup unicorn.</p>
                 <div class="d-flex justify-content-center gap-2">
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fab fa-linkedin"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fab fa-facebook"></i>
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm" onclick="return false;">
                         <i class="fas fa-envelope"></i>
                     </a>
                 </div>
@@ -360,12 +360,23 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            const href = this.getAttribute('href');
+            // Skip empty or invalid selectors
+            if (!href || href === '#' || href.length <= 1) {
+                return;
+            }
+            try {
+                const target = document.querySelector(href);
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            } catch (error) {
+                if (window.TRO365_DEBUG) {
+                    console.warn('Invalid selector for smooth scrolling:', href, error);
+                }
             }
         });
     });

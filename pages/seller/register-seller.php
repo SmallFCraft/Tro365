@@ -10,13 +10,13 @@ use Tro365\Core\Auth;
 use Tro365\Models\User;
 use Tro365\Services\Upload;
 use Tro365\Core\Database;
-use Tro365\Activity;
-use Tro365\DataConsistency;
+use Tro365\Models\Activity;
+use Tro365\Services\DataConsistencyService;
 
 $auth = new Auth();
 $user = new User();
 $db = Database::getInstance();
-$dataConsistency = new DataConsistency();
+$dataConsistency = new DataConsistencyService();
 
 $error = '';
 $success = '';
@@ -53,33 +53,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'TrangThai' => 1 // Active account
             ];
 
-            // Validate required fields for new user
-            if (empty($userData['HoTen']) || empty($userData['TenDN']) || empty($userData['Email']) || empty($userData['MatKhau'])) {
-                throw new Exception('Vui lòng nhập đầy đủ thông tin bắt buộc');
+            // Server-side validation using ModernValidator (Respect/Validation)
+            $validation = \Tro365\Helpers\ModernValidator::quick($userData + [
+                'confirm_password' => $_POST['confirm_password'] ?? ''
+            ], [
+                'HoTen' => ['required' => true, 'length' => [3, 100]],
+                'TenDN' => ['required' => true, 'length' => [3, 50]],
+                'Email' => ['required' => true, 'email' => true],
+                'MatKhau' => ['required' => true, 'length' => [6, 255]],
+                'confirm_password' => ['confirm' => 'MatKhau'],
+                'SDT' => ['custom' => [function($v){ return empty($v) || preg_match('/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/', $v); }, 'Số điện thoại không hợp lệ']]
+            ]);
+
+            if (!$validation['valid']) {
+                throw new Exception(implode('. ', array_values($validation['errors'])));
             }
 
-            if (strlen($userData['MatKhau']) < 6) {
-                throw new Exception('Mật khẩu phải có ít nhất 6 ký tự');
-            }
-
-            // Confirm password match (for seller flow)
-            if (($_POST['confirm_password'] ?? '') !== ($userData['MatKhau'] ?? '')) {
-                throw new Exception('Mật khẩu xác nhận không khớp');
-            }
-
-            if (!isValidEmail($userData['Email'])) {
-                throw new Exception('Email không hợp lệ');
-            }
-
-            if (!empty($userData['SDT']) && !isValidPhone($userData['SDT'])) {
-                throw new Exception('Số điện thoại không hợp lệ');
-            }
-
-            // Check if username or email already exists
+            // Check if username or email already exists (server-side uniqueness)
             if ($user->getByUsername($userData['TenDN'])) {
                 throw new Exception('Tên đăng nhập đã tồn tại');
             }
-
             if ($user->getByEmail($userData['Email'])) {
                 throw new Exception('Email đã được sử dụng');
             }

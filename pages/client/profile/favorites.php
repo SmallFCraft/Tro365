@@ -465,14 +465,25 @@ async function removeFavorite(postId) {
         const data = await response.json();
         
         if (data.success) {
+            if (window.TroToast && typeof window.TroToast.show === 'function') {
+                window.TroToast.show({ message: 'Đã bỏ yêu thích', type: 'success', duration: 2000 });
+            }
             // Reload page to update the list
             window.location.reload();
         } else {
-            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            if (window.TroToast && typeof window.TroToast.show === 'function') {
+                window.TroToast.show({ message: 'Có lỗi xảy ra. Vui lòng thử lại.', type: 'error', duration: 3000 });
+            } else {
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            }
         }
     } catch (error) {
         console.error('Error removing favorite:', error);
-        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        if (window.TroToast && typeof window.TroToast.show === 'function') {
+            window.TroToast.show({ message: 'Có lỗi xảy ra. Vui lòng thử lại.', type: 'error', duration: 3000 });
+        } else {
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        }
     }
 }
 

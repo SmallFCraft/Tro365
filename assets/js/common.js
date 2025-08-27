@@ -313,7 +313,22 @@ window.Tro365Common = {
     this.ajaxRequest("/api/toggle-favorite", {
       body: JSON.stringify({ postId: postId }),
     })
-      .then(response => response.json())
+      .then(res => {
+        // If using modern http client, res is already parsed JSON
+        if (
+          res &&
+          typeof res === "object" &&
+          (res.success !== undefined || res.data !== undefined)
+        ) {
+          return res;
+        }
+        // Fallback: assume fetch Response
+        if (res && typeof res.json === "function") {
+          return res.json();
+        }
+        // Unknown type
+        return Promise.reject(new Error("Unexpected response type"));
+      })
       .then(data => {
         if (data.success) {
           // For post-detail page compatibility

@@ -162,15 +162,15 @@ window.Tro365Auth = {
       document.body.classList.add("reduce-motion");
 
       // Disable animations for users who prefer reduced motion
-      const style = document.createElement("style");
-      style.textContent = `
+      const authStyle = document.createElement("style");
+      authStyle.textContent = `
         .reduce-motion * {
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
           transition-duration: 0.01ms !important;
         }
       `;
-      document.head.appendChild(style);
+      document.head.appendChild(authStyle);
     }
 
     // Optimize backdrop-filter for better performance

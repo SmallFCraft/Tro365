@@ -28,9 +28,10 @@ RewriteRule ^classes/ - [F,L]
 # Prevent access to includes directory
 RewriteRule ^includes/ - [F,L]
 
-# Handle sitemap.xml and robots.txt BEFORE other rules
+# Handle sitemap.xml, robots.txt, and favicon BEFORE other rules
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^robots\.txt$ robots.php [L]
+RewriteRule ^favicon\.ico$ assets/images/logo/favicon.ico [L]
 
 # Allow access to assets
 RewriteRule ^assets/ - [L]

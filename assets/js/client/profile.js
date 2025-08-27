@@ -422,40 +422,12 @@ class ProfileManager {
   }
 
   /* ===== UTILITY METHODS ===== */
-  showToast(message, type = "info") {
-    // Create toast notification
-    const toast = document.createElement("div");
-    toast.className = `toast-notification toast-${type}`;
-    toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--glass-bg-strong);
-            backdrop-filter: var(--backdrop-filter);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            color: var(--text-primary);
-            z-index: 9999;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        `;
-    toast.textContent = message;
-
-    document.body.appendChild(toast);
-
-    // Animate in
-    setTimeout(() => {
-      toast.style.transform = "translateX(0)";
-    }, 10);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-      toast.style.transform = "translateX(100%)";
-      setTimeout(() => {
-        document.body.removeChild(toast);
-      }, 300);
-    }, 3000);
+  showToast(message, type = "info", duration = 3000) {
+    if (window.TroToast && typeof window.TroToast.show === "function") {
+      window.TroToast.show({ message, type, duration });
+      return;
+    }
+    alert(message);
   }
 
   /* ===== ACTIVITY CARDS INTERACTIONS ===== */

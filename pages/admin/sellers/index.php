@@ -6,13 +6,13 @@
 
 use Tro365\Core\Auth;
 use Tro365\Core\Database;
-use Tro365\DataConsistency;
+use Tro365\Services\DataConsistencyService;
 use Tro365\Services\LocationService;
-use Tro365\Activity;
+use Tro365\Models\Activity;
 
 $auth = new Auth();
 $db = Database::getInstance();
-$dataConsistency = new DataConsistency();
+$dataConsistency = new DataConsistencyService();
 $locationService = new LocationService();
 
 // Require admin/moderator role
@@ -781,7 +781,8 @@ function showToast(type, message) {
 function createToastContainer() {
     const container = document.createElement('div');
     container.id = 'toastContainer';
-    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.className = 'toast-container position-fixed end-0 p-3';
+    container.style.top = '100px';
     container.style.zIndex = '9999';
     document.body.appendChild(container);
     return container;

@@ -197,3 +197,22 @@ function getMaxRoomsPerPost() {
 
     return $maxRooms;
 }
+
+// PSR-4 backward-compatibility class aliases (old classes moved to proper namespaces)
+// Map Old class -> New namespace for backward compatibility
+if (!class_exists('Tro365\\Contact') && class_exists('Tro365\\Models\\Contact')) {
+    class_alias('Tro365\\Models\\Contact', 'Tro365\\Contact');
+}
+if (!class_exists('Tro365\\Activity') && class_exists('Tro365\\Models\\Activity')) {
+    class_alias('Tro365\\Models\\Activity', 'Tro365\\Activity');
+}
+if (!class_exists('Tro365\\DataConsistency') && class_exists('Tro365\\Services\\DataConsistencyService')) {
+    class_alias('Tro365\\Services\\DataConsistencyService', 'Tro365\\DataConsistency');
+}
+if (!class_exists('Tro365\\SettingsController') && class_exists('Tro365\\Controllers\\SettingsController')) {
+    class_alias('Tro365\\Controllers\\SettingsController', 'Tro365\\SettingsController');
+}
+if (!class_exists('Tro365\\DebugManager') && class_exists('Tro365\\Services\\DebugManager')) {
+    class_alias('Tro365\\Services\\DebugManager', 'Tro365\\DebugManager');
+}
+

@@ -225,11 +225,11 @@ class Database
         }
 
         try {
-            // Check debug mode without triggering more queries
-            if (defined('APP_DEBUG') && APP_DEBUG) {
+            // Check debug mode using the helper function
+            if (function_exists('isDebugModeEnabled') && isDebugModeEnabled()) {
                 // Add to Debug Manager if available
-                if (class_exists('\Tro365\DebugManager')) {
-                    $debugManager = \Tro365\DebugManager::getInstance();
+                if (class_exists('\Tro365\Services\DebugManager')) {
+                    $debugManager = \Tro365\Services\DebugManager::getInstance();
                     $debugManager->addQuery($sql, $params, round($executionTime * 1000, 2)); // Convert to ms
                 }
             }
@@ -255,9 +255,9 @@ class Database
         error_log("Database Error: " . json_encode($error));
 
         // Add to Debug Manager if available
-        if (class_exists('\Tro365\DebugManager') && function_exists('isDebugModeEnabled') && isDebugModeEnabled()) {
+        if (class_exists('\Tro365\Services\DebugManager') && function_exists('isDebugModeEnabled') && isDebugModeEnabled()) {
             try {
-                $debugManager = \Tro365\DebugManager::getInstance();
+                $debugManager = \Tro365\Services\DebugManager::getInstance();
                 $debugManager->addError($exception->getMessage(), $exception->getFile(), $exception->getLine(), [
                     'sql' => $sql,
                     'params' => $params

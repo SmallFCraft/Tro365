@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../config/app.php';
 
 use Tro365\Core\Database;
 use Tro365\Core\Auth;
-use Tro365\Contact;
+use Tro365\Models\Contact;
 use Tro365\Services\LocationService;
 
 $db = Database::getInstance();
@@ -1884,9 +1884,9 @@ if ($auth->isLoggedIn()) {
                     }
 
                     // Show success message briefly
-                    if (data.data.message) {
-                        showToast(data.data.message, 'success');
-                    }
+                    const msg = (data.data && data.data.message)
+                      || (data.data && data.data.favorited ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+                    showToast(msg, 'success');
                 } else {
                     // Restore original state on error
                     heartIcon.className = originalHeartClasses;
@@ -1915,84 +1915,15 @@ if ($auth->isLoggedIn()) {
             });
         }
 
-        // Toast notification function
-        function showToast(message, type = 'info') {
-            // Remove existing toasts
-            const existingToasts = document.querySelectorAll('.toast-notification');
-            existingToasts.forEach(toast => toast.remove());
-
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `toast-notification toast-${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-
-            // Style the toast
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-                color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-                border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
-                border-radius: 12px;
-                padding: 12px 16px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 9999;
-                animation: slideInRight 0.3s ease-out;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                font-size: 14px;
-                max-width: 300px;
-                word-wrap: break-word;
-            `;
-
-            // Add CSS animations if not already added
-            if (!document.getElementById('toast-animations')) {
-                const style = document.createElement('style');
-                style.id = 'toast-animations';
-                style.textContent = `
-                    @keyframes slideInRight {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes slideOutRight {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(100%); opacity: 0; }
-                    }
-                    .toast-content {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                    .btn-favorite.loading {
-                        opacity: 0.7;
-                        pointer-events: none;
-                    }
-                    .btn-favorite.favorited {
-                        background: var(--danger-color) !important;
-                        border-color: var(--danger-color) !important;
-                        color: white !important;
-                    }
-                    .btn-favorite.favorited:hover {
-                        background: var(--danger-color) !important;
-                        border-color: var(--danger-color) !important;
-                    }
-                `;
-                document.head.appendChild(style);
+        // Toast notification (unified)
+        function showToast(message, type = 'info', duration = 3000) {
+            if (window.TroToast && typeof window.TroToast.show === 'function') {
+                window.TroToast.show({ message, type, duration });
+            } else {
+                alert(message);
             }
-
-            document.body.appendChild(toast);
-
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
         }
+
         
         function sharePost() {
             if (navigator.share) {

@@ -1055,7 +1055,7 @@ function buildSearchUrl($params = []) {
                                                     <span class="d-none d-md-inline"><?= $post['isFavorited'] ? 'Đã yêu thích' : 'Yêu thích' ?></span>
                                                 </button>
                                             <?php else: ?>
-                                                <button class="btn-favorite" onclick="redirectToLogin()" title="Đăng nhập để yêu thích">
+                                                <button class="btn-favorite" onclick="showToast('Vui lòng đăng nhập để sử dụng tính năng này','info'); setTimeout(function(){ redirectToLogin(); }, 1200); return false;" title="Đăng nhập để yêu thích">
                                                     <i class="far fa-heart"></i>
                                                     <span class="d-none d-md-inline">Yêu thích</span>
                                                 </button>
@@ -1254,70 +1254,15 @@ function buildSearchUrl($params = []) {
             });
         });
 
-        // Toast notification function (simplified and working like home.php)
-        function showToast(message, type = 'info') {
-            // Remove existing toasts
-            const existingToasts = document.querySelectorAll('.toast-notification');
-            existingToasts.forEach(toast => toast.remove());
-
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `toast-notification toast-${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-
-            // Add styles
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-                color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-                border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
-                border-radius: 12px;
-                padding: 12px 16px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 9999;
-                font-size: 14px;
-                max-width: 300px;
-                animation: slideInRight 0.3s ease-out;
-            `;
-
-            // Add animation keyframes if not exists
-            if (!document.querySelector('#toast-animations')) {
-                const style = document.createElement('style');
-                style.id = 'toast-animations';
-                style.textContent = `
-                    @keyframes slideInRight {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes slideOutRight {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(100%); opacity: 0; }
-                    }
-                    .toast-content {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                `;
-                document.head.appendChild(style);
+        // Toast notification (unified)
+        function showToast(message, type = 'info', duration = 3000) {
+            if (window.TroToast && typeof window.TroToast.show === 'function') {
+                window.TroToast.show({ message, type, duration });
+            } else {
+                alert(message);
             }
-
-            // Add to page
-            document.body.appendChild(toast);
-
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
         }
+
 
         // Global function for favorite toggle (copied from working home.php implementation)
         function toggleFavorite(postId, buttonElement) {

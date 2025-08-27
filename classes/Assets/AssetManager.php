@@ -79,8 +79,8 @@ class AssetManager
         $out[] = "<!-- Modern Meta Tags -->";
         $out[] = '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">';
         $out[] = '<meta name="theme-color" content="#667eea">';
-        $out[] = '<meta name="apple-mobile-web-app-capable" content="yes">';
-        $out[] = '<meta name="apple-mobile-web-app-status-bar-style" content="default">';
+        // Modern PWA capability meta (apple tag is deprecated)
+        $out[] = '<meta name="mobile-web-app-capable" content="yes">';
 
         // CSRF token if provided
         $csrf = $this->metaTags['csrf'] ?? (function_exists('csrf_token') ? csrf_token() : '');
@@ -88,9 +88,11 @@ class AssetManager
             $out[] = '<meta name="csrf-token" content="' . htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') . '">';
         }
 
-        // Preload critical
-        $out[] = '<link rel="preload" href="' . $this->url('/assets/js/modern/app.js') . '" as="script">';
-        $out[] = '<link rel="preload" href="' . $this->url('/assets/css/modern/utilities.css') . '" as="style">';
+        // Icons (avoid relying on /favicon.ico route)
+        $out[] = '<link rel="icon" href="' . $this->url('/assets/images/logo/favicon.ico') . '" type="image/x-icon">';
+        $out[] = '<link rel="apple-touch-icon" href="' . $this->url('/assets/images/logo/apple-touch-icon.png') . '">';
+
+        // Connection hints
         $out[] = '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
         $out[] = '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>';
 
@@ -112,6 +114,7 @@ class AssetManager
         $out[] = '<script src="' . $this->url('/assets/js/modern/http-client.js') . $this->ver() . '"></script>';
         $out[] = '<script src="' . $this->url('/assets/js/modern/dom-utils.js') . $this->ver() . '"></script>';
         $out[] = '<script src="' . $this->url('/assets/js/modern/form-validator.js') . $this->ver() . '"></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/modern/toast.js') . $this->ver() . '"></script>';
         $out[] = '<script src="' . $this->url('/assets/js/modern/app.js') . $this->ver() . '"></script>';
         // Local vendor libs
         $out[] = '<!-- Modern JavaScript Libraries (Local) -->';

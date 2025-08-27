@@ -48,8 +48,10 @@
             "Tro365\\Models\\": "classes/models/",
             "Tro365\\Services\\": "classes/services/",
             "Tro365\\Core\\": "classes/core/",
-            "Tro365\\": "classes/",
-            "Tro365\\Helpers\\": "classes/helpers/"
+            "Tro365\\Controllers\\": "classes/controllers/",
+            "Tro365\\Assets\\": "classes/assets/",
+            "Tro365\\Helpers\\": "classes/helpers/",
+            "Tro365\\": "classes/"
         },
         "files": [
             "includes/functions/helpers.php",

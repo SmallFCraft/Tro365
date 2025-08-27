@@ -252,17 +252,19 @@ class ImageGallery {
         }
       });
 
-      // Mouse wheel zoom
-      this.lightbox.addEventListener("wheel", e => {
-        if (!this.lightbox.classList.contains("active")) return;
-
-        e.preventDefault();
-        if (e.deltaY < 0) {
-          this.zoomIn();
-        } else {
-          this.zoomOut();
-        }
-      });
+      // Mouse wheel zoom (passive listener to avoid scroll-blocking; we don't call preventDefault)
+      this.lightbox.addEventListener(
+        "wheel",
+        e => {
+          if (!this.lightbox.classList.contains("active")) return;
+          if (e.deltaY < 0) {
+            this.zoomIn();
+          } else {
+            this.zoomOut();
+          }
+        },
+        { passive: true }
+      );
 
       // Double-click to zoom
       this.lightbox.addEventListener("dblclick", e => {
@@ -540,28 +542,36 @@ class ImageGallery {
     let startY = 0;
 
     if (this.lightbox) {
-      this.lightbox.addEventListener("touchstart", e => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      });
+      this.lightbox.addEventListener(
+        "touchstart",
+        e => {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        },
+        { passive: true }
+      );
 
-      this.lightbox.addEventListener("touchend", e => {
-        if (!this.lightbox.classList.contains("active")) return;
+      this.lightbox.addEventListener(
+        "touchend",
+        e => {
+          if (!this.lightbox.classList.contains("active")) return;
 
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = startX - endX;
-        const diffY = startY - endY;
+          const endX = e.changedTouches[0].clientX;
+          const endY = e.changedTouches[0].clientY;
+          const diffX = startX - endX;
+          const diffY = startY - endY;
 
-        // Only handle horizontal swipes
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-          if (diffX > 0) {
-            this.nextImage();
-          } else {
-            this.previousImage();
+          // Only handle horizontal swipes
+          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX > 0) {
+              this.nextImage();
+            } else {
+              this.previousImage();
+            }
           }
-        }
-      });
+        },
+        { passive: true }
+      );
     }
   }
 

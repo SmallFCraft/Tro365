@@ -44,8 +44,10 @@ if (isset($_SESSION['user_id'])) {
     <meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1d29" media="(prefers-color-scheme: dark)">
 
-    <!-- Preload critical resources for LCP optimization -->
+    <!-- Preload critical resources for LCP optimization (only on pages that use hero) -->
+    <?php if (!empty($hasHeroSection)) : ?>
     <link rel="preload" href="/assets/images/hero_section.jpg" as="image" fetchpriority="high">
+    <?php endif; ?>
 
     <!-- Preload critical CSS and fonts -->
     <link rel="preload" href="/assets/css/client/layouts.css" as="style">
@@ -112,6 +114,10 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Layout CSS (critical) -->
     <link href="/assets/css/client/layouts.css" rel="stylesheet">
+
+    <!-- Glass Morphism components (async) -->
+    <link rel="preload" href="/assets/css/client/glass-morphism.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="/assets/css/client/glass-morphism.css" rel="stylesheet"></noscript>
 
     <!-- Non-critical local CSS (async) -->
     <link rel="preload" href="/assets/css/components/common.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -390,7 +396,7 @@ if (isset($_SESSION['user_id'])) {
 
                         <div class="dropdown-section">
                             <h6 class="section-title">Hoạt động</h6>
-                            <a href="/profile/favorites" class="dropdown-item">
+                            <a href="/profile#favorites" class="dropdown-item">
                                 <i class="fas fa-heart" aria-hidden="true"></i>
                                 <span>Yêu thích</span>
                                 <?php if ($favoritesCount > 0): ?>
@@ -500,7 +506,7 @@ if (isset($_SESSION['user_id'])) {
                     <span>Bộ lọc</span>
                 </button>
             <?php endif; ?>
-            <a href="/profile/favorites" class="bottom-nav-item" aria-label="Yêu thích">
+            <a href="/profile#favorites" class="bottom-nav-item" aria-label="Yêu thích">
                 <i class="fas fa-heart" aria-hidden="true"></i>
                 <span>Yêu thích</span>
                 <?php if ($favoritesCount > 0): ?>

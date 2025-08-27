@@ -1026,7 +1026,7 @@ function getEmailService()
 
     if ($emailService === null) {
         require_once __DIR__ . '/../../classes/services/EmailService.php';
-        $emailService = new \Tro365\EmailService();
+        $emailService = new \Tro365\Services\EmailService();
     }
 
     return $emailService;
@@ -1521,7 +1521,7 @@ function getDataConsistencyInstance() {
     static $dataConsistency = null;
 
     if ($dataConsistency === null) {
-        $dataConsistency = new \Tro365\DataConsistency();
+        $dataConsistency = new \Tro365\Services\DataConsistencyService();
     }
 
     return $dataConsistency;

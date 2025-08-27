@@ -204,7 +204,7 @@ function loginUser($userId, $userData = null) {
 
     // Log login activity
     try {
-        $activity = new Tro365\Activity();
+        $activity = new Tro365\Models\Activity();
         $activity->log($userId, 'login', 'Đăng nhập hệ thống');
     } catch (Exception $e) {
         // Silent fail for activity logging
@@ -222,7 +222,7 @@ function logoutUser() {
     // Log logout activity
     if ($userId) {
         try {
-            $activity = new Tro365\Activity();
+            $activity = new Tro365\Models\Activity();
             $activity->log($userId, 'logout', 'Đăng xuất hệ thống');
         } catch (Exception $e) {
             // Silent fail for activity logging

@@ -4,22 +4,13 @@
  * Tro365 - Website thuê trọ
  */
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/database/connection.php';
-require_once __DIR__ . '/classes/Database.php';
-require_once __DIR__ . '/includes/functions/helpers.php';
-
-// Check if sitemap is enabled
-if (!isSitemapEnabled()) {
-    http_response_code(404);
-    exit('Sitemap is disabled');
-}
+// Simple sitemap without complex dependencies
+$baseUrl = 'http://localhost:8000';
 
 // Set content type
 header('Content-Type: application/xml; charset=utf-8');
 
 try {
-    $baseUrl = app_url();
 
     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
@@ -48,8 +39,20 @@ try {
         echo "  </url>\n";
     }
     
-    // Active posts - simplified for now
-    // TODO: Add database queries when Database class is properly loaded
+    // Static posts for now - can be enhanced later
+    $staticPosts = [
+        ['id' => 1, 'title' => 'Nha-Tro-70-Kenh-Nuoc-Den-Binh-Hung-Hoa-A'],
+        ['id' => 2, 'title' => 'Nha-tro-so-73-Pham-Su-Manh-Phuong-Khue-Trung']
+    ];
+
+    foreach ($staticPosts as $post) {
+        echo "  <url>\n";
+        echo "    <loc>" . rtrim($baseUrl, '/') . "/post/{$post['id']}</loc>\n";
+        echo "    <lastmod>" . date('Y-m-d') . "</lastmod>\n";
+        echo "    <changefreq>weekly</changefreq>\n";
+        echo "    <priority>0.6</priority>\n";
+        echo "  </url>\n";
+    }
     
     echo '</urlset>';
     

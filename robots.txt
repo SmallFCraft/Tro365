@@ -23,7 +23,7 @@ Allow: /uploads/posts/
 Allow: /uploads/avatars/
 
 # Sitemap location
-Sitemap: https://tro.loading99.site/sitemap.xml
+Sitemap: http://localhost:8000/sitemap.php
 
 # Crawl delay for different bots
 User-agent: Googlebot

@@ -5,9 +5,9 @@
  */
 
 require_once __DIR__ . '/../../config/app.php';
-require_once __DIR__ . '/../../classes/SettingsController.php';
+require_once __DIR__ . '/../../classes/controllers/SettingsController.php';
 
-use Tro365\SettingsController;
+use Tro365\Controllers\SettingsController;
 
 // Initialize controller
 $settingsController = new SettingsController();

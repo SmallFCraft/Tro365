@@ -1,12 +1,12 @@
 <?php
 /**
- * Debug Manager Class
+ * Debug Manager Service
  * Tro365 - Website thuê trọ
  * 
  * Central debug controller for comprehensive debugging
  */
 
-namespace Tro365;
+namespace Tro365\Services;
 
 class DebugManager
 {
@@ -41,8 +41,8 @@ class DebugManager
     private function isDebugEnabled()
     {
         try {
-            // Use APP_DEBUG constant to avoid database queries during initialization
-            return defined('APP_DEBUG') && APP_DEBUG;
+            // Use the same logic as isDebugModeEnabled() helper function
+            return function_exists('isDebugModeEnabled') ? isDebugModeEnabled() : false;
         } catch (Exception $e) {
             return false;
         }
@@ -235,7 +235,7 @@ class DebugManager
         $debugData = $this->getAllDebugData();
         
         ob_start();
-        include __DIR__ . '/../includes/debug/debug-panel.php';
+        include dirname(__DIR__, 2) . '/includes/debug/debug-panel.php';
         return ob_get_clean();
     }
 }

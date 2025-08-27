@@ -302,12 +302,23 @@ class ContactPageManager {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener("click", function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute("href"));
-        if (target) {
-          target.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+        const href = this.getAttribute("href");
+        // Skip empty or invalid selectors
+        if (!href || href === "#" || href.length <= 1) {
+          return;
+        }
+        try {
+          const target = document.querySelector(href);
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        } catch (error) {
+          if (window.TRO365_DEBUG) {
+            console.warn("Invalid selector for smooth scrolling:", href, error);
+          }
         }
       });
     });
@@ -368,45 +379,14 @@ class ContactPageManager {
   }
 
   /**
-   * Show toast notification
+   * Show toast notification (unified)
    */
-  showToast(message, type = "info") {
-    // Remove existing toast
-    const existingToast = document.querySelector(".toast-notification");
-    if (existingToast) {
-      existingToast.remove();
+  showToast(message, type = "info", duration = 3000) {
+    if (window.TroToast && typeof window.TroToast.show === "function") {
+      window.TroToast.show({ message, type, duration });
+      return;
     }
-
-    // Create toast element
-    const toast = document.createElement("div");
-    toast.className = `toast-notification toast-${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--glass-bg-strong);
-            backdrop-filter: var(--backdrop-filter);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            color: var(--text-primary);
-            z-index: 9999;
-            animation: slideInRight 0.3s ease;
-            box-shadow: var(--glass-shadow);
-        `;
-
-    document.body.appendChild(toast);
-
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-      toast.style.animation = "slideOutRight 0.3s ease";
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.remove();
-        }
-      }, 300);
-    }, 3000);
+    alert(message);
   }
 }
 
@@ -416,8 +396,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Add CSS animations for toast
-const style = document.createElement("style");
-style.textContent = `
+const contactStyle = document.createElement("style");
+contactStyle.textContent = `
     @keyframes slideInRight {
         from {
             opacity: 0;
@@ -470,4 +450,4 @@ style.textContent = `
         box-shadow: 0 0 0 3px rgba(var(--danger-rgb), 0.1);
     }
 `;
-document.head.appendChild(style);
+document.head.appendChild(contactStyle);

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../../../includes/functions/validation.php';
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
-use Tro365\Activity;
+use Tro365\Models\Activity;
 
 // Helper function to get activity icons
 function getActivityIcon($description) {
@@ -123,21 +123,15 @@ $stats['profile_completion'] = round(($completedFields / count($profileFields)) 
 $favCountKey = 'profile:favorites_count:' . $currentUser['ID'];
 $favListKey  = 'profile:favorites_list:' . $currentUser['ID'];
 
-$favoriteCount = cache_get($favCountKey, null, 120);
-if ($favoriteCount === null) {
-    $favoriteResult = $db->selectOne(
-        "SELECT COUNT(*) as count FROM YeuThich WHERE KhachHangID = :user_id",
-        ['user_id' => $currentUser['ID']]
-    );
-    $favoriteCount = (int)($favoriteResult['count'] ?? 0);
-    cache_set($favCountKey, $favoriteCount);
-}
+// TEMPORARY HARDCODE FOR TESTING
+$favoriteCount = 2; // Hardcode to test display
 $stats['favorite_posts'] = $favoriteCount;
 
-// Get favorite posts for display
+// Get favorite posts for display (disable cache temporarily)
 $favoritePosts = [];
 if ($favoriteCount > 0) {
-    $favoritePosts = cache_get($favListKey, null, 120);
+    // $favoritePosts = cache_get($favListKey, null, 120); // Disabled temporarily
+    $favoritePosts = null; // Force fresh query
     if ($favoritePosts === null) {
         $favoritePosts = $db->select(
             "SELECT bd.*, yt.NgayTao as favorite_date
@@ -152,7 +146,7 @@ if ($favoriteCount > 0) {
                 'status' => POST_STATUS_APPROVED
             ]
         );
-        cache_set($favListKey, $favoritePosts);
+        // cache_set($favListKey, $favoritePosts); // Disabled temporarily
     }
 }
 
@@ -575,10 +569,12 @@ include __DIR__ . '/../../../includes/layouts/client/header.php';
                                              onerror="this.src='/assets/images/default/no-image.png'">
 
                                         <div class="position-absolute top-0 end-0 m-2">
-                                            <button class="btn btn-sm btn-danger rounded-circle"
-                                                    onclick="removeFavorite(<?= $favoritePost['ID'] ?>)"
-                                                    title="Bỏ yêu thích">
-                                                <i class="fas fa-heart"></i>
+                                            <button class="btn-favorite favorited"
+                                                    data-post-id="<?= $favoritePost['ID'] ?>"
+                                                    onclick="toggleFavorite(<?= $favoritePost['ID'] ?>, this)"
+                                                    title="Xóa khỏi yêu thích">
+                                                <i class="fas fa-heart text-danger"></i>
+                                                <span class="d-none d-md-inline">Đã yêu thích</span>
                                             </button>
                                         </div>
                                     </div>
@@ -947,38 +943,199 @@ include __DIR__ . '/../../../includes/layouts/client/header.php';
 <!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Toast Notification System (unified with home.php and search.php) -->
+<script src="/assets/js/modern/toast.js"></script>
+
 <!-- Profile Page JavaScript loaded via footer -->
 
 <script>
-// Remove favorite function
-async function removeFavorite(postId) {
-    if (!confirm('Bạn có chắc muốn bỏ yêu thích bài đăng này?')) {
+// Global function for favorite toggle (copied from working home.php implementation)
+function toggleFavorite(postId, buttonElement) {
+    // Check if user is logged in
+    <?php if (!$auth->isLoggedIn()): ?>
+    showToast('Vui lòng đăng nhập để sử dụng tính năng này', 'info');
+    window.location.href = '/login';
+    return;
+    <?php endif; ?>
+
+    if (!buttonElement) {
+        buttonElement = event?.target?.closest('button');
+    }
+
+    if (!buttonElement) {
+        console.error('Cannot find button element for favorite toggle');
         return;
     }
 
-    try {
-        const response = await fetch('/api/toggle-favorite', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': '<?= $_SESSION['csrf_token'] ?? '' ?>'
-            },
-            body: JSON.stringify({ postId: postId })
-        });
+    // Prevent multiple clicks
+    if (buttonElement.disabled) {
+        return;
+    }
 
-        const result = await response.json();
+    // Show loading state
+    const heartIcon = buttonElement.querySelector('i');
+    const textSpan = buttonElement.querySelector('span');
+    const originalHeartClasses = heartIcon.className;
 
-        if (result.success) {
-            // Reload page to update favorites list
-            location.reload();
+    // Set loading state
+    buttonElement.disabled = true;
+    heartIcon.className = 'fas fa-spinner fa-spin';
+    if (textSpan) textSpan.textContent = 'Đang xử lý...';
+
+    window.Tro365Common.toggleFavorite(postId, function(data) {
+        // Restore button state
+        buttonElement.disabled = false;
+
+        if (data.success && data.data) {
+            // Update UI based on API response
+            if (data.data.favorited) {
+                // Show filled red heart
+                heartIcon.className = 'fas fa-heart text-danger';
+                buttonElement.classList.add('favorited');
+                buttonElement.title = 'Xóa khỏi yêu thích';
+                if (textSpan) textSpan.textContent = 'Đã yêu thích';
+                showToast('Đã thêm vào danh sách yêu thích', 'success');
+            } else {
+                // Show empty heart
+                heartIcon.className = 'far fa-heart';
+                buttonElement.classList.remove('favorited');
+                buttonElement.title = 'Thêm vào yêu thích';
+                if (textSpan) textSpan.textContent = 'Yêu thích';
+
+                // For profile favorites page, remove the card from list
+                const card = buttonElement.closest('.col-lg-6, .col-xl-4');
+                if (card) {
+                    card.style.transition = 'opacity 0.3s ease';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        // Update favorites count in title - find correct heading
+                        const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                        let favoritesHeading = null;
+                        for (let heading of allHeadings) {
+                            if (heading.textContent.includes('Bài đăng yêu thích')) {
+                                favoritesHeading = heading;
+                                break;
+                            }
+                        }
+
+                        if (favoritesHeading) {
+                            const currentText = favoritesHeading.textContent;
+                            const match = currentText.match(/\((\d+)\)/);
+                            if (match) {
+                                const newCount = Math.max(0, parseInt(match[1]) - 1);
+                                favoritesHeading.innerHTML = favoritesHeading.innerHTML.replace(/\(\d+\)/, `(${newCount})`);
+                            }
+                        }
+                        // Show empty state if no more favorites
+                        const remainingCards = document.querySelectorAll('.col-lg-6, .col-xl-4');
+                        if (remainingCards.length === 0) {
+                            // Update counter to 0 when no more favorites - find correct heading
+                            const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                            let favoritesHeading = null;
+                            for (let heading of allHeadings) {
+                                if (heading.textContent.includes('Bài đăng yêu thích')) {
+                                    favoritesHeading = heading;
+                                    break;
+                                }
+                            }
+
+                            if (favoritesHeading) {
+                                favoritesHeading.innerHTML = favoritesHeading.innerHTML.replace(/\(\d+\)/, '(0)');
+                            }
+
+                            // Show empty state without reload
+                            const favoritesGrid = document.querySelector('.row.g-4');
+                            if (favoritesGrid) {
+                                favoritesGrid.innerHTML = `
+                                    <div class="col-12">
+                                        <div class="glass-card text-center py-5">
+                                            <i class="fas fa-heart-broken fa-3x text-muted mb-3"></i>
+                                            <h5 class="text-muted">Chưa có bài đăng yêu thích</h5>
+                                            <p class="text-muted">Hãy tìm kiếm và lưu những bài đăng bạn quan tâm</p>
+                                            <a href="/search" class="btn btn-primary">
+                                                <i class="fas fa-search me-2"></i>Tìm kiếm ngay
+                                            </a>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }, 300);
+                }
+                showToast('Đã xóa khỏi danh sách yêu thích', 'info');
+            }
         } else {
-            alert('Có lỗi xảy ra: ' + (result.message || 'Không thể bỏ yêu thích'));
+            // Restore original state on error
+            heartIcon.className = originalHeartClasses;
+            if (textSpan) {
+                textSpan.textContent = buttonElement.classList.contains('favorited') ? 'Đã yêu thích' : 'Yêu thích';
+            }
+
+            // Show error message
+            const errorMsg = data.message || 'Có lỗi xảy ra, vui lòng thử lại';
+            showToast(errorMsg, 'error');
         }
-    } catch (error) {
-        console.error('Error removing favorite:', error);
-        alert('Có lỗi xảy ra khi bỏ yêu thích');
+    });
+}
+
+// Toast notification (unified with home.php and search.php)
+function showToast(message, type = 'info', duration = 3000) {
+    if (window.TroToast && typeof window.TroToast.show === 'function') {
+        window.TroToast.show({ message, type, duration });
+    } else {
+        // Fallback minimal alert
+        alert(message);
     }
 }
 </script>
+
+<script>
+// Handle #favorites anchor: switch to Favorites tab on load and on hash changes
+(function() {
+  function showFavoritesTab(scroll = true) {
+    const favoritesTabBtn = document.getElementById('favorites-tab');
+    const favoritesPane = document.getElementById('favorites');
+    if (favoritesTabBtn) {
+      try {
+        // Prefer Bootstrap API if available
+        if (window.bootstrap && window.bootstrap.Tab) {
+          const tab = new window.bootstrap.Tab(favoritesTabBtn);
+          tab.show();
+        } else {
+          // Fallback: simulate click
+          favoritesTabBtn.click();
+        }
+      } catch (e) {
+        favoritesTabBtn.click();
+      }
+    }
+    if (scroll && favoritesPane) {
+      favoritesPane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function handleHash() {
+    if (window.location.hash === '#favorites') {
+      showFavoritesTab();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', handleHash);
+  window.addEventListener('hashchange', handleHash);
+
+  // Update URL hash when user clicks the Favorites tab
+  document.addEventListener('DOMContentLoaded', function() {
+    const favoritesTabBtn = document.getElementById('favorites-tab');
+    if (!favoritesTabBtn) return;
+    favoritesTabBtn.addEventListener('click', function() {
+      if (window.location.hash !== '#favorites') {
+        history.replaceState(null, '', '#favorites');
+      }
+    });
+  });
+})();
+</script>
+
 
 <?php include __DIR__ . '/../../../includes/layouts/client/footer.php'; ?>

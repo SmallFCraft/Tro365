@@ -784,7 +784,16 @@ class ModernNavigation {
         );
       },
       error => {
-        console.error("Geolocation error:", error);
+        // Avoid noisy console errors; log only in debug with minimal info
+        const errCode =
+          error && typeof error.code !== "undefined" ? error.code : "UNKNOWN";
+        const errMsg = error && error.message ? error.message : "";
+        if (window.TRO365_DEBUG) {
+          console.warn("Geolocation error:", {
+            code: errCode,
+            message: errMsg,
+          });
+        }
 
         let errorMessage = "Không thể xác định vị trí của bạn";
         switch (error.code) {
@@ -800,7 +809,9 @@ class ModernNavigation {
             errorMessage = "Hết thời gian chờ định vị. Vui lòng thử lại";
             break;
           default:
-            errorMessage = `Lỗi định vị: ${error.message}`;
+            errorMessage = errMsg
+              ? `Lỗi định vị: ${errMsg}`
+              : "Không thể xác định vị trí của bạn";
             break;
         }
 
@@ -1123,50 +1134,14 @@ class ModernNavigation {
     return currentPath === linkPath;
   }
 
-  // Toast notification system
+  // Toast notification system (delegates to unified TroToast)
   showToast(message, type = "info", duration = 5000) {
-    // Create toast container if it doesn't exist
-    let toastContainer = document.getElementById("toast-container");
-    if (!toastContainer) {
-      toastContainer = document.createElement("div");
-      toastContainer.id = "toast-container";
-      toastContainer.className = "toast-container";
-      document.body.appendChild(toastContainer);
+    if (window.TroToast && typeof window.TroToast.show === "function") {
+      window.TroToast.show({ message, type, duration });
+      return;
     }
-
-    // Create toast element
-    const toast = document.createElement("div");
-    toast.className = `toast toast-${type}`;
-
-    // Toast content
-    const icon = this.getToastIcon(type);
-    toast.innerHTML = `
-      <div class="toast-content">
-        <i class="${icon}"></i>
-        <span class="toast-message">${message}</span>
-        <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    `;
-
-    // Add to container
-    toastContainer.appendChild(toast);
-
-    // Show toast with animation
-    setTimeout(() => {
-      toast.classList.add("show");
-    }, 100);
-
-    // Auto remove after duration
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => {
-        if (toast.parentElement) {
-          toast.remove();
-        }
-      }, 300);
-    }, duration);
+    // Fallback (should rarely be needed)
+    alert(message);
   }
 
   getToastIcon(type) {

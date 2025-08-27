@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../includes/functions/auth.php';
 require_once __DIR__ . '/../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
-use Tro365\Contact;
+use Tro365\Models\Contact;
 
 $auth = new Auth();
 $contact = new Contact();
