@@ -4,6 +4,13 @@
  * Tro365 - Website thuê trọ
  */
 
+// Set JSON header
+header('Content-Type: application/json; charset=utf-8');
+
+// Include necessary files
+require_once __DIR__ . '/../../../config/app.php';
+require_once __DIR__ . '/../../../includes/functions/helpers.php';
+
 use Tro365\Core\Auth;
 use Tro365\Core\Database;
 use Tro365\DataConsistency;
@@ -11,32 +18,34 @@ use Tro365\DataConsistency;
 // Only allow AJAX requests
 if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
     http_response_code(403);
-    exit('Access denied');
+    echo json_encode(['success' => false, 'message' => 'Access denied']);
+    exit;
 }
 
-$auth = new Auth();
-$db = Database::getInstance();
-$dataConsistency = new DataConsistency();
-
-// Require admin/moderator role
+// Initialize with error handling
 try {
+    $auth = new Auth();
+    $db = Database::getInstance();
+    $dataConsistency = new DataConsistency();
+
+    // Require admin/moderator role
     $auth->requireModerator();
 } catch (Exception $e) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
+    echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập: ' . $e->getMessage()]);
     exit;
 }
 
 try {
     // Get pending sellers with complete user data
     $sql = "SELECT ds.*,
-                   kh.HoTen, kh.Email, kh.TenDN, kh.SDT as UserSDT,
-                   kh.DiaChi as UserDiaChi, kh.CCCD as UserCCCD
+                   kh.HoTen, kh.Email, kh.TenDN, kh.SDT,
+                   kh.DiaChi, kh.CCCD
             FROM DangKySeller ds
             LEFT JOIN KhachHang kh ON ds.KhachHangID = kh.ID
             WHERE ds.TrangThai = 0
             ORDER BY ds.NgayTao ASC";
-    
+
     $pendingSellers = $db->select($sql);
     
     if (empty($pendingSellers)) {
@@ -64,28 +73,27 @@ try {
                     <tbody>';
         
         foreach ($pendingSellers as $seller) {
-            // Get effective values using unified method (eliminates duplication)
-            $effectiveValues = $dataConsistency->getEffectiveSellerValues($seller);
-            $effectiveCCCD = $effectiveValues['CCCD'];
-            $effectivePhone = $effectiveValues['Phone'];
-            $effectiveEmail = $effectiveValues['Email'];
-            $effectiveAddress = $effectiveValues['Address'];
+            // Get effective values (seller-specific data takes priority over user data)
+            $effectiveCCCD = ($seller['SoCCCD'] ?? '') ?: ($seller['CCCD'] ?? '');
+            $effectivePhone = ($seller['SDTLienHe'] ?? '') ?: ($seller['SDT'] ?? '');
+            $effectiveEmail = ($seller['EmailLienHe'] ?? '') ?: ($seller['Email'] ?? '');
+            $effectiveAddress = ($seller['DiaChiKinhDoanh'] ?? '') ?: ($seller['DiaChi'] ?? '');
 
             $html .= '
                         <tr>
                             <td>
-                                <span class="fw-bold text-primary">#' . $seller['ID'] . '</span>
+                                <span class="fw-bold text-primary">#' . ($seller['ID'] ?? '') . '</span>
                             </td>
                             <td>
                                 <div>
-                                    <strong>' . e($seller['HoTenChuTro']) . '</strong>
+                                    <strong>' . e($seller['HoTenChuTro'] ?? $seller['HoTen'] ?? '') . '</strong>
                                 </div>
                                 <small class="text-muted">
                                     CCCD: ' . e($effectiveCCCD) . '
                                 </small>
                                 <br>
                                 <small class="text-muted">
-                                    User: ' . e($seller['TenDN']) . '
+                                    User: ' . e($seller['TenDN'] ?? '') . '
                                 </small>
                             </td>
                             <td>
@@ -95,9 +103,9 @@ try {
                             <td>
                                 <small>
                                     ' . e($effectiveAddress) . '';
-            
-            if ($seller['TenXP'] || $seller['TenQH'] || $seller['TenTT']) {
-                $html .= '<br>' . e($seller['TenXP'] . ', ' . $seller['TenQH'] . ', ' . $seller['TenTT']);
+
+            if (($seller['TenXP'] ?? '') || ($seller['TenQH'] ?? '') || ($seller['TenTT'] ?? '')) {
+                $html .= '<br>' . e(($seller['TenXP'] ?? '') . ', ' . ($seller['TenQH'] ?? '') . ', ' . ($seller['TenTT'] ?? ''));
             }
             
             $html .= '

@@ -379,12 +379,11 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                 </thead>
                                 <tbody>
                                     <?php foreach ($sellers as $seller):
-                                        // Get effective values using unified method (eliminates duplication)
-                                        $effectiveValues = $dataConsistency->getEffectiveSellerValues($seller);
-                                        $effectiveCCCD = $effectiveValues['CCCD'];
-                                        $effectivePhone = $effectiveValues['Phone'];
-                                        $effectiveEmail = $effectiveValues['Email'];
-                                        $effectiveAddress = $effectiveValues['Address'];
+                                        // Get effective values (seller-specific data takes priority over user data)
+                                        $effectiveCCCD = ($seller['SoCCCD'] ?? '') ?: ($seller['CCCD'] ?? '');
+                                        $effectivePhone = ($seller['SDTLienHe'] ?? '') ?: ($seller['SDT'] ?? '');
+                                        $effectiveEmail = ($seller['EmailLienHe'] ?? '') ?: ($seller['Email'] ?? '');
+                                        $effectiveAddress = ($seller['DiaChiKinhDoanh'] ?? '') ?: ($seller['DiaChi'] ?? '');
                                     ?>
                                         <tr>
                                             <td><?= $seller['ID'] ?></td>
@@ -789,11 +788,14 @@ function createToastContainer() {
 }
 
 // Auto-submit form when status filter changes
-document.querySelector('select[name="status"]').addEventListener('change', function() {
-    this.form.submit();
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.querySelector('select[name="status"]');
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
 });
-
-
 
 // Other utility functions
 function exportSellers() {

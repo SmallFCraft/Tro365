@@ -178,11 +178,67 @@ if ($auth->isLoggedIn()) {
     }
     echo e($metaDescription);
     ?>">
-    <!-- Stylesheets -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- CRITICAL PERFORMANCE OPTIMIZATIONS -->
+    <!-- DNS prefetch and preconnect for faster resource loading -->
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Preload critical LCP image for immediate loading -->
+    <?php
+    $lcpImagePath = '';
+    if (!empty($images)) {
+        $lcpImagePath = $images[0]['DuongDan'];
+    } elseif (!empty($post['AnhDaiDien'])) {
+        $lcpImagePath = $post['AnhDaiDien'];
+    }
+
+    if ($lcpImagePath) {
+        // Check for optimized formats
+        $pathInfo = pathinfo($lcpImagePath);
+        $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+        $avifPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.avif';
+
+        // Preload AVIF if available
+        if (file_exists($_SERVER['DOCUMENT_ROOT'] . $avifPath)) {
+            echo '<link rel="preload" as="image" href="' . e($avifPath) . '" type="image/avif">';
+        }
+        // Preload WebP if available
+        elseif (file_exists($_SERVER['DOCUMENT_ROOT'] . $webpPath)) {
+            echo '<link rel="preload" as="image" href="' . e($webpPath) . '" type="image/webp">';
+        }
+        // Fallback to original
+        else {
+            echo '<link rel="preload" as="image" href="' . e($lcpImagePath) . '">';
+        }
+    }
+    ?>
+
+    <!-- Critical CSS inline for immediate rendering -->
+    <style>
+        /* Critical above-the-fold styles for immediate rendering */
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        .post-image-gallery { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 24px; padding: 1.5rem; margin-bottom: 2rem; }
+        .main-image-container { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 1.5rem; }
+        .main-image { width: 100%; height: 400px; object-fit: cover; display: block; }
+        .post-title { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: #212529; }
+        @media (max-width: 575.98px) { .main-image { height: 250px; } .post-title { font-size: 1.5rem; } }
+    </style>
+
+    <!-- Load critical CSS immediately -->
     <link href="/assets/css/client/main.css" rel="stylesheet">
     <link href="/assets/css/client/layouts.css" rel="stylesheet">
+    <link href="/assets/css/client/glass-morphism.css" rel="stylesheet">
+
+    <!-- Defer non-critical CSS to avoid render blocking -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></noscript>
+
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"></noscript>
 
     <!-- Post Detail Styles -->
     <style>
@@ -610,48 +666,27 @@ if ($auth->isLoggedIn()) {
             flex-wrap: wrap;
         }
 
-        .btn-favorite {
-            background: var(--glass-bg);
-            backdrop-filter: var(--backdrop-filter);
-            -webkit-backdrop-filter: var(--backdrop-filter);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-primary);
-            transition: all var(--transition-base);
-            font-weight: 500;
+        /* Glass Morphism Button Enhancements for Post Actions */
+        .btn-glass-primary.favorited {
+            background: linear-gradient(135deg,
+                    rgba(220, 53, 69, 0.3) 0%,
+                    rgba(220, 53, 69, 0.2) 100%);
+            border-color: rgba(220, 53, 69, 0.5);
+            color: #dc3545;
         }
 
-        .btn-favorite:hover {
-            background: var(--danger-color);
-            color: white;
-            border-color: var(--danger-color);
-            transform: translateY(-2px);
+        .btn-glass-primary.favorited:hover {
+            background: linear-gradient(135deg,
+                    rgba(220, 53, 69, 0.4) 0%,
+                    rgba(220, 53, 69, 0.3) 100%);
+            border-color: rgba(220, 53, 69, 0.6);
+            color: #dc3545;
         }
 
-        .btn-favorite.favorited {
-            background: var(--danger-color);
-            color: white;
-            border-color: var(--danger-color);
-        }
-
-        .btn-share {
-            background: var(--glass-bg);
-            backdrop-filter: var(--backdrop-filter);
-            -webkit-backdrop-filter: var(--backdrop-filter);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-primary);
-            transition: all var(--transition-base);
-            font-weight: 500;
-        }
-
-        .btn-share:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
+        /* Ensure proper spacing and alignment for post actions */
+        .post-actions .btn-glass {
+            min-width: 140px;
+            justify-content: center;
         }
 
         /* Post Details Grid */
@@ -1331,8 +1366,7 @@ if ($auth->isLoggedIn()) {
                 justify-content: center;
             }
 
-            .btn-favorite,
-            .btn-share {
+            .post-actions .btn-glass {
                 flex: 1;
                 text-align: center;
             }
@@ -1513,7 +1547,10 @@ if ($auth->isLoggedIn()) {
                                 'main-image',
                                 [
                                     'id' => 'mainImage',
-                                    'data-gallery-image' => e($images[0]['DuongDan'])
+                                    'data-gallery-image' => e($images[0]['DuongDan']),
+                                    'loading' => 'eager', // Critical LCP image - load immediately
+                                    'fetchpriority' => 'high', // High priority for LCP
+                                    'decoding' => 'sync' // Synchronous decoding for LCP
                                 ]
                             ) ?>
 
@@ -1567,7 +1604,10 @@ if ($auth->isLoggedIn()) {
                                 'main-image',
                                 [
                                     'id' => 'mainImage',
-                                    'data-gallery-image' => e($post['AnhDaiDien'])
+                                    'data-gallery-image' => e($post['AnhDaiDien']),
+                                    'loading' => 'eager', // Critical LCP image - load immediately
+                                    'fetchpriority' => 'high', // High priority for LCP
+                                    'decoding' => 'sync' // Synchronous decoding for LCP
                                 ]
                             ) ?>
 
@@ -1606,14 +1646,15 @@ if ($auth->isLoggedIn()) {
                                 <span><i class="fas fa-clock"></i> <?= timeAgo($post['NgayTao']) ?></span>
                             </div>
                         </div>
+                        <!-- Post Actions with Glass Morphism UI -->
                         <div class="post-actions">
                             <?php if ($auth->isLoggedIn()): ?>
-                                <button class="btn btn-favorite <?= $isFavorited ? 'favorited' : '' ?>" onclick="toggleFavorite(<?= $postId ?>)">
+                                <button class="btn-glass btn-glass-primary <?= $isFavorited ? 'favorited' : '' ?>" onclick="toggleFavorite(<?= $postId ?>)">
                                     <i class="fas fa-heart"></i>
                                     <span id="favoriteText"><?= $isFavorited ? 'Đã yêu thích' : 'Yêu thích' ?></span>
                                 </button>
                             <?php endif; ?>
-                            <button class="btn btn-share" onclick="sharePost()">
+                            <button class="btn-glass" onclick="sharePost()">
                                 <i class="fas fa-share"></i> Chia sẻ
                             </button>
                         </div>
@@ -1831,12 +1872,56 @@ if ($auth->isLoggedIn()) {
 
     <?php include __DIR__ . '/../../includes/layouts/client/footer.php'; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/client/image-gallery.js"></script>
+    <!-- Optimized JavaScript Loading -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="/assets/js/client/image-gallery.js" defer></script>
+
+    <!-- Performance optimization script -->
+    <script>
+        // Remove unused CSS after page load to reduce payload
+        window.addEventListener('load', function() {
+            // Remove unused Bootstrap components CSS
+            const unusedSelectors = [
+                '.accordion', '.alert', '.badge', '.breadcrumb', '.carousel',
+                '.dropdown-menu', '.list-group', '.modal', '.nav-tabs',
+                '.navbar', '.offcanvas', '.pagination', '.popover', '.progress',
+                '.spinner-border', '.toast', '.tooltip'
+            ];
+
+            // Create a style element to override unused styles
+            const style = document.createElement('style');
+            style.textContent = unusedSelectors.map(sel => `${sel} { display: none !important; }`).join('');
+            document.head.appendChild(style);
+
+            // Optimize images after load
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    this.style.opacity = '1';
+                    this.style.transition = 'opacity 0.3s ease';
+                });
+            });
+        });
+
+        // Preload next likely images for better UX
+        document.addEventListener('DOMContentLoaded', function() {
+            const gallery = document.querySelector('.thumbnail-container');
+            if (gallery) {
+                // Preload first 3 gallery images for smooth navigation
+                const hiddenImages = document.querySelectorAll('[data-gallery-image]');
+                for (let i = 1; i < Math.min(4, hiddenImages.length); i++) {
+                    const link = document.createElement('link');
+                    link.rel = 'prefetch';
+                    link.href = hiddenImages[i].dataset.galleryImage;
+                    document.head.appendChild(link);
+                }
+            }
+        });
+    </script>
     <script>
         
         function toggleFavorite(postId) {
-            const buttonElement = document.querySelector('.btn-favorite');
+            const buttonElement = document.querySelector('.btn-glass-primary');
             const heartIcon = buttonElement.querySelector('.fa-heart');
             const favoriteText = document.getElementById('favoriteText');
 

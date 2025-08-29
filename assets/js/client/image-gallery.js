@@ -27,8 +27,9 @@ class ImageGallery {
   }
 
   collectImages() {
+    // Collect all gallery images but exclude the main image to avoid duplication
     const imageElements = this.container.querySelectorAll(
-      "[data-gallery-image]"
+      "[data-gallery-image]:not(.main-image)"
     );
     this.images = Array.from(imageElements).map((img, index) => ({
       src: img.dataset.galleryImage,
@@ -37,6 +38,24 @@ class ImageGallery {
       loaded: false,
       thumbnail: null,
     }));
+
+    // If no hidden gallery images found, use the main image as single image
+    if (this.images.length === 0) {
+      const mainImage = this.container.querySelector(
+        ".main-image[data-gallery-image]"
+      );
+      if (mainImage) {
+        this.images = [
+          {
+            src: mainImage.dataset.galleryImage,
+            alt: mainImage.alt || "Ảnh chính",
+            element: mainImage,
+            loaded: false,
+            thumbnail: null,
+          },
+        ];
+      }
+    }
   }
 
   setupLazyLoading() {

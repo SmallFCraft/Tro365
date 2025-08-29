@@ -128,20 +128,38 @@ class FormValidator {
   }
 
   /**
-   * Handle input events
+   * Handle input events - Enhanced to prevent premature validation
    */
   handleInput(event) {
     if (event.target.matches("input, select, textarea")) {
-      this.validateField(event.target);
+      const field = event.target;
+      // Only validate if field was previously validated or has content
+      if (
+        field.classList.contains("is-invalid") ||
+        field.classList.contains("is-valid") ||
+        field.value.trim() !== ""
+      ) {
+        this.validateField(field);
+      }
     }
   }
 
   /**
-   * Handle blur events
+   * Handle blur events - Enhanced to validate only after meaningful interaction
    */
   handleBlur(event) {
     if (event.target.matches("input, select, textarea")) {
-      this.validateField(event.target);
+      const field = event.target;
+      // Only validate on blur if field has content or is required and user has interacted
+      if (
+        field.value.trim() !== "" ||
+        (field.hasAttribute("required") &&
+          field.dataset.hasInteracted === "true")
+      ) {
+        this.validateField(field);
+      }
+      // Mark field as having been interacted with
+      field.dataset.hasInteracted = "true";
     }
   }
 

@@ -100,15 +100,92 @@ class ImageHelper
     {
         try {
             $outputPath = $outputPath ?: $imagePath;
-            
+
             $image = Image::make($imagePath);
             $image->encode($format);
             $image->save($outputPath);
-            
+
             return $outputPath;
-            
+
         } catch (Exception $e) {
             throw new Exception("Lỗi chuyển đổi định dạng ảnh: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Convert image to modern formats (WebP and AVIF) for better performance
+     */
+    public static function convertToModernFormats($imagePath, $quality = 85)
+    {
+        try {
+            $pathInfo = pathinfo($imagePath);
+            $basePath = $pathInfo['dirname'] . '/' . $pathInfo['filename'];
+            $results = [];
+
+            // Generate WebP (widely supported)
+            try {
+                $webpPath = $basePath . '.webp';
+                $image = Image::make($imagePath);
+                $image->encode('webp', $quality)->save($webpPath);
+                $results['webp'] = $webpPath;
+            } catch (Exception $e) {
+                writeLog("WebP conversion failed: " . $e->getMessage());
+            }
+
+            // Generate AVIF (best compression, newer format)
+            try {
+                if (function_exists('imageavif')) {
+                    $avifPath = $basePath . '.avif';
+                    $image = Image::make($imagePath);
+                    $image->encode('avif', $quality)->save($avifPath);
+                    $results['avif'] = $avifPath;
+                }
+            } catch (Exception $e) {
+                writeLog("AVIF conversion failed: " . $e->getMessage());
+            }
+
+            return $results;
+
+        } catch (Exception $e) {
+            throw new Exception("Lỗi chuyển đổi sang định dạng hiện đại: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate responsive image sizes for different screen breakpoints
+     */
+    public static function generateResponsiveSizes($imagePath, $displayWidth, $displayHeight, $quality = 85)
+    {
+        try {
+            $pathInfo = pathinfo($imagePath);
+            $baseName = $pathInfo['filename'];
+            $directory = $pathInfo['dirname'];
+            $extension = $pathInfo['extension'];
+
+            $sizes = [
+                'mobile' => ['width' => $displayWidth, 'height' => $displayHeight, 'suffix' => '_mobile'],
+                'tablet' => ['width' => (int)($displayWidth * 1.5), 'height' => (int)($displayHeight * 1.5), 'suffix' => '_tablet'],
+                'desktop' => ['width' => (int)($displayWidth * 2), 'height' => (int)($displayHeight * 2), 'suffix' => '_desktop'], // For retina
+            ];
+
+            $results = [];
+            foreach ($sizes as $device => $config) {
+                $outputPath = $directory . '/' . $baseName . $config['suffix'] . '.' . $extension;
+
+                $image = Image::make($imagePath);
+                $image->resize($config['width'], $config['height'], function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                $image->save($outputPath, $quality);
+
+                $results[$device] = $outputPath;
+            }
+
+            return $results;
+
+        } catch (Exception $e) {
+            throw new Exception("Lỗi tạo responsive images: " . $e->getMessage());
         }
     }
     

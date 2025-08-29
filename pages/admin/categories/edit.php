@@ -5,7 +5,7 @@
  */
 
 use Tro365\Core\Auth;
-use Tro365\Category;
+use Tro365\Models\Category;
 use Tro365\Activity;
 
 $auth = new Auth();

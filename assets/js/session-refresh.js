@@ -72,9 +72,19 @@ if (typeof SessionRefresh === "undefined") {
 
       // Refresh on page visibility change
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) {
+        if (!document.hidden && this.isUserLoggedIn()) {
           this.refreshSession();
         }
+      });
+
+      // Listen for logout events to stop session refresh immediately
+      window.addEventListener("beforeunload", () => {
+        this.stopRefresh();
+      });
+
+      // Listen for custom logout event
+      window.addEventListener("userLogout", () => {
+        this.stopRefresh();
       });
 
       if (this.debug) {

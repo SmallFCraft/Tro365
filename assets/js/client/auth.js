@@ -212,12 +212,21 @@ window.Tro365Auth = {
     }
   },
   /**
-   * Initialize form validation
+   * Initialize form validation - Enhanced to work with FormValidator
    */
   initFormValidation: function () {
     const forms = document.querySelectorAll(".needs-validation");
 
     forms.forEach(form => {
+      // Skip if FormValidator is already handling this form
+      if (form.dataset.fvInitialized === "1") {
+        console.log(
+          "FormValidator detected, skipping auth.js validation for form:",
+          form.id
+        );
+        return;
+      }
+
       form.addEventListener("submit", function (event) {
         if (!form.checkValidity()) {
           event.preventDefault();
@@ -230,17 +239,26 @@ window.Tro365Auth = {
       // Set custom Vietnamese validation messages
       this.setValidationMessages(form);
 
-      // Real-time validation
+      // Enhanced real-time validation - only after meaningful interaction
       const inputs = form.querySelectorAll("input, select, textarea");
       inputs.forEach(input => {
-        // Only validate after user interaction
-        input.addEventListener("blur", function () {
-          this.classList.add("was-validated");
-          this.validateField();
+        let hasInteracted = false;
+
+        // Track meaningful interaction (typing or focus loss with content)
+        input.addEventListener("input", function () {
+          hasInteracted = true;
+          if (this.classList.contains("was-validated")) {
+            this.validateField();
+          }
         });
 
-        input.addEventListener("input", function () {
-          if (this.classList.contains("was-validated")) {
+        // Only validate on blur if user has actually interacted and field has content or is required
+        input.addEventListener("blur", function () {
+          if (
+            hasInteracted ||
+            (this.value.trim() !== "" && this.hasAttribute("required"))
+          ) {
+            this.classList.add("was-validated");
             this.validateField();
           }
         });

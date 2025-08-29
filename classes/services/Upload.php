@@ -5,23 +5,16 @@ namespace Tro365\Services;
 use Exception;
 
 /**
- * Upload Service - Now using League Flysystem internally
+ * Upload Service
  * Tro365 - Website thuê trọ
  *
- * This class now uses FlysystemUpload internally while maintaining
- * backward compatibility with existing code
- */
-
-/**
- * Upload Class
- * Tro365 - Website thuê trọ
+ * Professional upload service with image optimization integration
  */
 class Upload
 {
     private $allowedTypes;
     private $maxSize;
     private $uploadPath;
-    private ?FlysystemUpload $flysystemUpload;
     
     public function __construct()
     {
@@ -30,23 +23,9 @@ class Upload
         $this->maxSize = \getUploadMaxSizeBytes();
         $this->uploadPath = UPLOAD_PATH;
 
-        // Initialize FlysystemUpload for modern file operations (with fallback)
-        try {
-            if (class_exists('League\Flysystem\Filesystem')) {
-                $this->flysystemUpload = new FlysystemUpload($this->uploadPath);
-                writeLog("Upload service initialized with Flysystem backend");
-            } else {
-                writeLog("Flysystem not available, using legacy file operations");
-                $this->flysystemUpload = null;
-            }
-        } catch (Exception $e) {
-            writeLog("Flysystem initialization failed: " . $e->getMessage() . ", using legacy operations");
-            $this->flysystemUpload = null;
-        }
-
         // Debug upload configuration
+        writeLog("Upload service initialized with optimized backend");
         writeLog("Upload config - Path: " . $this->uploadPath . ", Max size: " . $this->maxSize . ", Types: " . implode(',', $this->allowedTypes));
-        writeLog("Current working directory: " . getcwd());
         writeLog("Upload path exists: " . (is_dir($this->uploadPath) ? 'YES' : 'NO'));
     }
     
@@ -55,65 +34,15 @@ class Upload
      */
     public function uploadFile($file, $type = 'general', $customPath = null)
     {
-        try {
-            // Use Flysystem if available, otherwise fallback to legacy
-            if ($this->flysystemUpload !== null) {
-                writeLog("Upload attempt (Flysystem) - File: " . $file['name'] . ", Type: $type");
-
-                $result = $this->flysystemUpload->uploadFile($file, $type, $customPath);
-
-                if ($result['success']) {
-                    writeLog("Upload successful (Flysystem) - Web path: " . $result['web_path']);
-                } else {
-                    writeLog("Upload failed (Flysystem): " . $result['error']);
-                }
-
-                return $result;
-            } else {
-                // Fallback to legacy upload method
-                return $this->legacyUploadFile($file, $type, $customPath);
-            }
-
-        } catch (Exception $e) {
-            writeLog("Upload exception (Flysystem): " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
+        return $this->legacyUploadFile($file, $type, $customPath);
     }
 
     /**
-     * Upload avatar with username as filename - Now using Flysystem
+     * Upload avatar with username as filename
      */
     public function uploadAvatar($file, $username)
     {
-        try {
-            // Use Flysystem if available, otherwise fallback to legacy
-            if ($this->flysystemUpload !== null) {
-                writeLog("Avatar upload attempt (Flysystem) - User: $username");
-
-                $result = $this->flysystemUpload->uploadAvatar($file, $username);
-
-                if ($result['success']) {
-                    writeLog("Avatar upload successful (Flysystem) - Path: " . $result['file_path']);
-                } else {
-                    writeLog("Avatar upload failed (Flysystem): " . $result['error']);
-                }
-
-                return $result;
-            } else {
-                // Fallback to legacy avatar upload
-                return $this->legacyUploadAvatar($file, $username);
-            }
-
-        } catch (Exception $e) {
-            writeLog("Avatar upload exception (Flysystem): " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
+        return $this->legacyUploadAvatar($file, $username);
     }
 
     /**
@@ -138,33 +67,11 @@ class Upload
     }
 
     /**
-     * Upload multiple files - Now using Flysystem
+     * Upload multiple files
      */
     public function uploadMultiple($files, $type = 'general', $customPath = null)
     {
-        try {
-            // Use Flysystem if available, otherwise fallback to legacy
-            if ($this->flysystemUpload !== null) {
-                writeLog("Multiple upload attempt (Flysystem) - Type: $type");
-
-                $results = $this->flysystemUpload->uploadMultiple($files, $type, $customPath);
-
-                $successCount = count(array_filter($results, fn($r) => $r['success']));
-                writeLog("Multiple upload completed (Flysystem) - Success: $successCount/" . count($results));
-
-                return $results;
-            } else {
-                // Fallback to legacy multiple upload
-                return $this->legacyUploadMultiple($files, $type, $customPath);
-            }
-
-        } catch (Exception $e) {
-            writeLog("Multiple upload exception (Flysystem): " . $e->getMessage());
-            return [[
-                'success' => false,
-                'error' => $e->getMessage()
-            ]];
-        }
+        return $this->legacyUploadMultiple($files, $type, $customPath);
     }
     
     /**
@@ -369,77 +276,29 @@ class Upload
     }
     
     /**
-     * Delete file - Now using Flysystem
+     * Delete file
      */
     public function deleteFile($filePath)
     {
-        try {
-            // Use Flysystem if available, otherwise fallback to legacy
-            if ($this->flysystemUpload !== null) {
-                writeLog("Delete file attempt (Flysystem) - Path: $filePath");
-
-                $result = $this->flysystemUpload->deleteFile($filePath);
-
-                if ($result) {
-                    writeLog("File deleted successfully (Flysystem)");
-                } else {
-                    writeLog("File deletion failed (Flysystem)");
-                }
-
-                return $result;
-            } else {
-                // Fallback to legacy file deletion
-                return $this->legacyDeleteFile($filePath);
-            }
-
-        } catch (Exception $e) {
-            writeLog("Delete file exception (Flysystem): " . $e->getMessage());
-            return false;
-        }
+        return $this->legacyDeleteFile($filePath);
     }
     
     /**
-     * Create thumbnail - Now using Flysystem
+     * Create thumbnail
      */
     public function createThumbnail($imagePath, $width = 300, $height = 200)
     {
-        try {
-            // Use Flysystem if available, otherwise fallback to legacy
-            if ($this->flysystemUpload !== null) {
-                writeLog("Create thumbnail attempt (Flysystem) - Path: $imagePath");
-
-                $result = $this->flysystemUpload->createThumbnail($imagePath, $width, $height);
-
-                if ($result) {
-                    writeLog("Thumbnail created successfully (Flysystem)");
-                } else {
-                    writeLog("Thumbnail creation failed (Flysystem)");
-                }
-
-                return $result;
-            } else {
-                // Fallback to legacy thumbnail creation
-                return $this->legacyCreateThumbnail($imagePath, $width, $height);
-            }
-
-        } catch (Exception $e) {
-            writeLog("Create thumbnail exception (Flysystem): " . $e->getMessage());
-            return false;
-        }
+        return $this->legacyCreateThumbnail($imagePath, $width, $height);
     }
 
-    // ==================== ADDITIONAL FLYSYSTEM METHODS ====================
+    // ==================== UTILITY METHODS ====================
 
     /**
      * Check if file exists
      */
     public function fileExists($filePath): bool
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->fileExists($filePath);
-        } else {
-            return file_exists($filePath);
-        }
+        return file_exists($filePath);
     }
 
     /**
@@ -447,11 +306,7 @@ class Upload
      */
     public function getFileSize($filePath): int
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->getFileSize($filePath);
-        } else {
-            return file_exists($filePath) ? filesize($filePath) : 0;
-        }
+        return file_exists($filePath) ? filesize($filePath) : 0;
     }
 
     /**
@@ -459,11 +314,7 @@ class Upload
      */
     public function getMimeType($filePath): string
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->getMimeType($filePath);
-        } else {
-            return file_exists($filePath) ? mime_content_type($filePath) ?: 'application/octet-stream' : 'application/octet-stream';
-        }
+        return file_exists($filePath) ? mime_content_type($filePath) ?: 'application/octet-stream' : 'application/octet-stream';
     }
 
     /**
@@ -471,11 +322,7 @@ class Upload
      */
     public function copyFile($source, $destination): bool
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->copyFile($source, $destination);
-        } else {
-            return file_exists($source) ? copy($source, $destination) : false;
-        }
+        return file_exists($source) ? copy($source, $destination) : false;
     }
 
     /**
@@ -483,11 +330,7 @@ class Upload
      */
     public function moveFile($source, $destination): bool
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->moveFile($source, $destination);
-        } else {
-            return file_exists($source) ? rename($source, $destination) : false;
-        }
+        return file_exists($source) ? rename($source, $destination) : false;
     }
 
     /**
@@ -495,11 +338,7 @@ class Upload
      */
     public function createDirectory($path): bool
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->createDirectory($path);
-        } else {
-            return is_dir($path) || mkdir($path, 0755, true);
-        }
+        return is_dir($path) || mkdir($path, 0755, true);
     }
 
     /**
@@ -507,31 +346,27 @@ class Upload
      */
     public function listDirectory($path = '', $recursive = false): array
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->listDirectory($path, $recursive);
-        } else {
-            // Simple fallback directory listing
-            $fullPath = $this->uploadPath . '/' . ltrim($path, '/');
-            if (!is_dir($fullPath)) {
-                return [];
-            }
-
-            $files = [];
-            $iterator = $recursive ? new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($fullPath)) : new \DirectoryIterator($fullPath);
-
-            foreach ($iterator as $file) {
-                if ($file->isDot()) continue;
-
-                $files[] = [
-                    'path' => str_replace($this->uploadPath . '/', '', $file->getPathname()),
-                    'type' => $file->isDir() ? 'dir' : 'file',
-                    'size' => $file->isFile() ? $file->getSize() : null,
-                    'timestamp' => $file->getMTime()
-                ];
-            }
-
-            return $files;
+        // Simple directory listing
+        $fullPath = $this->uploadPath . '/' . ltrim($path, '/');
+        if (!is_dir($fullPath)) {
+            return [];
         }
+
+        $files = [];
+        $iterator = $recursive ? new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($fullPath)) : new \DirectoryIterator($fullPath);
+
+        foreach ($iterator as $file) {
+            if ($file->isDot()) continue;
+
+            $files[] = [
+                'path' => str_replace($this->uploadPath . '/', '', $file->getPathname()),
+                'type' => $file->isDir() ? 'dir' : 'file',
+                'size' => $file->isFile() ? $file->getSize() : null,
+                'timestamp' => $file->getMTime()
+            ];
+        }
+
+        return $files;
     }
 
     /**
@@ -539,43 +374,31 @@ class Upload
      */
     public function cleanupOldFiles($directory = 'temp', $olderThanDays = 7): int
     {
-        if ($this->flysystemUpload !== null) {
-            return $this->flysystemUpload->cleanupOldFiles($directory, $olderThanDays);
-        } else {
-            // Simple fallback cleanup
-            $fullPath = $this->uploadPath . '/' . ltrim($directory, '/');
-            if (!is_dir($fullPath)) {
-                return 0;
-            }
+        // Simple cleanup
+        $fullPath = $this->uploadPath . '/' . ltrim($directory, '/');
+        if (!is_dir($fullPath)) {
+            return 0;
+        }
 
-            $cutoffTime = time() - ($olderThanDays * 24 * 60 * 60);
-            $deleted = 0;
+        $cutoffTime = time() - ($olderThanDays * 24 * 60 * 60);
+        $deleted = 0;
 
-            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($fullPath));
-            foreach ($iterator as $file) {
-                if ($file->isFile() && $file->getMTime() < $cutoffTime) {
-                    if (unlink($file->getPathname())) {
-                        $deleted++;
-                    }
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($fullPath));
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getMTime() < $cutoffTime) {
+                if (unlink($file->getPathname())) {
+                    $deleted++;
                 }
             }
-
-            return $deleted;
         }
+
+        return $deleted;
     }
 
-    /**
-     * Get FileSystemService instance for advanced operations
-     */
-    public function getFileSystem(): ?\Tro365\Services\FileSystemService
-    {
-        return $this->flysystemUpload ? $this->flysystemUpload->getFileSystem() : null;
-    }
-
-    // ==================== LEGACY FALLBACK METHODS ====================
+    // ==================== CORE UPLOAD METHODS ====================
 
     /**
-     * Legacy upload file method (fallback when Flysystem not available)
+     * Upload file implementation
      */
     private function legacyUploadFile($file, $type = 'general', $customPath = null)
     {
@@ -612,28 +435,57 @@ class Upload
                 throw new Exception("Không thể di chuyển file upload từ " . $file['tmp_name'] . " đến " . $filePath);
             }
 
-            // Optimize image (if applicable)
+            // Auto-optimize image using SimpleImageOptimizer service
             try {
                 $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
                 if (in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
-                    if (class_exists('\\Tro365\\Helpers\\ImageHelper')) {
-                        \Tro365\Helpers\ImageHelper::optimizeForWeb($filePath, 85);
+
+                    // Use ImageOptimizationService for automatic optimization
+                    require_once __DIR__ . '/ImageOptimizationService.php';
+
+                    $optimizer = new \Tro365\Services\ImageOptimizationService([
+                        'quality' => 85,
+                        'maxWidth' => MAX_IMAGE_WIDTH ?? 1920,
+                        'maxHeight' => MAX_IMAGE_HEIGHT ?? 1080,
+                        'enableWebP' => true,
+                        'enableAVIF' => function_exists('imageavif') // Auto-detect AVIF support
+                    ]);
+
+                    $results = $optimizer->optimizeUploadedImage($filePath, $type);
+
+                    if ($results['success']) {
+                        writeLog("Auto-optimization successful: " . basename($filePath) .
+                                " | Saved: " . $this->formatBytes($results['savings']) .
+                                " | Formats: " . implode(', ', $results['formats_created']));
                     } else {
-                        resizeImageUnified($filePath, $filePath, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, 85, false);
+                        writeLog("Auto-optimization failed: " . $results['error']);
+
+                        // Fallback to old method
+                        if (function_exists('resizeImageUnified')) {
+                            resizeImageUnified($filePath, $filePath, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, 85, false);
+                        }
                     }
-                    // Try Spatie optimizer (best-effort)
+
+                    // Try Spatie optimizer as additional optimization (best-effort)
                     try {
                         if (class_exists('\\Spatie\\ImageOptimizer\\OptimizerChainFactory')) {
                             \Spatie\ImageOptimizer\OptimizerChainFactory::create()->optimize($filePath);
                         }
-                    } catch (\Throwable $e) { writeLog('Spatie optimizer skipped: '.$e->getMessage()); }
-                    // Auto-create thumbnail for post images
-                    if ($type === 'posts') {
-                        $this->createThumbnail($filePath, 300, 200);
+                    } catch (\Throwable $e) {
+                        writeLog('Spatie optimizer skipped: '.$e->getMessage());
                     }
                 }
             } catch (Exception $ie) {
-                writeLog("Image optimization failed: " . $ie->getMessage());
+                writeLog("Auto image optimization failed: " . $ie->getMessage());
+
+                // Fallback to basic resize if auto-optimization fails
+                try {
+                    if (function_exists('resizeImageUnified')) {
+                        resizeImageUnified($filePath, $filePath, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, 85, false);
+                    }
+                } catch (Exception $fallbackError) {
+                    writeLog("Fallback optimization also failed: " . $fallbackError->getMessage());
+                }
             }
 
             // Generate web path
@@ -660,7 +512,7 @@ class Upload
     }
 
     /**
-     * Legacy upload avatar method (fallback when Flysystem not available)
+     * Upload avatar implementation
      */
     private function legacyUploadAvatar($file, $username)
     {
@@ -729,7 +581,7 @@ class Upload
     }
 
     /**
-     * Legacy upload multiple method (fallback when Flysystem not available)
+     * Upload multiple files implementation
      */
     private function legacyUploadMultiple($files, $type = 'general', $customPath = null)
     {
@@ -766,7 +618,7 @@ class Upload
     }
 
     /**
-     * Legacy delete file method (fallback when Flysystem not available)
+     * Delete file implementation
      */
     private function legacyDeleteFile($filePath)
     {
@@ -793,7 +645,7 @@ class Upload
     }
 
     /**
-     * Legacy create thumbnail method (fallback when Flysystem not available)
+     * Create thumbnail implementation
      */
     private function legacyCreateThumbnail($imagePath, $width = 300, $height = 200)
     {
@@ -816,5 +668,18 @@ class Upload
             writeLog("Create thumbnail exception (Legacy): " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Format bytes to human readable format
+     */
+    private function formatBytes($bytes, $precision = 2) {
+        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, $precision) . ' ' . $units[$i];
     }
 }

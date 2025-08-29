@@ -175,40 +175,340 @@ $categories = $post->getCategories();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/assets/css/client/main.css" rel="stylesheet">
+    <link href="/assets/css/client/glass-morphism.css" rel="stylesheet">
+    <link href="/assets/css/client/layouts.css" rel="stylesheet">
     <style>
-        .form-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+        /* Enhanced Glass Morphism Post Creation Styles */
+        .post-creation-container {
+            background: var(--glass-gradient);
+            backdrop-filter: var(--backdrop-filter);
+            border-radius: 24px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: var(--glass-shadow-strong);
+            border: 2px solid var(--glass-border);
         }
+
+        [data-theme="light"] .post-creation-container {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .post-creation-container {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .post-creation-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem;
+            margin: 0;
+            border-radius: 22px 22px 0 0;
+        }
+
+        .post-creation-body {
+            padding: 2rem;
+        }
+
+        .form-section-glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-filter);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: var(--glass-transition);
+        }
+
+        [data-theme="light"] .form-section-glass {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] .form-section-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-section-glass:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glass-shadow-strong);
+            border-color: var(--glass-border-strong);
+        }
+
+        .section-title-glass {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .section-title-glass i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .form-control-glass {
+            background: var(--glass-bg-light);
+            backdrop-filter: blur(8px);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            transition: var(--glass-transition);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .form-control-glass {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .form-control-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .form-control-glass:focus {
+            background: var(--glass-bg);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            outline: none;
+        }
+
+        .upload-area-glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-filter);
+            border: 3px dashed var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--glass-transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] .upload-area-glass {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .upload-area-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .upload-area-glass:hover {
+            border-color: var(--primary-color);
+            background: var(--glass-bg-strong);
+            transform: translateY(-2px);
+            box-shadow: var(--glass-shadow-strong);
+        }
+
+        .upload-area-glass.dragover {
+            border-color: var(--primary-color);
+            background: var(--glass-bg-strong);
+            transform: scale(1.02);
+        }
+
+        .upload-area-glass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+        }
+
+        .btn-glass-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: white;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            transition: var(--glass-transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-glass-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+        }
+
+        .btn-glass-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-glass-secondary {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-filter);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            padding: 0.875rem 2rem;
+            font-weight: 500;
+            transition: var(--glass-transition);
+        }
+
+        [data-theme="light"] .btn-glass-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .btn-glass-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-glass-secondary:hover {
+            background: var(--glass-bg-strong);
+            border-color: var(--glass-border-strong);
+            transform: translateY(-2px);
+            color: var(--text-primary);
+        }
+
+        .sidebar-glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-filter);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        [data-theme="light"] .sidebar-glass {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] .sidebar-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .help-item-glass {
+            background: var(--glass-bg-light);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: var(--glass-transition);
+        }
+
+        [data-theme="light"] .help-item-glass {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .help-item-glass {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .help-item-glass:hover {
+            background: var(--glass-bg);
+            border-color: var(--glass-border-strong);
+            transform: translateX(4px);
+        }
+
         .image-preview {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 10px;
         }
+
         .image-preview img {
             width: 100px;
             height: 100px;
             object-fit: cover;
-            border-radius: 5px;
-            border: 2px solid #ddd;
+            border-radius: 12px;
+            border: 2px solid var(--glass-border);
+            transition: var(--glass-transition);
         }
-        .upload-area {
-            border: 2px dashed #ddd;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.3s;
+
+        .image-preview img:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
         }
-        .upload-area:hover {
-            border-color: #667eea;
+
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .post-creation-container {
+                margin: 1rem;
+                border-radius: 20px;
+            }
+
+            .post-creation-header {
+                padding: 1.5rem;
+                border-radius: 18px 18px 0 0;
+            }
+
+            .post-creation-body {
+                padding: 1.5rem;
+            }
+
+            .form-section-glass {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .upload-area-glass {
+                padding: 2rem 1rem;
+            }
+
+            .sidebar-glass {
+                margin-top: 2rem;
+                position: static;
+            }
         }
-        .upload-area.dragover {
-            border-color: #667eea;
-            background-color: #f0f8ff;
+
+        @media (max-width: 480px) {
+            .post-creation-container {
+                margin: 0.5rem;
+                border-radius: 16px;
+            }
+
+            .post-creation-header {
+                padding: 1rem;
+                border-radius: 14px 14px 0 0;
+            }
+
+            .post-creation-body {
+                padding: 1rem;
+            }
+
+            .form-section-glass {
+                padding: 1rem;
+                border-radius: 16px;
+            }
+
+            .section-title-glass {
+                font-size: 1.1rem;
+            }
+
+            .btn-glass-primary,
+            .btn-glass-secondary {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -228,14 +528,15 @@ $categories = $post->getCategories();
 
         <div class="row">
             <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
+                <div class="post-creation-container">
+                    <div class="post-creation-header">
                         <h4 class="mb-0">
                             <i class="fas fa-plus-circle me-2"></i>
                             Tạo bài đăng mới
                         </h4>
+                        <p class="mb-0 mt-2 opacity-75">Tạo bài đăng chất lượng để thu hút khách hàng</p>
                     </div>
-                    <div class="card-body">
+                    <div class="post-creation-body">
                         <?php if ($error): ?>
                             <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-circle me-2"></i>
@@ -247,20 +548,20 @@ $categories = $post->getCategories();
                             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
                             <!-- Basic Information -->
-                            <div class="form-section">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    Thông tin cơ bản
-                                </h5>
+                            <div class="form-section-glass">
+                                <div class="section-title-glass">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Thông tin cơ bản</span>
+                                </div>
                                 
                                 <div class="mb-3">
-                                    <label for="title" class="form-label">
+                                    <label for="title" class="form-label fw-semibold">
                                         Tiêu đề <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="title" 
-                                           name="title" 
+                                    <input type="text"
+                                           class="form-control form-control-glass"
+                                           id="title"
+                                           name="title"
                                            value="<?= e($_POST['title'] ?? '') ?>"
                                            placeholder="Nhập tiêu đề bài đăng..."
                                            required>
@@ -269,39 +570,39 @@ $categories = $post->getCategories();
                                 <!-- Mô tả ngắn field removed - content will be used for both full content and auto-generated excerpts -->
                                 
                                 <div class="mb-3">
-                                    <label for="content" class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
-                                    <textarea class="form-control"
+                                    <label for="content" class="form-label fw-semibold">Mô tả chi tiết <span class="text-danger">*</span></label>
+                                    <textarea class="form-control form-control-glass"
                                               id="content"
                                               name="content"
                                               rows="6"
                                               placeholder="Mô tả chi tiết về phòng trọ, tiện ích, quy định..."
                                               required><?= e($_POST['content'] ?? '') ?></textarea>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="category" class="form-label">
+                                        <label for="category" class="form-label fw-semibold">
                                             Danh mục <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-select" id="category" name="category" required>
+                                        <select class="form-select form-control-glass" id="category" name="category" required>
                                             <option value="">Chọn danh mục</option>
                                             <?php foreach ($categories as $category): ?>
-                                                <option value="<?= $category['ID'] ?>" 
+                                                <option value="<?= $category['ID'] ?>"
                                                         <?= ($_POST['category'] ?? '') == $category['ID'] ? 'selected' : '' ?>>
                                                     <?= e($category['TenDM']) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="col-md-6 mb-3">
-                                        <label for="price" class="form-label">
+                                        <label for="price" class="form-label fw-semibold">
                                             Giá thuê (VNĐ/tháng) <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" 
-                                               class="form-control" 
-                                               id="price" 
-                                               name="price" 
+                                        <input type="number"
+                                               class="form-control form-control-glass"
+                                               id="price"
+                                               name="price"
                                                value="<?= e($_POST['price'] ?? '') ?>"
                                                placeholder="0"
                                                min="0"
@@ -311,28 +612,28 @@ $categories = $post->getCategories();
                                 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="area" class="form-label">
+                                        <label for="area" class="form-label fw-semibold">
                                             Diện tích (m²) <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" 
-                                               class="form-control" 
-                                               id="area" 
-                                               name="area" 
+                                        <input type="number"
+                                               class="form-control form-control-glass"
+                                               id="area"
+                                               name="area"
                                                value="<?= e($_POST['area'] ?? '') ?>"
                                                placeholder="0"
                                                step="0.1"
                                                min="0"
                                                required>
                                     </div>
-                                    
+
                                     <div class="col-md-6 mb-3">
                                         <?php $maxRooms = getMaxRoomsPerPost(); ?>
-                                        <label for="rooms" class="form-label">
+                                        <label for="rooms" class="form-label fw-semibold">
                                             Số phòng
                                             <span class="text-muted">(tối đa <?= $maxRooms ?>)</span>
                                         </label>
                                         <input type="number"
-                                               class="form-control"
+                                               class="form-control form-control-glass"
                                                id="rooms"
                                                name="rooms"
                                                value="<?= e($_POST['rooms'] ?? '1') ?>"
@@ -348,44 +649,44 @@ $categories = $post->getCategories();
                             </div>
 
                             <!-- Location -->
-                            <div class="form-section">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-map-marker-alt me-2"></i>
-                                    Địa điểm
-                                </h5>
-                                
+                            <div class="form-section-glass">
+                                <div class="section-title-glass">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Địa điểm</span>
+                                </div>
+
                                 <div class="mb-3">
-                                    <label for="address" class="form-label">
+                                    <label for="address" class="form-label fw-semibold">
                                         Địa chỉ cụ thể <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="address" 
-                                           name="address" 
+                                    <input type="text"
+                                           class="form-control form-control-glass"
+                                           id="address"
+                                           name="address"
                                            value="<?= e($_POST['address'] ?? '') ?>"
                                            placeholder="Số nhà, tên đường..."
                                            required>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label for="province" class="form-label">Tỉnh/Thành phố</label>
-                                        <select class="form-select" id="province" name="province">
+                                        <label for="province" class="form-label fw-semibold">Tỉnh/Thành phố</label>
+                                        <select class="form-select form-control-glass" id="province" name="province">
                                             <option value="">Chọn tỉnh/thành</option>
                                             <!-- Provinces will be loaded via API -->
                                         </select>
                                     </div>
-                                    
+
                                     <div class="col-md-4 mb-3">
-                                        <label for="district" class="form-label">Quận/Huyện</label>
-                                        <select class="form-select" id="district" name="district">
+                                        <label for="district" class="form-label fw-semibold">Quận/Huyện</label>
+                                        <select class="form-select form-control-glass" id="district" name="district">
                                             <option value="">Chọn quận/huyện</option>
                                         </select>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
-                                        <label for="ward" class="form-label">Phường/Xã</label>
-                                        <select class="form-select" id="ward" name="ward">
+                                        <label for="ward" class="form-label fw-semibold">Phường/Xã</label>
+                                        <select class="form-select form-control-glass" id="ward" name="ward">
                                             <option value="">Chọn phường/xã</option>
                                         </select>
                                     </div>
@@ -393,36 +694,36 @@ $categories = $post->getCategories();
                             </div>
 
                             <!-- Images -->
-                            <div class="form-section">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-images me-2"></i>
-                                    Hình ảnh
-                                </h5>
-                                
-                                <div class="upload-area" onclick="document.getElementById('images').click()">
-                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                                    <h6>Kéo thả hoặc click để chọn hình ảnh</h6>
+                            <div class="form-section-glass">
+                                <div class="section-title-glass">
+                                    <i class="fas fa-images"></i>
+                                    <span>Hình ảnh</span>
+                                </div>
+
+                                <div class="upload-area-glass" onclick="document.getElementById('images').click()">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <h6 class="fw-semibold">Kéo thả hoặc click để chọn hình ảnh</h6>
                                     <p class="text-muted mb-0">
                                         Hỗ trợ: JPG, PNG, GIF. Tối đa <?= formatFileSize(UPLOAD_MAX_SIZE) ?> mỗi file.
                                     </p>
                                 </div>
-                                
-                                <input type="file" 
-                                       id="images" 
-                                       name="images[]" 
-                                       multiple 
-                                       accept="image/*" 
+
+                                <input type="file"
+                                       id="images"
+                                       name="images[]"
+                                       multiple
+                                       accept="image/*"
                                        style="display: none;">
-                                
+
                                 <div id="imagePreview" class="image-preview"></div>
                             </div>
 
-                            <div class="d-flex justify-content-between">
-                                <a href="/seller/posts" class="btn btn-outline-secondary">
+                            <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
+                                <a href="/seller/posts" class="btn btn-glass-secondary">
                                     <i class="fas fa-arrow-left me-2"></i>
                                     Quay lại
                                 </a>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-glass-primary">
                                     <i class="fas fa-save me-2"></i>
                                     Tạo bài đăng
                                 </button>
@@ -434,39 +735,55 @@ $categories = $post->getCategories();
 
             <!-- Sidebar -->
             <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Hướng dẫn
-                        </h6>
+                <div class="sidebar-glass">
+                    <div class="section-title-glass mb-4">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Hướng dẫn</span>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <h6><i class="fas fa-check-circle text-success me-2"></i>Tiêu đề hấp dẫn</h6>
-                            <small class="text-muted">Viết tiêu đề ngắn gọn, thu hút và mô tả đúng bài đăng</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6><i class="fas fa-check-circle text-success me-2"></i>Mô tả chi tiết</h6>
-                            <small class="text-muted">Cung cấp thông tin đầy đủ về tiện ích, quy định</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6><i class="fas fa-check-circle text-success me-2"></i>Hình ảnh chất lượng</h6>
-                            <small class="text-muted">Đăng nhiều hình ảnh rõ nét, đẹp để thu hút khách</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6><i class="fas fa-check-circle text-success me-2"></i>Giá cả hợp lý</h6>
-                            <small class="text-muted">Đặt giá phù hợp với thị trường và chất lượng</small>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Lưu ý:</strong> Bài đăng sẽ được kiểm duyệt trước khi hiển thị công khai.
+
+                    <div class="help-item-glass">
+                        <h6 class="fw-semibold mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Tiêu đề hấp dẫn
+                        </h6>
+                        <small class="text-muted">Viết tiêu đề ngắn gọn, thu hút và mô tả đúng bài đăng</small>
+                    </div>
+
+                    <div class="help-item-glass">
+                        <h6 class="fw-semibold mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Mô tả chi tiết
+                        </h6>
+                        <small class="text-muted">Cung cấp thông tin đầy đủ về tiện ích, quy định</small>
+                    </div>
+
+                    <div class="help-item-glass">
+                        <h6 class="fw-semibold mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Hình ảnh chất lượng
+                        </h6>
+                        <small class="text-muted">Đăng nhiều hình ảnh rõ nét, đẹp để thu hút khách</small>
+                    </div>
+
+                    <div class="help-item-glass">
+                        <h6 class="fw-semibold mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Giá cả hợp lý
+                        </h6>
+                        <small class="text-muted">Đặt giá phù hợp với thị trường và chất lượng</small>
+                    </div>
+
+                    <hr class="my-4" style="border-color: var(--glass-border);">
+
+                    <div class="help-item-glass" style="border-color: var(--primary-color); background: rgba(102, 126, 234, 0.1);">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-info-circle text-primary mt-1"></i>
+                            <div>
+                                <strong class="text-primary">Lưu ý:</strong>
+                                <small class="d-block text-muted mt-1">
+                                    Bài đăng sẽ được kiểm duyệt trước khi hiển thị công khai.
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
