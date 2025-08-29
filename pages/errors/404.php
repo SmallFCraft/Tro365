@@ -24,8 +24,10 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
     <div class="error-hero" style="min-height: 80vh;">
         <div class="error-container">
             <!-- Error Icon -->
-            <div class="error-icon">
-                <i class="fas fa-search"></i>
+            <div class="error-icon error-404">
+                <div class="error-icon-container">
+                    <i class="fas fa-search"></i>
+                </div>
             </div>
 
             <!-- Error Number -->

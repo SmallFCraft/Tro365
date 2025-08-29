@@ -342,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <i class="fas fa-eye" id="toggleIcon2"></i>
                                             </button>
                                         </div>
-                                        <div id="confirmPasswordFeedback" class="invalid-feedback"></div>
+                                        <div id="confirmPasswordFeedback"></div>
                                     </div>
                                 </div>
                             </div>
@@ -407,6 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="<?= app_url('assets/js/common.js') ?>" defer></script>
     <script src="<?= app_url('assets/js/client/auth.js') ?>" defer></script>
+    <script src="<?= app_url('assets/js/client/password-strength.js') ?>" defer></script>
     
     <!-- Enhanced JavaScript Functions -->
     <script>

@@ -55,6 +55,10 @@ echo $am->renderFooter();
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
@@ -170,17 +174,26 @@ setTimeout(function() {
 
 // Initialize admin-specific components on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTables if present
-    if (typeof $.fn.DataTable !== 'undefined') {
-        $('.data-table').DataTable({
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
-            },
-            responsive: true,
-            pageLength: 25,
-            order: [[0, 'desc']]
-        });
-    }
+    // Initialize DataTables if present with safe loading
+    setTimeout(function() {
+        if (typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.DataTable !== 'undefined') {
+            $('.data-table').each(function() {
+                if (!$.fn.DataTable.isDataTable(this)) {
+                    $(this).DataTable({
+                        language: {
+                            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+                        },
+                        responsive: true,
+                        pageLength: 25,
+                        order: [[0, 'desc']]
+                    });
+                }
+            });
+            console.log('✅ DataTables initialized successfully');
+        } else {
+            console.warn('⚠️ DataTables not available - skipping initialization');
+        }
+    }, 500); // Wait 500ms for all scripts to load
 
     // Footer stats removed
 });
@@ -201,7 +214,7 @@ window.currentUserRole = <?= $_SESSION['user_role'] ?>;
 <?php
 // Render Debug Panel for admin pages
 if (isDebugModeEnabled()) {
-    $debugManager = \Tro365\DebugManager::getInstance();
+    $debugManager = \Tro365\Services\DebugManager::getInstance();
     echo $debugManager->renderDebugPanel();
 }
 ?>

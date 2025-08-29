@@ -3,7 +3,7 @@
 *.zip
 .env
 /assets/uploads/*
-
+./var/*
 .github/
 .qoder/
 

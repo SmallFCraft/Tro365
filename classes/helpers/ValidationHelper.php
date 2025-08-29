@@ -69,48 +69,48 @@ class ValidationHelper
     {
         $constraints = new Assert\Collection([
             'username' => [
-                new Assert\NotBlank(['message' => 'Tên đăng nhập không được để trống']),
-                new Assert\Length([
-                    'min' => 3,
-                    'max' => 50,
-                    'minMessage' => 'Tên đăng nhập phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Tên đăng nhập không được vượt quá {{ limit }} ký tự'
-                ]),
+                new Assert\NotBlank(message: 'Tên đăng nhập không được để trống'),
+                new Assert\Length(
+                    min: 3,
+                    max: 50,
+                    minMessage: 'Tên đăng nhập phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Tên đăng nhập không được vượt quá {{ limit }} ký tự'
+                ),
                 new Assert\Regex([
                     'pattern' => '/^[a-zA-Z0-9_]+$/',
                     'message' => 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới'
                 ])
             ],
             'email' => [
-                new Assert\NotBlank(['message' => 'Email không được để trống']),
-                new Assert\Email(['message' => 'Email không hợp lệ'])
+                new Assert\NotBlank(message: 'Email không được để trống'),
+                new Assert\Email(message: 'Email không hợp lệ')
             ],
             'password' => [
-                new Assert\NotBlank(['message' => 'Mật khẩu không được để trống']),
-                new Assert\Length([
-                    'min' => 8,
-                    'minMessage' => 'Mật khẩu phải có ít nhất {{ limit }} ký tự'
-                ]),
-                new Assert\Regex([
-                    'pattern' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
-                    'message' => 'Mật khẩu phải chứa ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt'
-                ])
+                new Assert\NotBlank(message: 'Mật khẩu không được để trống'),
+                new Assert\Length(
+                    min: 8,
+                    minMessage: 'Mật khẩu phải có ít nhất {{ limit }} ký tự'
+                ),
+                new Assert\Regex(
+                    pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+                    message: 'Mật khẩu phải chứa ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt'
+                )
             ],
             'full_name' => [
-                new Assert\NotBlank(['message' => 'Họ tên không được để trống']),
-                new Assert\Length([
-                    'min' => 2,
-                    'max' => 100,
-                    'minMessage' => 'Họ tên phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Họ tên không được vượt quá {{ limit }} ký tự'
-                ])
+                new Assert\NotBlank(message: 'Họ tên không được để trống'),
+                new Assert\Length(
+                    min: 2,
+                    max: 100,
+                    minMessage: 'Họ tên phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Họ tên không được vượt quá {{ limit }} ký tự'
+                )
             ],
             'phone' => [
-                new Assert\NotBlank(['message' => 'Số điện thoại không được để trống']),
-                new Assert\Regex([
-                    'pattern' => '/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/',
-                    'message' => 'Số điện thoại không hợp lệ'
-                ])
+                new Assert\NotBlank(message: 'Số điện thoại không được để trống'),
+                new Assert\Regex(
+                    pattern: '/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/',
+                    message: 'Số điện thoại không hợp lệ'
+                )
             ]
         ]);
 
@@ -124,51 +124,51 @@ class ValidationHelper
     {
         $constraints = new Assert\Collection([
             'title' => [
-                new Assert\NotBlank(['message' => 'Tiêu đề không được để trống']),
-                new Assert\Length([
-                    'min' => 10,
-                    'max' => 200,
-                    'minMessage' => 'Tiêu đề phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Tiêu đề không được vượt quá {{ limit }} ký tự'
-                ])
+                new Assert\NotBlank(message: 'Tiêu đề không được để trống'),
+                new Assert\Length(
+                    min: 10,
+                    max: 200,
+                    minMessage: 'Tiêu đề phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Tiêu đề không được vượt quá {{ limit }} ký tự'
+                )
             ],
             'content' => [
-                new Assert\NotBlank(['message' => 'Nội dung không được để trống']),
-                new Assert\Length([
-                    'min' => 100,
-                    'minMessage' => 'Nội dung phải có ít nhất {{ limit }} ký tự (vì không còn mô tả ngắn riêng)'
-                ])
+                new Assert\NotBlank(message: 'Nội dung không được để trống'),
+                new Assert\Length(
+                    min: 100,
+                    minMessage: 'Nội dung phải có ít nhất {{ limit }} ký tự (vì không còn mô tả ngắn riêng)'
+                )
             ],
             'price' => [
-                new Assert\NotBlank(['message' => 'Giá không được để trống']),
-                new Assert\Type(['type' => 'numeric', 'message' => 'Giá phải là số']),
-                new Assert\Range([
-                    'min' => 0,
-                    'max' => 999999999,
-                    'notInRangeMessage' => 'Giá phải từ {{ min }} đến {{ max }}'
-                ])
+                new Assert\NotBlank(message: 'Giá không được để trống'),
+                new Assert\Type(type: 'numeric', message: 'Giá phải là số'),
+                new Assert\Range(
+                    min: 0,
+                    max: 999999999,
+                    notInRangeMessage: 'Giá phải từ {{ min }} đến {{ max }}'
+                )
             ],
             'area' => [
-                new Assert\NotBlank(['message' => 'Diện tích không được để trống']),
-                new Assert\Type(['type' => 'numeric', 'message' => 'Diện tích phải là số']),
-                new Assert\Range([
-                    'min' => 1,
-                    'max' => 10000,
-                    'notInRangeMessage' => 'Diện tích phải từ {{ min }} đến {{ max }} m²'
-                ])
+                new Assert\NotBlank(message: 'Diện tích không được để trống'),
+                new Assert\Type(type: 'numeric', message: 'Diện tích phải là số'),
+                new Assert\Range(
+                    min: 1,
+                    max: 10000,
+                    notInRangeMessage: 'Diện tích phải từ {{ min }} đến {{ max }} m²'
+                )
             ],
             'address' => [
-                new Assert\NotBlank(['message' => 'Địa chỉ không được để trống']),
-                new Assert\Length([
-                    'min' => 10,
-                    'max' => 500,
-                    'minMessage' => 'Địa chỉ phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Địa chỉ không được vượt quá {{ limit }} ký tự'
-                ])
+                new Assert\NotBlank(message: 'Địa chỉ không được để trống'),
+                new Assert\Length(
+                    min: 10,
+                    max: 500,
+                    minMessage: 'Địa chỉ phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Địa chỉ không được vượt quá {{ limit }} ký tự'
+                )
             ],
             'category_id' => [
-                new Assert\NotBlank(['message' => 'Danh mục không được để trống']),
-                new Assert\Type(['type' => 'integer', 'message' => 'Danh mục không hợp lệ'])
+                new Assert\NotBlank(message: 'Danh mục không được để trống'),
+                new Assert\Type(type: 'integer', message: 'Danh mục không hợp lệ')
             ]
         ]);
 
@@ -182,35 +182,35 @@ class ValidationHelper
     {
         $constraints = new Assert\Collection([
             'name' => [
-                new Assert\NotBlank(['message' => 'Họ tên không được để trống']),
-                new Assert\Length([
-                    'min' => 2,
-                    'max' => 100,
-                    'minMessage' => 'Họ tên phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Họ tên không được vượt quá {{ limit }} ký tự'
-                ])
+                new Assert\NotBlank(message: 'Họ tên không được để trống'),
+                new Assert\Length(
+                    min: 2,
+                    max: 100,
+                    minMessage: 'Họ tên phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Họ tên không được vượt quá {{ limit }} ký tự'
+                )
             ],
             'email' => [
-                new Assert\NotBlank(['message' => 'Email không được để trống']),
-                new Assert\Email(['message' => 'Email không hợp lệ'])
+                new Assert\NotBlank(message: 'Email không được để trống'),
+                new Assert\Email(message: 'Email không hợp lệ')
             ],
             'subject' => [
-                new Assert\NotBlank(['message' => 'Chủ đề không được để trống']),
-                new Assert\Length([
-                    'min' => 5,
-                    'max' => 200,
-                    'minMessage' => 'Chủ đề phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Chủ đề không được vượt quá {{ limit }} ký tự'
-                ])
+                new Assert\NotBlank(message: 'Chủ đề không được để trống'),
+                new Assert\Length(
+                    min: 5,
+                    max: 200,
+                    minMessage: 'Chủ đề phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Chủ đề không được vượt quá {{ limit }} ký tự'
+                )
             ],
             'message' => [
-                new Assert\NotBlank(['message' => 'Tin nhắn không được để trống']),
-                new Assert\Length([
-                    'min' => 20,
-                    'max' => 2000,
-                    'minMessage' => 'Tin nhắn phải có ít nhất {{ limit }} ký tự',
-                    'maxMessage' => 'Tin nhắn không được vượt quá {{ limit }} ký tự'
-                ])
+                new Assert\NotBlank(message: 'Tin nhắn không được để trống'),
+                new Assert\Length(
+                    min: 20,
+                    max: 2000,
+                    minMessage: 'Tin nhắn phải có ít nhất {{ limit }} ký tự',
+                    maxMessage: 'Tin nhắn không được vượt quá {{ limit }} ký tự'
+                )
             ]
         ]);
 
@@ -223,27 +223,27 @@ class ValidationHelper
     public static function validateFileUpload(array $file, array $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'], int $maxSize = 5242880): array
     {
         $constraints = new Assert\Collection([
-            'name' => [new Assert\NotBlank(['message' => 'Tên file không được để trống'])],
+            'name' => [new Assert\NotBlank(message: 'Tên file không được để trống')],
             'type' => [
-                new Assert\NotBlank(['message' => 'Loại file không được để trống']),
-                new Assert\Choice([
-                    'choices' => array_map(fn($type) => "image/{$type}", $allowedTypes),
-                    'message' => 'Loại file không được hỗ trợ'
-                ])
+                new Assert\NotBlank(message: 'Loại file không được để trống'),
+                new Assert\Choice(
+                    choices: array_map(fn($type) => "image/{$type}", $allowedTypes),
+                    message: 'Loại file không được hỗ trợ'
+                )
             ],
             'size' => [
-                new Assert\NotBlank(['message' => 'Kích thước file không hợp lệ']),
-                new Assert\Range([
-                    'min' => 1,
-                    'max' => $maxSize,
-                    'notInRangeMessage' => 'Kích thước file phải từ {{ min }} đến {{ max }} bytes'
-                ])
+                new Assert\NotBlank(message: 'Kích thước file không hợp lệ'),
+                new Assert\Range(
+                    min: 1,
+                    max: $maxSize,
+                    notInRangeMessage: 'Kích thước file phải từ {{ min }} đến {{ max }} bytes'
+                )
             ],
             'error' => [
-                new Assert\EqualTo([
-                    'value' => UPLOAD_ERR_OK,
-                    'message' => 'Có lỗi xảy ra khi upload file'
-                ])
+                new Assert\EqualTo(
+                    value: UPLOAD_ERR_OK,
+                    message: 'Có lỗi xảy ra khi upload file'
+                )
             ]
         ]);
 
@@ -312,11 +312,11 @@ class ValidationHelper
     public static function validatePassword($password): array
     {
         $constraints = [
-            new Assert\NotBlank(['message' => 'Mật khẩu không được để trống']),
-            new Assert\Length([
-                'min' => 6,
-                'minMessage' => 'Mật khẩu phải có ít nhất {{ limit }} ký tự'
-            ])
+            new Assert\NotBlank(message: 'Mật khẩu không được để trống'),
+            new Assert\Length(
+                min: 6,
+                minMessage: 'Mật khẩu phải có ít nhất {{ limit }} ký tự'
+            )
         ];
 
         return self::validateValue($password, $constraints);
@@ -328,8 +328,8 @@ class ValidationHelper
     public static function validateEmail($email): array
     {
         $constraints = [
-            new Assert\NotBlank(['message' => 'Email không được để trống']),
-            new Assert\Email(['message' => 'Email không hợp lệ'])
+            new Assert\NotBlank(message: 'Email không được để trống'),
+            new Assert\Email(message: 'Email không hợp lệ')
         ];
 
         return self::validateValue($email, $constraints);
@@ -409,7 +409,7 @@ class ValidationHelper
             'email' => 'required|email',
             'password' => 'required|min:6|max:100',
             'password_confirmation' => 'required|same:password',
-            'phone' => 'required|regex:/^(84|0[3|5|7|8|9])+([0-9]{8})$/'
+            'phone' => 'regex:/^[0-9]{10,11}$/'
         ];
 
         $messages = [
@@ -427,7 +427,6 @@ class ValidationHelper
             'password.max' => 'Mật khẩu không được vượt quá 100 ký tự',
             'password_confirmation.required' => 'Xác nhận mật khẩu là bắt buộc',
             'password_confirmation.same' => 'Xác nhận mật khẩu không khớp',
-            'phone.required' => 'Số điện thoại là bắt buộc',
             'phone.regex' => 'Số điện thoại không hợp lệ'
         ];
 

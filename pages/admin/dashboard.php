@@ -4,16 +4,36 @@
  * Tro365 - Website thuê trọ
  */
 
+// Load required files first
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../includes/functions/auth.php';
+
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
 
-// Require moderator role or higher
-requireModerator();
+echo "<!-- Debug: Starting auth check -->";
 
-$auth = new Auth();
-$post = new Post();
-$db = Database::getInstance();
+// Require moderator role or higher - show 403 for unauthenticated users
+requireModeratorStrict();
+
+echo "<!-- Debug: Auth check passed -->";
+
+try {
+    $auth = new Auth();
+    echo "<!-- Debug: Auth object created -->";
+
+    $post = new Post();
+    echo "<!-- Debug: Post object created -->";
+
+    $db = Database::getInstance();
+    echo "<!-- Debug: Database object created -->";
+} catch (Exception $e) {
+    echo "<!-- Debug Error: " . $e->getMessage() . " -->";
+    die("Error creating objects: " . $e->getMessage());
+}
 
 // Force refresh session to get latest role
 $auth->updateSession();
@@ -23,30 +43,61 @@ $auth->requireAdmin();
 
 $currentUser = $auth->getCurrentUser();
 
-// Get statistics
-$stats = [
-    'total_posts' => $post->count([]),
-    'pending_posts' => $post->count(['status' => POST_STATUS_PENDING]),
-    'approved_posts' => $post->count(['status' => POST_STATUS_APPROVED]),
-    'rejected_posts' => $post->count(['status' => POST_STATUS_REJECTED]),
-    'total_users' => $db->count('KhachHang', '1=1'),
-    'total_sellers' => $db->count('KhachHang', 'VaiTroID = :role', ['role' => ROLE_SELLER]),
-    'pending_sellers' => $db->count('KhachHang', 'VaiTroID = :role AND TrangThai = :status', ['role' => ROLE_SELLER, 'status' => 0])
-];
+// Get statistics with error handling
+try {
+    $stats = [
+        'total_posts' => $post->count([]),
+        'pending_posts' => $post->count(['status' => POST_STATUS_PENDING]),
+        'approved_posts' => $post->count(['status' => POST_STATUS_APPROVED]),
+        'rejected_posts' => $post->count(['status' => POST_STATUS_REJECTED]),
+        'total_users' => $db->count('KhachHang', '1=1'),
+        'total_sellers' => $db->count('KhachHang', 'VaiTroID = :role', ['role' => ROLE_SELLER]),
+        'pending_sellers' => $db->count('KhachHang', 'VaiTroID = :role AND TrangThai = :status', ['role' => ROLE_SELLER, 'status' => 0])
+    ];
+} catch (Exception $e) {
+    // Fallback stats if database error
+    $stats = [
+        'total_posts' => 0,
+        'pending_posts' => 0,
+        'approved_posts' => 0,
+        'rejected_posts' => 0,
+        'total_users' => 0,
+        'total_sellers' => 0,
+        'pending_sellers' => 0
+    ];
+    error_log("Dashboard stats error: " . $e->getMessage());
+}
 
-// Get recent posts needing approval
-$pendingPosts = $post->getAll(1, 10, ['status' => POST_STATUS_PENDING]);
+// Get recent posts needing approval with error handling
+try {
+    $pendingPosts = $post->getAll(1, 10, ['status' => POST_STATUS_PENDING]);
+} catch (Exception $e) {
+    $pendingPosts = [];
+    error_log("Dashboard pending posts error: " . $e->getMessage());
+}
 
-// Get recent users
-$recentUsers = $db->select(
-    "SELECT * FROM KhachHang ORDER BY NgayTao DESC LIMIT 10"
-);
+// Get recent users with error handling
+try {
+    $recentUsers = $db->select(
+        "SELECT * FROM KhachHang ORDER BY NgayTao DESC LIMIT 10"
+    );
+} catch (Exception $e) {
+    $recentUsers = [];
+    error_log("Dashboard recent users error: " . $e->getMessage());
+}
 
-// Get total views
-$viewsResult = $db->selectOne("SELECT SUM(LuotXem) as total_views FROM BaiDang");
-$stats['total_views'] = (int)($viewsResult['total_views'] ?? 0);
+// Get total views with error handling
+try {
+    $viewsResult = $db->selectOne("SELECT SUM(LuotXem) as total_views FROM BaiDang");
+    $stats['total_views'] = (int)($viewsResult['total_views'] ?? 0);
+} catch (Exception $e) {
+    $stats['total_views'] = 0;
+    error_log("Dashboard total views error: " . $e->getMessage());
+}
 ?>
 <?php include __DIR__ . '/../../includes/layouts/admin/header.php'; ?>
+
+<!-- Debug: Header included -->
 
 <div class="container-fluid">
     <div class="row">
@@ -57,8 +108,12 @@ $stats['total_views'] = (int)($viewsResult['total_views'] ?? 0);
             </div>
         </div>
 
+        <!-- Debug: After sidebar column -->
+
         <!-- Main content -->
         <div class="col-md-9 col-lg-10 main-content">
+            <!-- Debug: Main content started -->
+
             <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">

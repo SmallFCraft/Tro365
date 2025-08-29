@@ -15,10 +15,10 @@
                 <!-- Company Info -->
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="footer-brand">
-                        <div class="brand-title">
+                        <h5 class="brand-title">
                             <i class="fas fa-home me-2"></i>
                             <?= getWebsiteName() ?>
-                        </div>
+                        </h5>
                         <p class="brand-description">
                             <?= getWebsiteDescription() ?>
                         </p>
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php
 // Render Debug Panel for client pages
 if (isDebugModeEnabled()) {
-    $debugManager = \Tro365\DebugManager::getInstance();
+    $debugManager = \Tro365\Services\DebugManager::getInstance();
     echo $debugManager->renderDebugPanel();
 }
 ?>

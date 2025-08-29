@@ -13,18 +13,61 @@ if (typeof SessionRefresh === "undefined") {
       this.apiEndpoint = "/api/auth/refresh-session";
       this.debug = options.debug || false;
 
+      this.intervalId = null;
       this.init();
     }
 
+    /**
+     * Check if user is logged in by checking for session indicators
+     */
+    isUserLoggedIn() {
+      // Check for common session indicators
+      return (
+        this.currentUserRole !== null ||
+        document.body.classList.contains("logged-in") ||
+        document.querySelector("[data-user-id]") !== null ||
+        window.TRO365_USER_ID !== undefined
+      );
+    }
+
+    /**
+     * Stop session refresh
+     */
+    stopRefresh() {
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+        if (this.debug) {
+          console.log("SessionRefresh: Stopped session refresh");
+        }
+      }
+    }
+
     init() {
+      // Only initialize if user is logged in
+      if (!this.isUserLoggedIn()) {
+        if (this.debug) {
+          console.log(
+            "SessionRefresh: User not logged in, skipping initialization"
+          );
+        }
+        return;
+      }
+
       // Auto-refresh every interval
-      setInterval(() => {
-        this.refreshSession();
+      this.intervalId = setInterval(() => {
+        if (this.isUserLoggedIn()) {
+          this.refreshSession();
+        } else {
+          this.stopRefresh();
+        }
       }, this.refreshInterval);
 
       // Also refresh on page focus (when user comes back to tab)
       window.addEventListener("focus", () => {
-        this.refreshSession();
+        if (this.isUserLoggedIn()) {
+          this.refreshSession();
+        }
       });
 
       // Refresh on page visibility change
@@ -197,6 +240,9 @@ if (typeof SessionRefresh === "undefined") {
     }
 
     handleUnauthenticated() {
+      // Stop session refresh to prevent further 401 errors
+      this.stopRefresh();
+
       // User logged out - automatically redirect to login
       if (this.debug) {
         console.log("User unauthenticated - redirecting to login");
@@ -209,10 +255,12 @@ if (typeof SessionRefresh === "undefined") {
         })
       );
 
-      // Auto-redirect to login
-      setTimeout(() => {
-        window.location.href = "/login?reason=session_expired";
-      }, 1000);
+      // Auto-redirect to login (only if not already on login page)
+      if (!window.location.pathname.includes("/login")) {
+        setTimeout(() => {
+          window.location.href = "/login?reason=session_expired";
+        }, 1000);
+      }
     }
 
     handleRefreshError(data) {

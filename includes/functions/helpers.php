@@ -276,17 +276,34 @@ function dd($data)
  */
 function writeLog($message, $level = 'info', $category = 'general', $context = [])
 {
-    // Prevent infinite loops - don't check debug mode for critical logs
+    // Always log errors and critical messages
     if ($level !== 'error' && $level !== 'critical') {
-        // Use APP_DEBUG constant to avoid database queries
-        if (!defined('APP_DEBUG') || !APP_DEBUG) {
+        // Check if debug mode is enabled
+        $debugEnabled = false;
+
+        // Try multiple ways to check debug mode
+        if (defined('APP_DEBUG') && APP_DEBUG) {
+            $debugEnabled = true;
+        } elseif (function_exists('isDebugModeEnabled') && isDebugModeEnabled()) {
+            $debugEnabled = true;
+        } elseif (isset($_ENV['APP_DEBUG']) && filter_var($_ENV['APP_DEBUG'], FILTER_VALIDATE_BOOLEAN)) {
+            $debugEnabled = true;
+        }
+
+        if (!$debugEnabled) {
             return;
         }
     }
 
     // Resolve log directory and file
     $logDir = rtrim(LOG_PATH, '/\\');
-    $logFile = $logDir . '/app.log';
+
+    // Separate debug logs into debug.log file
+    if ($level === 'debug' || $category === 'debug') {
+        $logFile = $logDir . '/debug.log';
+    } else {
+        $logFile = $logDir . '/app.log';
+    }
     $timestamp = date('Y-m-d H:i:s');
 
     // Format context data

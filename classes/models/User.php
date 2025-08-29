@@ -40,7 +40,7 @@ class User extends BaseModel
             'email' => 'required|email',
             'password' => 'required|min:6|max:100',
             'full_name' => 'required|min:2|max:100',
-            'phone' => 'nullable|regex:/^(84|0[3|5|7|8|9])+([0-9]{8})$/',
+            'phone' => 'nullable|regex:/^[0-9]{10,11}$/',
             'cccd' => 'nullable|regex:/^[0-9]{9,12}$/',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:Nam,Nữ,Khác'
@@ -72,17 +72,17 @@ class User extends BaseModel
                 'errors' => $validation['errors'],
                 'username' => $data['TenDN'] ?? 'unknown'
             ]);
-            throw new Exception(implode(', ', $errors));
+            throw new \Exception(implode(', ', $errors));
         }
 
         // Check if username exists
         if ($this->usernameExists($data['TenDN'])) {
-            throw new Exception("Tên đăng nhập đã tồn tại");
+            throw new \Exception("Tên đăng nhập đã tồn tại");
         }
 
         // Check if email exists
         if ($this->emailExists($data['Email'])) {
-            throw new Exception("Email đã tồn tại");
+            throw new \Exception("Email đã tồn tại");
         }
 
         // Hash password
@@ -141,20 +141,20 @@ class User extends BaseModel
         unset($data['ID'], $data['MatKhau'], $data['NgayTao']);
 
         if (empty($data)) {
-            throw new Exception("Không có dữ liệu để cập nhật");
+            throw new \Exception("Không có dữ liệu để cập nhật");
         }
 
         // Validate email if provided
         if (isset($data['Email'])) {
             $emailValidation = ValidationHelper::validateEmail($data['Email']);
             if (!$emailValidation['valid']) {
-                throw new Exception(implode(', ', $emailValidation['errors']));
+                throw new \Exception(implode(', ', $emailValidation['errors']));
             }
 
             // Check if email exists for other users
             $existing = $this->getByEmail($data['Email']);
             if ($existing && $existing['ID'] != $id) {
-                throw new Exception("Email đã tồn tại");
+                throw new \Exception("Email đã tồn tại");
             }
         }
 
@@ -162,25 +162,25 @@ class User extends BaseModel
         if (isset($data['NgaySinh']) && !empty($data['NgaySinh'])) {
             $birthDate = \DateTime::createFromFormat('Y-m-d', $data['NgaySinh']);
             if (!$birthDate || $birthDate->format('Y-m-d') !== $data['NgaySinh']) {
-                throw new Exception('Ngày sinh không hợp lệ');
+                throw new \Exception('Ngày sinh không hợp lệ');
             }
 
             // Check if birth date is not in the future
             if ($birthDate > new \DateTime()) {
-                throw new Exception('Ngày sinh không thể là ngày trong tương lai');
+                throw new \Exception('Ngày sinh không thể là ngày trong tương lai');
             }
 
             // Check minimum age (13 years old)
             $minAge = new \DateTime('-13 years');
             if ($birthDate > $minAge) {
-                throw new Exception('Bạn phải ít nhất 13 tuổi');
+                throw new \Exception('Bạn phải ít nhất 13 tuổi');
             }
         }
 
         // Validate CCCD
         if (isset($data['CCCD']) && !empty($data['CCCD'])) {
             if (!preg_match('/^[0-9]{9,12}$/', $data['CCCD'])) {
-                throw new Exception('CCCD phải có từ 9-12 chữ số');
+                throw new \Exception('CCCD phải có từ 9-12 chữ số');
             }
         }
 
@@ -188,7 +188,7 @@ class User extends BaseModel
         if (isset($data['GioiTinh']) && !empty($data['GioiTinh'])) {
             $validGenders = ['Nam', 'Nữ', 'Khác'];
             if (!in_array($data['GioiTinh'], $validGenders)) {
-                throw new Exception('Giới tính không hợp lệ');
+                throw new \Exception('Giới tính không hợp lệ');
             }
         }
     }
@@ -200,7 +200,7 @@ class User extends BaseModel
     {
         $user = $this->getByEmail($email);
         if (!$user) {
-            throw new Exception("Email không tồn tại trong hệ thống");
+            throw new \Exception("Email không tồn tại trong hệ thống");
         }
 
         // Generate secure token
@@ -239,21 +239,22 @@ class User extends BaseModel
     {
         $user = $this->getByResetToken($token);
         if (!$user) {
-            throw new Exception("Token không hợp lệ hoặc đã hết hạn");
+            throw new \Exception("Token không hợp lệ hoặc đã hết hạn");
         }
 
         // Validate new password
-        $passwordValidation = ValidationHelper::validatePassword($newPassword);
+        $passwordValidation = \Tro365\Helpers\ValidationHelper::validatePassword($newPassword);
         if (!$passwordValidation['valid']) {
-            throw new Exception(implode(', ', $passwordValidation['errors']));
+            throw new \Exception(implode(', ', $passwordValidation['errors']));
         }
 
-        // Update password and clear token
-        $this->update($user['ID'], [
-            'MatKhau' => password_hash($newPassword, PASSWORD_DEFAULT),
+        // Update password and clear token - bypass beforeUpdate hook
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $this->db->update('KhachHang', [
+            'MatKhau' => $hashedPassword,
             'reset_token' => null,
             'reset_expiry' => null
-        ]);
+        ], 'ID = :id', ['id' => $user['ID']]);
 
         return $user;
     }
@@ -272,15 +273,15 @@ class User extends BaseModel
             }
             
             if (!$user) {
-                throw new Exception("Tên đăng nhập hoặc email không tồn tại");
+                throw new \Exception("Tên đăng nhập hoặc email không tồn tại");
             }
             
             if ($user['TrangThai'] != USER_STATUS_ACTIVE) {
-                throw new Exception("Tài khoản đã bị khóa hoặc chưa được kích hoạt");
+                throw new \Exception("Tài khoản đã bị khóa hoặc chưa được kích hoạt");
             }
             
             if (!password_verify($password, $user['MatKhau'])) {
-                throw new Exception("Mật khẩu không đúng");
+                throw new \Exception("Mật khẩu không đúng");
             }
             
             // Update last login time
@@ -289,7 +290,7 @@ class User extends BaseModel
             return $user;
             
         } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -302,20 +303,23 @@ class User extends BaseModel
             // Get user data
             $user = $this->getById($userId);
             if (!$user) {
-                throw new Exception("Người dùng không tồn tại");
+                throw new \Exception("Người dùng không tồn tại");
             }
 
             // Verify current password
             if (!password_verify($currentPassword, $user['MatKhau'])) {
-                throw new Exception("Mật khẩu hiện tại không đúng");
+                throw new \Exception("Mật khẩu hiện tại không đúng");
             }
 
             // Validate new password
-            ValidationHelper::validatePassword($newPassword);
+            $passwordValidation = \Tro365\Helpers\ValidationHelper::validatePassword($newPassword);
+            if (!$passwordValidation['valid']) {
+                throw new \Exception(implode(', ', $passwordValidation['errors']));
+            }
 
             // Check if new password is different from current
             if (password_verify($newPassword, $user['MatKhau'])) {
-                throw new Exception("Mật khẩu mới phải khác mật khẩu hiện tại");
+                throw new \Exception("Mật khẩu mới phải khác mật khẩu hiện tại");
             }
 
             // Hash new password
@@ -331,7 +335,7 @@ class User extends BaseModel
             return true;
 
         } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -356,7 +360,7 @@ class User extends BaseModel
             // Get current user data for comparison
             $currentUser = $this->getById($id);
             if (!$currentUser) {
-                throw new Exception('User not found');
+                throw new \Exception('User not found');
             }
 
             // Update user data
@@ -385,13 +389,14 @@ class User extends BaseModel
     {
         $sql = "SELECT COUNT(*) as count FROM KhachHang WHERE TenDN = :username";
         $params = ['username' => $username];
-        
+
         if ($excludeId) {
             $sql .= " AND ID != :excludeId";
             $params['excludeId'] = $excludeId;
         }
-        
+
         $result = $this->db->selectOne($sql, $params);
+
         return $result['count'] > 0;
     }
     
@@ -486,7 +491,7 @@ class User extends BaseModel
         try {
             return $this->db->delete('KhachHang', 'ID = :id', ['id' => $id]);
         } catch (Exception $e) {
-            throw new Exception("Lỗi xóa người dùng: " . $e->getMessage());
+            throw new \Exception("Lỗi xóa người dùng: " . $e->getMessage());
         }
     }
 
@@ -506,10 +511,10 @@ class User extends BaseModel
                 return $token;
             }
 
-            throw new Exception("Không thể tạo token xác thực");
+            throw new \Exception("Không thể tạo token xác thực");
 
         } catch (Exception $e) {
-            throw new Exception("Lỗi tạo token xác thực: " . $e->getMessage());
+            throw new \Exception("Lỗi tạo token xác thực: " . $e->getMessage());
         }
     }
 
@@ -526,7 +531,7 @@ class User extends BaseModel
             );
 
             if (!$user) {
-                throw new Exception("Token xác thực không hợp lệ hoặc đã được sử dụng");
+                throw new \Exception("Token xác thực không hợp lệ hoặc đã được sử dụng");
             }
 
             // Update user as verified
@@ -539,10 +544,10 @@ class User extends BaseModel
                 return $user;
             }
 
-            throw new Exception("Không thể xác thực email");
+            throw new \Exception("Không thể xác thực email");
 
         } catch (Exception $e) {
-            throw new Exception("Lỗi xác thực email: " . $e->getMessage());
+            throw new \Exception("Lỗi xác thực email: " . $e->getMessage());
         }
     }
 
@@ -588,11 +593,11 @@ class User extends BaseModel
             $user = $this->getByEmail($email);
 
             if (!$user) {
-                throw new Exception("Email không tồn tại trong hệ thống");
+                throw new \Exception("Email không tồn tại trong hệ thống");
             }
 
             if ($this->isEmailVerified($user['ID'])) {
-                throw new Exception("Email đã được xác thực");
+                throw new \Exception("Email đã được xác thực");
             }
 
             // Generate new token
@@ -604,7 +609,7 @@ class User extends BaseModel
             ];
 
         } catch (Exception $e) {
-            throw new Exception("Lỗi gửi lại email xác thực: " . $e->getMessage());
+            throw new \Exception("Lỗi gửi lại email xác thực: " . $e->getMessage());
         }
     }
 }

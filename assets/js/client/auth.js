@@ -566,19 +566,33 @@ window.Tro365Auth = {
     const forms = document.querySelectorAll("form");
 
     forms.forEach(form => {
-      form.addEventListener("submit", function () {
+      // Remove any existing submit listeners to prevent double submission
+      const newForm = form.cloneNode(true);
+      form.parentNode.replaceChild(newForm, form);
+
+      newForm.addEventListener("submit", function (event) {
+        // Prevent double submission
+        if (this.dataset.submitting === "true") {
+          event.preventDefault();
+          return false;
+        }
+
         // Only add loading state if form is valid
         if (this.checkValidity()) {
+          // Mark as submitting
+          this.dataset.submitting = "true";
+
           const submitBtn = this.querySelector('button[type="submit"]');
           if (submitBtn) {
             submitBtn.classList.add("btn-loading");
             submitBtn.disabled = true;
 
-            // Re-enable after 5 seconds as fallback
+            // Re-enable after 10 seconds as fallback
             setTimeout(() => {
               submitBtn.classList.remove("btn-loading");
               submitBtn.disabled = false;
-            }, 5000);
+              this.dataset.submitting = "false";
+            }, 10000);
           }
         }
       });

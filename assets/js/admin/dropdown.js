@@ -118,12 +118,65 @@ window.Tro365UniversalDropdownManager =
         }
 
         if (!dropdown) {
+          // Dispose any existing Bootstrap instance first
+          const existingInstance =
+            bootstrap.Dropdown.getInstance(dropdownToggle);
+          if (existingInstance) {
+            existingInstance.dispose();
+          }
+
           // Use viewport boundary for both admin and client to avoid clipping issues
           const boundary = "viewport";
-          dropdown = new bootstrap.Dropdown(dropdownToggle, {
-            autoClose: true,
-            boundary,
-          });
+          try {
+            dropdown = new bootstrap.Dropdown(dropdownToggle, {
+              autoClose: true,
+              boundary,
+            });
+          } catch (error) {
+            console.warn(
+              `${this.getLogPrefix()} Bootstrap dropdown creation error:`,
+              error
+            );
+            return; // Skip this dropdown if creation fails
+          }
+
+          // Remove Bootstrap data attribute to avoid conflicts
+          dropdownToggle.removeAttribute("data-bs-toggle");
+
+          // Add manual click handler that doesn't use Bootstrap dropdown instance
+          dropdownToggle.addEventListener(
+            "click",
+            function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              try {
+                // Find the dropdown menu manually
+                const dropdownMenu = dropdownToggle.nextElementSibling;
+                if (
+                  dropdownMenu &&
+                  dropdownMenu.classList.contains("dropdown-menu")
+                ) {
+                  const isShown = dropdownMenu.classList.contains("show");
+
+                  if (isShown) {
+                    // Hide dropdown
+                    dropdownMenu.classList.remove("show");
+                    dropdownToggle.setAttribute("aria-expanded", "false");
+                  } else {
+                    // Show dropdown
+                    dropdownMenu.classList.add("show");
+                    dropdownToggle.setAttribute("aria-expanded", "true");
+                  }
+                }
+              } catch (error) {
+                console.warn(
+                  `${this.getLogPrefix()} dropdown toggle error:`,
+                  error
+                );
+              }
+            }.bind(this)
+          );
           this.dropdownInstances.set(dropdownToggle, dropdown);
           console.log(
             `${this.getLogPrefix()} dropdown instance created for:`,

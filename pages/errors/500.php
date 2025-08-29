@@ -27,7 +27,9 @@ include_once __DIR__ . '/../../includes/layouts/client/header.php';
         <div class="error-container">
             <!-- Error Icon -->
             <div class="error-icon error-500">
-                <i class="fas fa-exclamation-triangle"></i>
+                <div class="error-icon-container">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
             </div>
 
             <!-- Error Number -->

@@ -269,10 +269,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <strong>Thành công!</strong>
                                     <p><?= e($success) ?></p>
                                     <div class="mt-3">
-                                        <a href="/login" class="btn-seller btn-seller-success">
-                                            <i class="fas fa-sign-in-alt"></i>
-                                            Đăng nhập ngay
-                                        </a>
+                                        <?php if (isLoggedIn()): ?>
+                                            <a href="/" class="btn-seller btn-seller-success">
+                                                <i class="fas fa-home"></i>
+                                                Về trang chủ
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="/login" class="btn-seller btn-seller-success">
+                                                <i class="fas fa-sign-in-alt"></i>
+                                                Đăng nhập ngay
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -862,7 +869,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const feedback = document.getElementById('phoneFeedback');
             if (!feedback || !phone) return;
 
-            const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+            const phoneRegex = /^0[3|5|7|8|9][0-9]{8}$/;
             if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
                 showFeedback(feedback, 'Số điện thoại không hợp lệ', false);
                 return;

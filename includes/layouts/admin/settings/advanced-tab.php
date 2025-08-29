@@ -42,7 +42,7 @@
                                 </div>
                             </div>
                             <div class="d-grid">
-                                <button type="button" class="btn btn-primary" onclick="updateVersion()">
+                                <button type="button" class="btn btn-primary" data-action="update-version">
                                     <i class="fas fa-save me-1"></i>
                                     Cập nhật phiên bản
                                 </button>
@@ -161,15 +161,15 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-outline-warning" onclick="Tro365Settings.clearCache()" title="Xóa cache hệ thống và log files">
+                        <button type="button" class="btn btn-outline-warning" data-action="clear-cache" title="Xóa cache hệ thống và log files">
                             <i class="fas fa-trash me-1"></i>
                             Xóa Cache & Logs
                         </button>
-                        <button type="button" class="btn btn-outline-info" onclick="exportSystemInfo()">
+                        <button type="button" class="btn btn-outline-info" data-action="export-system-info">
                             <i class="fas fa-download me-1"></i>
                             Xuất thông tin hệ thống
                         </button>
-                        <button type="button" class="btn btn-outline-danger" onclick="resetToDefault()">
+                        <button type="button" class="btn btn-outline-danger" data-action="reset-to-default">
                             <i class="fas fa-undo me-1"></i>
                             Khôi phục mặc định
                         </button>
@@ -209,7 +209,7 @@
             </div>
 
             <div class="text-end">
-                <button type="button" class="btn btn-success btn-sm" onclick="saveTinyMCESettings()">
+                <button type="button" class="btn btn-success btn-sm" data-action="save-tinymce-settings">
                     <i class="fas fa-save me-1"></i>
                     Lưu cấu hình
                 </button>

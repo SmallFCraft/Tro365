@@ -57,7 +57,7 @@ function requireLogin($redirectUrl = null) {
     if (!isLoggedIn()) {
         $redirectUrl = $redirectUrl ?: $_SERVER['REQUEST_URI'];
         $_SESSION['redirect_after_login'] = $redirectUrl;
-        header('Location: /auth/login');
+        header('Location: /login');
         exit;
     }
 }
@@ -67,16 +67,21 @@ function requireLogin($redirectUrl = null) {
  */
 function requireRole($roleId) {
     requireLogin();
-    
+
     if (!hasRole($roleId)) {
         http_response_code(403);
-        include_once __DIR__ . '/../layouts/client/header.php';
-        echo '<div class="container mt-5 text-center">';
-        echo '<h1>403 - Không có quyền truy cập</h1>';
-        echo '<p>Bạn không có quyền truy cập vào trang này.</p>';
-        echo '<a href="/" class="btn btn-primary">Về trang chủ</a>';
-        echo '</div>';
-        include_once __DIR__ . '/../layouts/client/footer.php';
+        include_once __DIR__ . '/../../pages/errors/403.php';
+        exit;
+    }
+}
+
+/**
+ * Require specific role - show 403 error for both unauthenticated and insufficient permissions
+ */
+function requireRoleStrict($roleId) {
+    if (!isLoggedIn() || !hasRole($roleId)) {
+        http_response_code(403);
+        include_once __DIR__ . '/../../pages/errors/403.php';
         exit;
     }
 }
@@ -89,10 +94,24 @@ function requireAdmin() {
 }
 
 /**
+ * Require admin role - show 403 error for both unauthenticated and insufficient permissions
+ */
+function requireAdminStrict() {
+    requireRoleStrict(ROLE_ADMIN);
+}
+
+/**
  * Require moderator role or higher
  */
 function requireModerator() {
     requireRole(ROLE_MODERATOR);
+}
+
+/**
+ * Require moderator role or higher - show 403 error for both unauthenticated and insufficient permissions
+ */
+function requireModeratorStrict() {
+    requireRoleStrict(ROLE_MODERATOR);
 }
 
 /**

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?? 'Admin Panel' ?> - <?= getWebsiteName() ?></title>
     <meta name="description" content="Admin Panel - <?= getWebsiteName() ?>">
-    
+
     <!-- Resource Hints: Preconnect to critical origins -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -21,6 +21,9 @@
     <!-- SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
     <!-- Common Components CSS -->
     <link href="/assets/css/components/common.css" rel="stylesheet">
 
@@ -34,8 +37,13 @@
     <?php
     $am = new \Tro365\Assets\AssetManager(app_url(''));
     $am->addMetaTags(['csrf' => csrf_token()]);
+    // Admin-only toast styles (GlassMorphism) for TroToast
     echo $am->renderHead();
     ?>
+
+    <!-- Admin-only Toast CSS (safe, no dependency on client CSS) -->
+    <link href="/assets/css/admin/toast.css" rel="stylesheet">
+
 
     <!-- Additional CSS for specific pages -->
     <?php if (isset($additionalCSS)): ?>
@@ -46,6 +54,8 @@
 
     <?php
     // Initialize Debug Manager for admin pages
+    // TODO: Implement DebugManager class
+    /*
     if (isDebugModeEnabled()) {
         $debugManager = \Tro365\DebugManager::getInstance();
         $debugManager->addDebugInfo('page', 'type', 'admin');
@@ -54,8 +64,9 @@
         $debugManager->addDebugInfo('admin', 'user_id', $_SESSION['user_id'] ?? 'guest');
         $debugManager->addDebugInfo('admin', 'user_role', $_SESSION['user_role'] ?? 'none');
     }
+    */
     ?>
-    
+
     <!-- Custom CSS -->
     <?php if (isset($customCSS)): ?>
         <style><?= $customCSS ?></style>
@@ -69,10 +80,13 @@
  * Tro365 - Website thuê trọ
  */
 
-use Tro365\Core\Auth;
-
-$auth = new Auth();
-$currentUser = $auth->getCurrentUser();
+try {
+    $auth = new \Tro365\Core\Auth();
+    $currentUser = $auth->getCurrentUser();
+} catch (Exception $e) {
+    error_log("Admin header error: " . $e->getMessage());
+    $currentUser = null;
+}
 ?>
 
 <!-- Admin Navigation -->
@@ -122,7 +136,7 @@ $currentUser = $auth->getCurrentUser();
                     <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/admin/statistics') === 0 ? 'active' : '' ?>" href="/admin/statistics">
                         <i class="fas fa-chart-bar me-2"></i>Thống kê
                     </a>
-                </li>   
+                </li>
             </ul>
 
             <ul class="navbar-nav me-3">
@@ -148,7 +162,7 @@ $currentUser = $auth->getCurrentUser();
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle user-profile" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="d-flex align-items-center">
-                            <?php if ($currentUser['AnhDaiDien']): ?>
+                            <?php if ($currentUser && $currentUser['AnhDaiDien']): ?>
                                 <img src="<?= e($currentUser['AnhDaiDien']) ?>"
                                      alt="Avatar"
                                      class="rounded-circle me-2 user-avatar"
@@ -159,7 +173,7 @@ $currentUser = $auth->getCurrentUser();
                                 </div>
                             <?php endif; ?>
                             <div class="user-info">
-                                <span class="fw-semibold text-white"><?= e($currentUser['HoTen']) ?></span>
+                                <span class="fw-semibold text-white"><?= e($currentUser ? $currentUser['HoTen'] : 'Unknown') ?></span>
                                 <br>
                                 <small class="text-white-50">
                                     <?php
@@ -170,7 +184,7 @@ $currentUser = $auth->getCurrentUser();
                                         4 => 'Moderator',
                                         5 => 'Admin'
                                     ];
-                                    echo $roleNames[$currentUser['VaiTroID']] ?? 'Unknown';
+                                    echo $currentUser ? ($roleNames[$currentUser['VaiTroID']] ?? 'Unknown') : 'Unknown';
                                     ?>
                                 </small>
                             </div>
@@ -179,7 +193,7 @@ $currentUser = $auth->getCurrentUser();
                     <ul class="dropdown-menu dropdown-menu-end user-dropdown">
                         <li class="dropdown-header">
                             <div class="d-flex align-items-center">
-                                <?php if ($currentUser['AnhDaiDien']): ?>
+                                <?php if ($currentUser && $currentUser['AnhDaiDien']): ?>
                                     <img src="<?= e($currentUser['AnhDaiDien']) ?>"
                                          alt="Avatar"
                                          class="rounded-circle me-2"
@@ -188,8 +202,8 @@ $currentUser = $auth->getCurrentUser();
                                     <i class="fas fa-user-circle me-2 text-muted" style="font-size: 2.5rem;"></i>
                                 <?php endif; ?>
                                 <div>
-                                    <div class="fw-semibold"><?= e($currentUser['HoTen']) ?></div>
-                                    <small class="text-muted"><?= e($currentUser['Email']) ?></small>
+                                    <div class="fw-semibold"><?= e($currentUser ? $currentUser['HoTen'] : 'Unknown') ?></div>
+                                    <small class="text-muted"><?= e($currentUser ? $currentUser['Email'] : 'unknown@example.com') ?></small>
                                 </div>
                             </div>
                         </li>
@@ -226,9 +240,9 @@ $currentUser = $auth->getCurrentUser();
 <div class="main-content">
 
 <!-- Flash Messages -->
-<?php 
+<?php
 $flash = getFlashMessage();
-if ($flash): 
+if ($flash):
 ?>
     <div class="container-fluid mt-3">
         <div class="alert alert-<?= $flash['type'] === MSG_SUCCESS ? 'success' : ($flash['type'] === MSG_WARNING ? 'warning' : 'danger') ?> alert-dismissible fade show" role="alert">

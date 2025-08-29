@@ -35,9 +35,21 @@ try {
             }
             
             $auth = new Auth();
-            
+
+            // Debug logging for session refresh
+            logAPI("Session refresh attempt", [
+                'session_id' => session_id(),
+                'user_id' => $_SESSION['user_id'] ?? null,
+                'session_data' => array_keys($_SESSION),
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ]);
+
             // Check if user is logged in
             if (!$auth->isLoggedIn()) {
+                logAPI("Session refresh failed - not authenticated", [
+                    'session_id' => session_id(),
+                    'session_data' => $_SESSION
+                ]);
                 http_response_code(401);
                 echo json_encode(['error' => 'Not authenticated']);
                 exit;

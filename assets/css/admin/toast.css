@@ -1,0 +1,64 @@
+/* Admin-only GlassMorphism Toast Styles (no dependency on client CSS vars) */
+/* Scope: gm-toast used by window.TroToast from assets/js/modern/toast.js */
+
+.gm-toast-container{
+  position:fixed; top:100px; right:12px; z-index:11000;
+  display:flex; flex-direction:column; gap:10px; pointer-events:none;
+}
+
+.gm-toast{
+  pointer-events:auto;
+  min-width:260px; max-width:min(92vw, 420px);
+  background:rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border:1px solid rgba(0,0,0,0.12);
+  border-radius:14px;
+  color:#1f2937; /* neutral-800 */
+  box-shadow:0 8px 32px rgba(0,0,0,0.12);
+  transform: translateX(120%);
+  opacity:0;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.gm-toast.is-visible{ transform: translateX(0); opacity:1; }
+
+.gm-toast__inner{
+  display:grid; grid-template-columns:24px 1fr 28px; align-items:center;
+  gap:10px; padding:12px 14px;
+}
+.gm-toast__icon{ opacity:.9; color:#0d6efd; }
+.gm-toast__message{ font-size:.95rem; line-height:1.35; }
+.gm-toast__close{ background:transparent; border:0; color:inherit; opacity:.7; cursor:pointer; }
+.gm-toast__close:hover{ opacity:1; }
+
+/* Bottom progress bar */
+.gm-toast__progress{
+  height:2px; width:100%; background:linear-gradient(90deg, rgba(13,110,253,.85), rgba(13,110,253,.25));
+}
+
+/* Variants (borders only, subtle) */
+.gm-toast--success{ border-color: rgba(25,135,84,.35); }
+.gm-toast--error{ border-color: rgba(220,53,69,.35); }
+.gm-toast--warning{ border-color: rgba(255,193,7,.45); }
+
+/* Dark mode friendly (admin uses dark navbar; keep toast readable) */
+@media (prefers-color-scheme: dark){
+  .gm-toast{
+    background: rgba(30,32,38,0.92);
+    color: #e5e7eb; /* neutral-200 */
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  }
+  .gm-toast__icon{ color:#8ab4ff; }
+  .gm-toast__progress{ background: linear-gradient(90deg, rgba(138,180,255,.9), rgba(138,180,255,.25)); }
+  .gm-toast--success{ border-color: rgba(46,204,113,.35); }
+  .gm-toast--error{ border-color: rgba(231,76,60,.35); }
+  .gm-toast--warning{ border-color: rgba(241,196,15,.45); }
+}
+
+/* Mobile adjustments */
+@media (max-width:480px){
+  .gm-toast-container{ top:90px; right:10px; left:10px; align-items:stretch; }
+  .gm-toast{ max-width:none; }
+}
+

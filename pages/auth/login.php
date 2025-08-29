@@ -67,9 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get flash message
 $flash = getFlashMessage();
+$info = '';
 if ($flash) {
     if ($flash['type'] === MSG_SUCCESS) {
         $success = $flash['message'];
+    } elseif ($flash['type'] === MSG_INFO) {
+        $info = $flash['message'];
     } else {
         $error = $flash['message'];
     }
@@ -148,7 +151,15 @@ if ($flash) {
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
-                        
+
+                        <?php if ($info): ?>
+                            <div class="auth-status-enhanced success">
+                                <i class="fas fa-check-circle status-icon"></i>
+                                <h5>Đăng ký thành công</h5>
+                                <p><?= e($info) ?></p>
+                            </div>
+                        <?php endif; ?>
+
                         <?php if ($success): ?>
                             <div class="auth-status-enhanced success">
                                 <i class="fas fa-check-circle status-icon"></i>
@@ -273,8 +284,8 @@ if ($flash) {
 
         // Enhanced Password Toggle Function using DOM Utils
         function togglePasswordVisibility(fieldId, iconId) {
-            const passwordField = window.DOM ? DOM.$(fieldId) : document.getElementById(fieldId);
-            const toggleIcon = window.DOM ? DOM.$(iconId) : document.getElementById(iconId);
+            const passwordField = document.getElementById(fieldId);
+            const toggleIcon = document.getElementById(iconId);
 
             if (passwordField && toggleIcon) {
                 if (passwordField.type === 'password') {
@@ -284,6 +295,8 @@ if ($flash) {
                     passwordField.type = 'password';
                     toggleIcon.className = 'fas fa-eye';
                 }
+            } else {
+                console.error('Toggle elements not found:', { passwordField, toggleIcon });
             }
         }
 

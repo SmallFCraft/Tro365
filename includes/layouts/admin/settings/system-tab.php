@@ -192,6 +192,24 @@
                             <i class="fas fa-info-circle text-info me-1"></i>
                             Hiển thị thông báo debug, status badge và thông tin lỗi chi tiết
                         </div>
+
+                        <?php if (isDebugModeEnabled()): ?>
+                        <div class="debug-panel-container mt-3">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-bug"></i> Debug Mode Active</h6>
+                                <div class="debug-info">
+                                    <small>
+                                        <strong>PHP Version:</strong> <?= PHP_VERSION ?><br>
+                                        <strong>Memory Usage:</strong> <?= formatBytes(memory_get_usage(true)) ?><br>
+                                        <strong>Session ID:</strong> <?= session_id() ?><br>
+                                        <strong>Log Path:</strong> <?= LOG_PATH ?><br>
+                                        <strong>Debug Status:</strong> <span class="text-success">ENABLED</span><br>
+                                        <strong>Current Time:</strong> <?= date('Y-m-d H:i:s') ?>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

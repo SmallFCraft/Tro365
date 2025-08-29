@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'username' => 'required|min:3|max:50|alpha_num',
             'email' => 'required|email',
             'fullname' => 'required|min:2|max:100',
-            'phone' => 'nullable|regex:/^(84|0[3|5|7|8|9])+([0-9]{8})$/',
+            'phone' => 'nullable|regex:/^(84[0-9]{9}|0[3|5|7|8|9][0-9]{8})$/',
             'cccd' => 'nullable|regex:/^[0-9]{9,12}$/',
             'birth_date' => 'nullable|date',
             'role_id' => 'required|integer|min:1|max:5',

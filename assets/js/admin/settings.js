@@ -14,6 +14,7 @@ window.Tro365Settings = {
     this.initStyles();
     this.bindEditVersionEvents();
     this.bindTestEmailEvents();
+    this.initEventDelegation();
 
     console.log("Tro365 Settings JavaScript initialized");
   },
@@ -33,6 +34,48 @@ window.Tro365Settings = {
             }
         `;
     document.head.appendChild(settingsStyle);
+  },
+
+  /**
+   * Initialize event delegation for data-action buttons
+   */
+  initEventDelegation: function () {
+    const self = this;
+
+    // Event delegation for all buttons with data-action
+    document.addEventListener("click", function (e) {
+      const button = e.target.closest("[data-action]");
+      if (!button) return;
+
+      // Prevent default behavior to avoid form submission or page reload
+      e.preventDefault();
+      e.stopPropagation();
+
+      const action = button.getAttribute("data-action");
+
+      switch (action) {
+        case "clear-cache":
+          self.clearCache();
+          break;
+        case "export-settings":
+          exportSettings();
+          break;
+        case "update-version":
+          self.updateVersion();
+          break;
+        case "export-system-info":
+          self.exportSystemInfo();
+          break;
+        case "reset-to-default":
+          self.resetToDefault();
+          break;
+        case "save-tinymce-settings":
+          saveTinyMCESettings();
+          break;
+        default:
+          console.warn("Unknown action:", action);
+      }
+    });
   },
 
   /**
@@ -498,6 +541,71 @@ window.Tro365Settings = {
   },
 
   /**
+   * Show custom confirmation modal
+   */
+  showConfirmModal: function (options) {
+    const {
+      title = "Xác nhận",
+      message = "Bạn có chắc chắn?",
+      confirmText = "Xác nhận",
+      cancelText = "Hủy",
+      confirmClass = "btn-primary",
+      onConfirm = () => {},
+      onCancel = () => {},
+    } = options;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById("confirmModal");
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // Create modal HTML with glassmorphism styling
+    const modalHtml = `
+      <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px;">
+            <div class="modal-header border-0">
+              <h5 class="modal-title" id="confirmModalLabel">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                ${title}
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              ${message}
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelText}</button>
+              <button type="button" class="btn ${confirmClass}" id="confirmModalBtn">${confirmText}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add modal to DOM
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+    // Initialize and show modal
+    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+    modal.show();
+
+    // Handle confirm button
+    document.getElementById("confirmModalBtn").addEventListener("click", () => {
+      modal.hide();
+      onConfirm();
+    });
+
+    // Handle modal close (cleanup)
+    document
+      .getElementById("confirmModal")
+      .addEventListener("hidden.bs.modal", () => {
+        document.getElementById("confirmModal").remove();
+      });
+  },
+
+  /**
    * Debounce function
    */
   debounce: function (func, wait) {
@@ -516,14 +624,32 @@ window.Tro365Settings = {
    * Clear cache and logs
    */
   clearCache: function () {
-    if (
-      !confirm(
-        "Bạn có chắc chắn muốn xóa cache và log files?\n\nHành động này sẽ:\n- Xóa tất cả cache hệ thống\n- Xóa log files cũ\n- Làm trống log files hôm nay"
-      )
-    ) {
-      return;
-    }
+    // Use custom confirmation modal instead of browser confirm
+    this.showConfirmModal({
+      title: "Xác nhận xóa Cache & Logs",
+      message: `
+        <p>Bạn có chắc chắn muốn xóa cache và log files?</p>
+        <div class="alert alert-warning mt-3">
+          <strong>Hành động này sẽ:</strong>
+          <ul class="mb-0 mt-2">
+            <li>Xóa tất cả cache hệ thống</li>
+            <li>Xóa log files cũ</li>
+            <li>Làm trống log files hôm nay</li>
+          </ul>
+        </div>
+      `,
+      confirmText: "Xóa Cache",
+      confirmClass: "btn-warning",
+      onConfirm: () => {
+        this.performClearCache();
+      },
+    });
+  },
 
+  /**
+   * Perform actual cache clearing
+   */
+  performClearCache: function () {
     fetch("/admin/cache/clear", {
       method: "POST",
       headers: {
@@ -920,7 +1046,13 @@ window.Tro365Settings = {
 
 // Auto-initialize on DOM ready
 document.addEventListener("DOMContentLoaded", function () {
-  window.Tro365Settings.init();
+  console.log("🔧 Initializing Tro365Settings...");
+  if (typeof window.Tro365Settings !== "undefined") {
+    window.Tro365Settings.init();
+    console.log("✅ Tro365Settings initialized successfully");
+  } else {
+    console.error("❌ Tro365Settings object not found");
+  }
 });
 
 // Global functions for backward compatibility

@@ -158,8 +158,8 @@ include_once __DIR__ . '/../../includes/layouts/client/header.php';
                                            placeholder="Nhập mật khẩu mới"
                                            required
                                            autocomplete="new-password">
-                                    <button type="button" class="auth-input-toggle" id="toggleNewPassword">
-                                        <i class="fas fa-eye"></i>
+                                    <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('password', 'toggleIcon1')" aria-label="Hiện/ẩn mật khẩu">
+                                        <i class="fas fa-eye" id="toggleIcon1"></i>
                                     </button>
                                 </div>
 
@@ -188,8 +188,8 @@ include_once __DIR__ . '/../../includes/layouts/client/header.php';
                                            placeholder="Nhập lại mật khẩu mới"
                                            required
                                            autocomplete="new-password">
-                                    <button type="button" class="auth-input-toggle" id="toggleConfirmPassword">
-                                        <i class="fas fa-eye"></i>
+                                    <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('confirm_password', 'toggleIcon2')" aria-label="Hiện/ẩn mật khẩu">
+                                        <i class="fas fa-eye" id="toggleIcon2"></i>
                                     </button>
                                 </div>
                                 <div class="auth-form-feedback" id="confirmPasswordFeedback"></div>
@@ -291,12 +291,29 @@ include_once __DIR__ . '/../../includes/layouts/client/header.php';
 
 <!-- Enhanced JavaScript for better UX -->
 <script>
+// Global Password Toggle Function
+function togglePasswordVisibility(fieldId, iconId) {
+    const passwordField = document.getElementById(fieldId);
+    const toggleIcon = document.getElementById(iconId);
+
+    if (passwordField && toggleIcon) {
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Tro365Auth if available
     if (window.Tro365Auth) {
         Tro365Auth.initThemeSupport();
         Tro365Auth.initMobileOptimizations();
-        Tro365Auth.initLoadingStates();
         Tro365Auth.initPasswordStrength();
     }
 
@@ -307,43 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmPasswordFeedback = document.getElementById('confirmPasswordFeedback');
     const submitBtn = document.getElementById('resetPasswordBtn');
 
-    // Password toggle functionality
-    const toggleNewPassword = document.getElementById('toggleNewPassword');
-    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-
-    if (toggleNewPassword) {
-        toggleNewPassword.addEventListener('click', function() {
-            const input = document.getElementById('password');
-            const icon = this.querySelector('i');
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-    }
-
-    if (toggleConfirmPassword) {
-        toggleConfirmPassword.addEventListener('click', function() {
-            const input = document.getElementById('confirm_password');
-            const icon = this.querySelector('i');
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-    }
+    // Move function to global scope for onclick access
 
     // Real-time password confirmation validation
     if (confirmPasswordInput && confirmPasswordFeedback) {
@@ -407,5 +388,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Enhanced Password Strength Indicator -->
+<script src="<?= app_url('assets/js/client/password-strength.js') ?>" defer></script>
 
 <?php include_once __DIR__ . '/../../includes/layouts/client/footer.php'; ?>

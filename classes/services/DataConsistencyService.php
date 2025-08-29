@@ -121,21 +121,21 @@ class DataConsistencyService
     {
         $sellerData = [
             'HoTenChuTro' => cleanInput($postData['landlord_name'] ?? ''),
-            'SoCCCD' => cleanInput($postData['cccd_number'] ?? ''),
-            'SDTLienHe' => cleanInput($postData['contact_phone'] ?? ''),
-            'EmailLienHe' => cleanInput($postData['contact_email'] ?? ''),
+            'CCCDKinhDoanh' => cleanInput($postData['cccd'] ?? ''),
+            'SDTKinhDoanh' => cleanInput($postData['contact_phone'] ?? ''),
+            'EmailKinhDoanh' => cleanInput($postData['contact_email'] ?? ''),
             'DiaChiKinhDoanh' => cleanInput($postData['business_address'] ?? ''),
             'LyDoMuonBan' => cleanInput($postData['reason'] ?? ''),
             'TrangThai' => 0, // Pending approval
-            'NgayDangKy' => date('Y-m-d H:i:s')
         ];
 
         // If user data is available, use it as fallback for empty fields
         if ($userData) {
             $sellerData['HoTenChuTro'] = $sellerData['HoTenChuTro'] ?: $userData['HoTen'];
-            $sellerData['EmailLienHe'] = $sellerData['EmailLienHe'] ?: $userData['Email'];
-            $sellerData['SDTLienHe'] = $sellerData['SDTLienHe'] ?: $userData['SDT'];
+            $sellerData['EmailKinhDoanh'] = $sellerData['EmailKinhDoanh'] ?: $userData['Email'];
+            $sellerData['SDTKinhDoanh'] = $sellerData['SDTKinhDoanh'] ?: $userData['SDT'];
             $sellerData['DiaChiKinhDoanh'] = $sellerData['DiaChiKinhDoanh'] ?: $userData['DiaChi'];
+            $sellerData['CCCDKinhDoanh'] = $sellerData['CCCDKinhDoanh'] ?: $userData['CCCD'];
         }
 
         return $sellerData;
@@ -153,11 +153,11 @@ class DataConsistencyService
             $errors[] = 'Vui lòng nhập họ tên chủ trọ';
         }
 
-        if (empty($sellerData['SoCCCD'])) {
+        if (empty($sellerData['CCCDKinhDoanh'])) {
             $errors[] = 'Vui lòng nhập số CCCD/CMND';
         }
 
-        if (empty($sellerData['SDTLienHe'])) {
+        if (empty($sellerData['SDTKinhDoanh'])) {
             $errors[] = 'Vui lòng nhập số điện thoại liên hệ';
         }
 
@@ -166,24 +166,24 @@ class DataConsistencyService
         }
 
         // Format validation
-        if (!empty($sellerData['SoCCCD']) && !preg_match('/^\d{9,12}$/', $sellerData['SoCCCD'])) {
+        if (!empty($sellerData['CCCDKinhDoanh']) && !preg_match('/^\d{9,12}$/', $sellerData['CCCDKinhDoanh'])) {
             $errors[] = 'Số CCCD/CMND không hợp lệ (9-12 chữ số)';
         }
 
-        if (!empty($sellerData['SDTLienHe']) && !isValidPhone($sellerData['SDTLienHe'])) {
+        if (!empty($sellerData['SDTKinhDoanh']) && !isValidPhone($sellerData['SDTKinhDoanh'])) {
             $errors[] = 'Số điện thoại liên hệ không hợp lệ';
         }
 
-        if (!empty($sellerData['EmailLienHe']) && !isValidEmail($sellerData['EmailLienHe'])) {
+        if (!empty($sellerData['EmailKinhDoanh']) && !isValidEmail($sellerData['EmailKinhDoanh'])) {
             $errors[] = 'Email liên hệ không hợp lệ';
         }
 
         // Check for duplicate CCCD
-        if (!empty($sellerData['SoCCCD'])) {
+        if (!empty($sellerData['CCCDKinhDoanh'])) {
             $existingCCCD = $this->db->selectOne(
-                "SELECT ID FROM DangKySeller WHERE SoCCCD = :cccd AND KhachHangID != :user_id",
+                "SELECT ID FROM DangKySeller WHERE CCCDKinhDoanh = :cccd AND KhachHangID != :user_id",
                 [
-                    'cccd' => $sellerData['SoCCCD'],
+                    'cccd' => $sellerData['CCCDKinhDoanh'],
                     'user_id' => $sellerData['KhachHangID'] ?? 0
                 ]
             );

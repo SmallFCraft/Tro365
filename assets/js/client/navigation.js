@@ -22,6 +22,9 @@ class ModernNavigation {
   }
 
   init() {
+    // Add body padding for fixed navbar
+    document.body.style.paddingTop = "80px";
+
     // Initialize mobile bottom nav visibility
     this.updateMobileNavVisibility();
 

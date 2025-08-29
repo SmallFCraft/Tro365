@@ -4,15 +4,13 @@
  * Tro365 - Website thuê trọ
  */
 
-use Tro365\Core\Auth;
-
 // Get current route for active menu highlighting
 $currentPath = $_SERVER['REQUEST_URI'] ?? '';
 $currentPath = parse_url($currentPath, PHP_URL_PATH);
 $currentPath = trim($currentPath, '/');
 
 // Get current user role for menu filtering
-$auth = new Auth();
+$auth = new \Tro365\Core\Auth();
 $currentUser = $auth->getCurrentUser();
 $userRole = $currentUser['VaiTroID'] ?? 0;
 $isAdmin = $userRole >= ROLE_ADMIN;

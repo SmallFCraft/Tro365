@@ -16,11 +16,33 @@ $settingsController->checkAdminAccess();
 $success = '';
 $error = '';
 
-// Redirect AJAX requests to handler
+// Accept AJAX POST (ModernApp/FormValidator may submit via XHR)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
-    // AJAX requests should go directly to /admin/ajax/settings-handler.php
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Please use /admin/ajax/settings-handler.php for AJAX requests']);
+    header('Content-Type: application/json');
+    try {
+        // Handle sections similar to normal submission
+        if (isset($_POST['website_settings'])) {
+            $settingsController->updateWebsiteSettings($_POST);
+        }
+        if (isset($_POST['system_settings'])) {
+            $settingsController->updateSystemSettings($_POST);
+        }
+        if (isset($_POST['email_settings'])) {
+            $settingsController->updateEmailSettings($_POST);
+        }
+        if (isset($_POST['seo_settings'])) {
+            $settingsController->updateSeoSettings($_POST);
+        }
+        // Always handle app_debug checkbox
+        $config = new \Tro365\Core\Config();
+        $debugValue = isset($_POST['app_debug']) ? 1 : 0;
+        $config->setValue('app_debug', $debugValue);
+
+        echo json_encode(['success' => true, 'message' => 'Cài đặt đã được cập nhật thành công!']);
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+    }
     exit;
 }
 
@@ -53,6 +75,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settingsController->updateSeoSettings($_POST);
         }
 
+        // Handle individual settings that might not be in sections
+        $config = new \Tro365\Core\Config();
+
+        // Always handle app_debug checkbox (even if unchecked)
+        $debugValue = isset($_POST['app_debug']) ? 1 : 0;
+        $config->setValue('app_debug', $debugValue);
+
         $success = 'Cài đặt đã được cập nhật thành công!';
 
     } catch (Exception $e) {
@@ -83,6 +112,9 @@ $db = new \Tro365\Core\Database();
 $pageTitle = 'Cài đặt hệ thống';
 include __DIR__ . '/../../includes/layouts/admin/header.php';
 ?>
+
+<!-- Settings JavaScript - Load in head for immediate availability -->
+<script src="http://localhost:8000/assets/js/admin/settings.js"></script>
 
 <div class="container-fluid">
     <div class="row">
@@ -122,10 +154,10 @@ include __DIR__ . '/../../includes/layouts/admin/header.php';
                         <p class="text-muted mb-0">Quản lý cấu hình và thiết lập toàn bộ hệ thống</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-warning" onclick="Tro365Settings.clearCache()" title="Xóa cache hệ thống và log files">
+                        <button type="button" class="btn btn-outline-warning" data-action="clear-cache" title="Xóa cache hệ thống và log files">
                             <i class="fas fa-trash me-2"></i>Xóa Cache & Logs
                         </button>
-                        <button type="button" class="btn btn-outline-success" onclick="exportSettings()">
+                        <button type="button" class="btn btn-outline-success" data-action="export-settings">
                             <i class="fas fa-download me-2"></i>Xuất cấu hình
                         </button>
                         <button type="submit" form="settingsForm" class="btn btn-primary">
@@ -212,7 +244,7 @@ include __DIR__ . '/../../includes/layouts/admin/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/../../includes/layouts/admin/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/layouts/admin/footer.php'; exit; ?>
 
 <!-- Additional CSS -->
 <style>
@@ -246,7 +278,7 @@ include __DIR__ . '/../../includes/layouts/admin/header.php';
 </style>
 
 <!-- Additional JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap bundle is already included in admin footer; avoid duplicate include here -->
 <script>
 // Pass system data to JavaScript
 window.systemData = {
@@ -295,26 +327,83 @@ window.systemData = {
     </div>
 </div>
 
-<script src="/assets/js/admin/settings.js"></script>
-
 <script>
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Settings page DOM ready');
+
     // Initialize Bootstrap tabs manually if needed
     const triggerTabList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tab"]'));
     triggerTabList.forEach(function (triggerEl) {
         const tabTrigger = new bootstrap.Tab(triggerEl);
-
         triggerEl.addEventListener('click', function (event) {
             event.preventDefault();
             tabTrigger.show();
         });
     });
 
-    // Tro365Settings is already initialized in settings.js
-    // Just initialize basic functionality here
-    initBasicFunctionality();
+    // Check if Tro365Settings is loaded
+    if (typeof window.Tro365Settings !== 'undefined') {
+        console.log('✅ Tro365Settings found and initialized');
+    } else {
+        console.error('❌ Tro365Settings not found - settings.js may not be loaded');
+    }
 });
+</script>
+
+</body>
+</html>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Direct event delegation for data-action buttons
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+
+        const action = button.getAttribute('data-action');
+        console.log('🔧 Direct handling action:', action);
+
+        switch (action) {
+            case 'clear-cache':
+                directClearCache();
+                break;
+            case 'export-settings':
+                directExportSettings();
+                break;
+            default:
+                console.warn('Unknown action in direct mode:', action);
+        }
+    });
+
+    // Direct auto-save functionality
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        const inputs = settingsForm.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('change', debounce(() => {
+                directAutoSave();
+            }, 1000));
+        });
+        console.log('✅ Auto-save initialized for', inputs.length, 'inputs');
+    }
+
+    console.log('✅ Direct settings functionality initialized');
+}
 
 // Fallback functionality if settings.js doesn't load
 function initBasicFunctionality() {
@@ -336,7 +425,205 @@ function initBasicFunctionality() {
         }, false);
     });
 
+    // Add fallback event delegation for data-action buttons
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+
+        const action = button.getAttribute('data-action');
+        console.log('🔧 Fallback handling action:', action);
+
+        switch (action) {
+            case 'clear-cache':
+                fallbackClearCache();
+                break;
+            case 'export-settings':
+                exportSettings();
+                break;
+            default:
+                console.warn('Unknown action in fallback mode:', action);
+        }
+    });
+
+    // Add fallback auto-save functionality
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        const inputs = settingsForm.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('change', debounce(() => {
+                fallbackAutoSave();
+            }, 1000));
+        });
+    }
+
     console.log('Basic settings functionality initialized (fallback mode)');
+}
+
+// Direct clear cache function
+function directClearCache() {
+    console.log('🔧 Direct clear cache called');
+
+    if (!confirm('Bạn có chắc chắn muốn xóa cache và log files?\n\nHành động này sẽ:\n- Xóa tất cả cache hệ thống\n- Xóa log files cũ\n- Làm trống log files hôm nay')) {
+        return;
+    }
+
+    console.log('🔧 Sending clear cache request...');
+
+    fetch('/admin/cache/clear', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => {
+        console.log('🔧 Clear cache response:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('🔧 Clear cache data:', data);
+        if (data.success) {
+            let message = 'Cache và logs đã được xóa thành công';
+            if (data.cleared && data.cleared.length > 0) {
+                message += ': ' + data.cleared.join(', ');
+            }
+            showDirectToast(message, 'success');
+        } else {
+            showDirectToast('Có lỗi xảy ra khi xóa cache: ' + (data.message || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Clear cache error:', error);
+        showDirectToast('Có lỗi xảy ra khi xóa cache', 'danger');
+    });
+}
+
+// Direct toast function
+function showDirectToast(message, type = 'info') {
+    console.log('🔧 Showing direct toast:', message, type);
+
+    // Create toast container if not exists
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed end-0 p-3';
+        toastContainer.style.top = '100px';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+        console.log('🔧 Created toast container');
+    }
+
+    const toastId = 'toast_' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+
+    console.log('🔧 Toast shown:', toastId);
+
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+        console.log('🔧 Toast removed:', toastId);
+    });
+}
+
+// Direct auto save function
+function directAutoSave() {
+    console.log('🔧 Direct auto save called');
+
+    const form = document.getElementById('settingsForm');
+    if (!form) {
+        console.warn('Settings form not found');
+        return;
+    }
+
+    const formData = new FormData(form);
+    formData.append('action', 'auto_save');
+
+    console.log('🔧 Sending auto save request...');
+
+    fetch('/admin/settings', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => {
+        console.log('🔧 Auto save response:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('🔧 Auto save data:', data);
+        if (data.success) {
+            showDirectAutoSaveIndicator();
+        } else {
+            console.warn('Auto save failed:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Auto-save error:', error);
+        showDirectToast('Lỗi lưu tự động', 'danger');
+    });
+}
+
+// Direct auto save indicator
+function showDirectAutoSaveIndicator() {
+    console.log('🔧 Showing direct auto save indicator');
+
+    // Remove existing indicator
+    const existing = document.querySelector('.auto-save-indicator');
+    if (existing) {
+        existing.remove();
+        console.log('🔧 Removed existing indicator');
+    }
+
+    const indicator = document.createElement('div');
+    indicator.className = 'auto-save-indicator alert alert-success alert-dismissible fade show position-fixed';
+    indicator.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 250px;';
+    indicator.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        Đã lưu tự động
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(indicator);
+    console.log('🔧 Auto save indicator shown');
+
+    setTimeout(() => {
+        if (indicator.parentNode) {
+            indicator.remove();
+            console.log('🔧 Auto save indicator removed');
+        }
+    }, 3000);
+}
+
+// Direct export settings function
+function directExportSettings() {
+    console.log('🔧 Direct export settings called');
+    showDirectToast('Tính năng xuất cấu hình đang được phát triển', 'info');
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 // Additional settings functions

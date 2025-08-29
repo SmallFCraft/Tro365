@@ -595,8 +595,6 @@ include_once __DIR__ . '/../../includes/layouts/admin/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/../../includes/layouts/admin/footer.php'; ?>
-
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -844,5 +842,5 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(animateNumbers, 500);
 });
 </script>
-</body>
-</html>
+
+<?php include __DIR__ . '/../../includes/layouts/admin/footer.php'; ?>
