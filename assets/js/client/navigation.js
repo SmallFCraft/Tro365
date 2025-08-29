@@ -37,9 +37,31 @@ class ModernNavigation {
   }
 
   updateViewportCache() {
-    // Cache viewport size to avoid forced reflow
-    this.viewportWidth = window.innerWidth;
-    this.isMobile = this.viewportWidth <= 767;
+    // Use ResizeObserver API for efficient viewport tracking to avoid forced reflow
+    if (!this.resizeObserver) {
+      this.resizeObserver = new ResizeObserver(() => {
+        // Use requestIdleCallback to defer non-critical viewport updates
+        if ("requestIdleCallback" in window) {
+          requestIdleCallback(() => {
+            this.viewportWidth = window.innerWidth;
+            this.isMobile = this.viewportWidth <= 767;
+          });
+        } else {
+          // Fallback for browsers without requestIdleCallback
+          setTimeout(() => {
+            this.viewportWidth = window.innerWidth;
+            this.isMobile = this.viewportWidth <= 767;
+          }, 0);
+        }
+      });
+      this.resizeObserver.observe(document.documentElement);
+    }
+
+    // Initial viewport detection - only run once
+    if (this.viewportWidth === 0) {
+      this.viewportWidth = window.innerWidth;
+      this.isMobile = this.viewportWidth <= 767;
+    }
   }
 
   updateMobileNavVisibility() {
@@ -87,15 +109,15 @@ class ModernNavigation {
   }
 
   handleResize() {
-    // Throttle resize events to avoid excessive forced reflow
+    // ResizeObserver now handles viewport updates efficiently
+    // Only update mobile nav visibility with throttling
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
     }
 
     this.resizeTimeout = setTimeout(() => {
-      this.updateViewportCache();
       this.updateMobileNavVisibility();
-    }, 100); // Throttle to 100ms
+    }, 150); // Increased throttle to 150ms for better performance
   }
 
   handleScroll() {

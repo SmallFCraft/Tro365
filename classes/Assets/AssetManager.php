@@ -100,9 +100,10 @@ class AssetManager
         $out[] = '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
         $out[] = '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>';
 
-        // CSS Utilities + any enqueued CSS
-        $out[] = '<!-- Modern CSS Utilities -->';
-        $out[] = '<link rel="stylesheet" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '">';
+        // CSS Utilities + any enqueued CSS (defer non-critical utilities to eliminate render blocking)
+        $out[] = '<!-- Modern CSS Utilities (Deferred for Performance) -->';
+        $out[] = '<link rel="preload" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">';
+        $out[] = '<noscript><link rel="stylesheet" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '"></noscript>';
         foreach ($this->css as $css) {
             $out[] = '<link rel="stylesheet" href="' . $this->url($css) . $this->ver() . '">';
         }
@@ -125,7 +126,7 @@ class AssetManager
         // Local vendor libs - async for non-critical functionality
         $out[] = '<!-- Modern JavaScript Libraries (Local) -->';
         $out[] = '<script src="' . $this->url('/assets/js/vendor/alpine.min.js') . '" defer></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/vendor/axios.min.js') . '" async></script>';
+        // Replaced axios with modern fetch-based HTTP client to eliminate legacy JavaScript
         $out[] = '<script src="' . $this->url('/assets/js/vendor/dayjs.min.js') . '" async></script>';
 
         // Initialize modern features with deferred execution
