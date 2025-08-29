@@ -113,25 +113,27 @@ class AssetManager
     public function renderFooter(): string
     {
         $out = [];
-        $out[] = '<!-- Modern JavaScript Libraries -->';
-        // Core modern libraries
-        $out[] = '<script src="' . $this->url('/assets/js/modern/http-client.js') . $this->ver() . '"></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/dom-utils.js') . $this->ver() . '"></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/form-validator.js') . $this->ver() . '"></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/toast.js') . $this->ver() . '"></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/app.js') . $this->ver() . '"></script>';
-        // Local vendor libs
+        $out[] = '<!-- Modern JavaScript Libraries (Optimized for Performance) -->';
+
+        // Critical libraries loaded with defer to avoid render blocking
+        $out[] = '<script src="' . $this->url('/assets/js/modern/http-client.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/modern/dom-utils.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/modern/form-validator.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/modern/toast.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/modern/app.js') . $this->ver() . '" defer></script>';
+
+        // Local vendor libs - async for non-critical functionality
         $out[] = '<!-- Modern JavaScript Libraries (Local) -->';
         $out[] = '<script src="' . $this->url('/assets/js/vendor/alpine.min.js') . '" defer></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/vendor/axios.min.js') . '"></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/vendor/dayjs.min.js') . '"></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/vendor/axios.min.js') . '" async></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/vendor/dayjs.min.js') . '" async></script>';
 
-        // Initialize modern features
-        $out[] = '<script>' . $this->jsInit() . '</script>';
+        // Initialize modern features with deferred execution
+        $out[] = '<script>' . $this->jsInitOptimized() . '</script>';
 
-        // Optional features
+        // Optional features with deferred loading
         if ($this->enableFormValidation) {
-            $out[] = '<script>document.addEventListener("DOMContentLoaded",function(){ if(window.ModernFormValidator){ ModernFormValidator.init(); } });</script>';
+            $out[] = '<script>window.addEventListener("load",function(){ if(window.ModernFormValidator){ ModernFormValidator.init(); } });</script>';
         }
         if ($this->enableLazyLoading) {
             $out[] = '<script>' . $this->lazyLoadingScript() . '</script>';
@@ -140,9 +142,9 @@ class AssetManager
             $out[] = '<script>' . $this->serviceWorkerScript() . '</script>';
         }
 
-        // Any enqueued JS after core
+        // Any enqueued JS after core with defer
         foreach ($this->js as $js) {
-            $out[] = '<script src="' . $this->url($js) . $this->ver() . '"></script>';
+            $out[] = '<script src="' . $this->url($js) . $this->ver() . '" defer></script>';
         }
 
         return implode("\n", $out) . "\n";
@@ -162,6 +164,38 @@ document.addEventListener('DOMContentLoaded', function() {
   tooltips.forEach(el => { el.setAttribute('title', el.dataset.tooltip); });
   console.log('🚀 Modern assets loaded successfully');
 });
+JS;
+    }
+
+    private function jsInitOptimized(): string
+    {
+        return <<<JS
+// Initialize modern features with performance optimization
+function initModernFeatures() {
+  const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = tokenMeta ? tokenMeta.getAttribute('content') : '';
+
+  // Wait for http client to be available
+  if (window.http && typeof window.http.setCsrfToken === 'function') {
+    window.http.setCsrfToken(csrfToken);
+  } else {
+    // Retry after a short delay if http client isn't ready
+    setTimeout(initModernFeatures, 100);
+    return;
+  }
+
+  const tooltips = document.querySelectorAll('[data-tooltip]');
+  tooltips.forEach(el => { el.setAttribute('title', el.dataset.tooltip); });
+  console.log('🚀 Modern assets loaded successfully');
+}
+
+// Use requestIdleCallback for non-critical initialization
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(initModernFeatures);
+} else {
+  // Fallback for browsers without requestIdleCallback
+  document.addEventListener('DOMContentLoaded', initModernFeatures);
+}
 JS;
     }
 

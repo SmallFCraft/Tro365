@@ -2349,6 +2349,8 @@ body {
   margin-bottom: var(--spacing-lg);
 }
 
+/* Brand title styling - now h2 instead of h5 but same visual appearance */
+h2.brand-title,
 .brand-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
@@ -2377,7 +2379,11 @@ body {
   margin-top: var(--spacing-lg);
 }
 
-.social-title {
+/* Footer section titles - now h3 instead of h6 but same visual appearance */
+h3.social-title,
+h3.section-title,
+.social-title,
+.section-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);

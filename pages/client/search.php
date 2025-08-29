@@ -1073,11 +1073,11 @@ function buildSearchUrl($params = []) {
                                     </div>
 
                                     <div class="post-content card-body">
-                                        <h5 class="post-title card-title">
+                                        <h3 class="post-title card-title">
                                             <a href="/post/<?= $post['ID'] ?>">
                                                 <?= e($post['TieuDe']) ?>
                                             </a>
-                                        </h5>
+                                        </h3>
 
                                         <p class="post-description card-text">
                                             <?php

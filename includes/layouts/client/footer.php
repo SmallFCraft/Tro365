@@ -15,17 +15,17 @@
                 <!-- Company Info -->
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="footer-brand">
-                        <h5 class="brand-title">
+                        <h2 class="brand-title">
                             <i class="fas fa-home me-2"></i>
                             <?= getWebsiteName() ?>
-                        </h5>
+                        </h2>
                         <p class="brand-description">
                             <?= getWebsiteDescription() ?>
                         </p>
 
                         <!-- Social Media -->
                         <div class="social-links">
-                            <h6 class="social-title">Kết nối với chúng tôi</h6>
+                            <h3 class="social-title">Kết nối với chúng tôi</h3>
                             <div class="social-icons">
                                 <?php $facebookUrl = getCompanyInfo('facebook_url', ''); ?>
                                 <?php if ($facebookUrl): ?>
@@ -62,7 +62,7 @@
                 <!-- Quick Links -->
                 <div class="col-lg-2 col-md-6 mb-4">
                     <div class="footer-section">
-                        <h6 class="section-title">Danh mục</h6>
+                        <h3 class="section-title">Danh mục</h3>
                         <ul class="footer-links">
                             <li><a href="/search?category=1">
                                 <i class="fas fa-bed me-2"></i>Phòng trọ
@@ -86,7 +86,7 @@
                 <!-- Support Links -->
                 <div class="col-lg-2 col-md-6 mb-4">
                     <div class="footer-section">
-                        <h6 class="section-title">Hỗ trợ</h6>
+                        <h3 class="section-title">Hỗ trợ</h3>
                         <ul class="footer-links">
                             <li><a href="/about">
                                 <i class="fas fa-info-circle me-2"></i>Giới thiệu
@@ -110,7 +110,7 @@
                 <!-- Contact Info -->
                 <div class="col-lg-4 col-md-12 mb-4">
                     <div class="footer-section">
-                        <h6 class="section-title">Thông tin liên hệ</h6>
+                        <h3 class="section-title">Thông tin liên hệ</h3>
                         <div class="contact-info">
                             <div class="contact-item">
                                 <div class="contact-icon">
@@ -311,8 +311,8 @@ echo $am->renderFooter();
 
 <!-- Footer CSS is already included in layouts.css -->
 
-<!-- Common JavaScript Functions - Load immediately for global functions -->
-<script src="<?= app_url('assets/js/common.js') ?>"></script>
+<!-- Common JavaScript Functions - Deferred to eliminate render blocking -->
+<script src="<?= app_url('assets/js/common.js') ?>" defer></script>
 
 <!-- Footer JavaScript - Deferred for Performance -->
 <script src="<?= app_url('assets/js/client/footer.js') ?>" defer></script>

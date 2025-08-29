@@ -1572,3 +1572,62 @@ function sellerHasBusinessInfo($sellerId) {
 function getEffectiveSellerValue($sellerValue, $userValue) {
     return getDataConsistencyInstance()->getEffectiveValue($sellerValue, $userValue);
 }
+
+/**
+ * Get optimized image URL with WebP support and responsive sizing
+ * @param string $imagePath Original image path
+ * @param int $width Target width (optional)
+ * @param int $height Target height (optional)
+ * @return string Optimized image URL
+ */
+function getOptimizedImageUrl($imagePath, $width = null, $height = null) {
+    // Check if browser supports WebP
+    $supportsWebP = false;
+    if (isset($_SERVER['HTTP_ACCEPT'])) {
+        $supportsWebP = strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
+    }
+
+    // Get file info
+    $pathInfo = pathinfo($imagePath);
+    $directory = $pathInfo['dirname'];
+    $filename = $pathInfo['filename'];
+    $extension = $pathInfo['extension'] ?? 'jpg';
+
+    // Generate WebP path
+    $webpPath = $directory . '/' . $filename . '.webp';
+    $webpFullPath = $_SERVER['DOCUMENT_ROOT'] . $webpPath;
+
+    // If WebP exists and browser supports it, use WebP
+    if ($supportsWebP && file_exists($webpFullPath)) {
+        $optimizedPath = $webpPath;
+    } else {
+        $optimizedPath = $imagePath;
+    }
+
+    // Add responsive sizing parameters if specified
+    if ($width || $height) {
+        $params = [];
+        if ($width) $params['w'] = $width;
+        if ($height) $params['h'] = $height;
+
+        if (!empty($params)) {
+            $optimizedPath .= '?' . http_build_query($params);
+        }
+    }
+
+    return $optimizedPath;
+}
+
+/**
+ * Generate responsive image srcset for different screen sizes
+ * @param string $imagePath Base image path
+ * @param array $sizes Array of widths for srcset
+ * @return string srcset attribute value
+ */
+function generateResponsiveSrcset($imagePath, $sizes = [400, 600, 800, 1200]) {
+    $srcset = [];
+    foreach ($sizes as $size) {
+        $srcset[] = getOptimizedImageUrl($imagePath, $size) . ' ' . $size . 'w';
+    }
+    return implode(', ', $srcset);
+}

@@ -86,6 +86,9 @@ $pageTitle = 'Trang chủ'; // Header layout will automatically append " - " . g
 $pageDescription = getMetaDescription();
 $pageKeywords = getMetaKeywords();
 
+// Enable hero section preload for LCP optimization
+$hasHeroSection = true;
+
 // Additional CSS for home page
 $additionalCSS = ['/assets/css/client/main.css'];
 
@@ -250,11 +253,11 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                     </div>
 
                     <div class="card-body">
-                        <h5 class="card-title">
+                        <h3 class="card-title">
                             <a href="/post/<?= $post['ID'] ?>">
                                 <?= htmlspecialchars($post['TieuDe']) ?>
                             </a>
-                        </h5>
+                        </h3>
 
                         <div class="price-section">
                             <span class="price"><?= number_format($post['Gia']) ?> VNĐ/tháng</span>
@@ -440,17 +443,25 @@ try {
                                 <?php
                                 $imageFileName = isset($provinceImageMap[$name]) ? $provinceImageMap[$name] : 'hcm';
                                 ?>
-                                <img data-src="/assets/images/provinces/<?= $imageFileName ?>.jpg"
+                                <?php
+                                // Province images are below the fold, should be lazy loaded for better performance
+                                $originalImagePath = "/assets/images/provinces/{$imageFileName}.jpg";
+                                $optimizedImageUrl = getOptimizedImageUrl($originalImagePath, 400, 225);
+                                $srcset = generateResponsiveSrcset($originalImagePath, [300, 400, 600]);
+                                ?>
+                                <img data-src="<?= $optimizedImageUrl ?>"
+                                     data-srcset="<?= $srcset ?>"
                                      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225'%3E%3Crect width='100%25' height='100%25' fill='%23f8f9fa'/%3E%3C/svg%3E"
                                      alt="Hình ảnh đại diện <?= e($name) ?>"
                                      class="province-image"
                                      loading="lazy"
-                                     data-fallback="/assets/images/provinces/hcm.jpg"
-                                     onerror="this.src='/assets/images/provinces/hcm.jpg'">
+                                     sizes="(max-width: 576px) 300px, (max-width: 768px) 400px, 600px"
+                                     data-fallback="<?= getOptimizedImageUrl('/assets/images/provinces/hcm.jpg', 400, 225) ?>"
+                                     onerror="this.src='<?= getOptimizedImageUrl('/assets/images/provinces/hcm.jpg', 400, 225) ?>'">
                                 <div class="province-overlay"></div>
                             </div>
                             <div class="province-content">
-                                <h4 class="province-name"><?= e($name) ?></h4>
+                                <h3 class="province-name"><?= e($name) ?></h3>
                             </div>
                         </div>
                     </a>
@@ -477,7 +488,7 @@ try {
                         <a href="/search?province=<?= $province['code'] ?>" class="text-decoration-none">
                             <div class="province-stats-card glass-card">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h4 class="province-stats-name mb-0"><?= e($province['name']) ?></h4>
+                                    <h3 class="province-stats-name mb-0"><?= e($province['name']) ?></h3>
                                     <span class="province-stats-count"><?= number_format($province['count']) ?> phòng trọ</span>
                                 </div>
                             </div>
