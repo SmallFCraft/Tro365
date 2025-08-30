@@ -21,16 +21,19 @@ try {
     
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
-    
+    $excludeId = isset($input['exclude_id']) ? (int)$input['exclude_id'] : null;
+
     // Enhanced validation using rakit/validation
     $validation = \Tro365\Helpers\ValidationHelper::enhancedValidate($input, [
         'type' => 'required|in:email,username',
-        'value' => 'required|min:1'
+        'value' => 'required|min:1',
+        'exclude_id' => 'nullable|integer|min:1'
     ], [
         'type.required' => 'Type là bắt buộc',
         'type.in' => 'Type phải là email hoặc username',
         'value.required' => 'Value là bắt buộc',
-        'value.min' => 'Value không được để trống'
+        'value.min' => 'Value không được để trống',
+        'exclude_id.integer' => 'exclude_id không hợp lệ'
     ]);
 
     if (!$validation['valid']) {
@@ -69,10 +72,14 @@ try {
                 $message = implode(', ', $errors);
                 LoggerHelper::logAPI('check-availability', 'POST', ['type' => 'email', 'valid' => false]);
             } else {
-                $existing = $user->getByEmail($value);
+                if ($excludeId) {
+                    $existing = $user->emailExists($value, $excludeId) ? ['ID' => $excludeId] : null;
+                } else {
+                    $existing = $user->getByEmail($value);
+                }
                 $available = !$existing;
                 $message = $existing ? 'Email đã được sử dụng' : 'Email có thể sử dụng';
-                LoggerHelper::logAPI('check-availability', 'POST', ['type' => 'email', 'available' => $available]);
+                LoggerHelper::logAPI('check-availability', 'POST', ['type' => 'email', 'available' => $available, 'excludeId' => $excludeId]);
             }
             break;
             
@@ -97,10 +104,14 @@ try {
                 $message = implode(', ', $validation['errors']);
                 LoggerHelper::logAPI('check-availability', 'POST', ['type' => 'username', 'valid' => false]);
             } else {
-                $existing = $user->getByUsername($value);
+                if ($excludeId) {
+                    $existing = $user->usernameExists($value, $excludeId) ? ['ID' => $excludeId] : null;
+                } else {
+                    $existing = $user->getByUsername($value);
+                }
                 $available = !$existing;
                 $message = $existing ? 'Tên đăng nhập đã tồn tại' : 'Tên đăng nhập có thể sử dụng';
-                LoggerHelper::logAPI('check-availability', 'POST', ['type' => 'username', 'available' => $available]);
+                LoggerHelper::logAPI('check-availability', 'POST', ['type' => 'username', 'available' => $available, 'excludeId' => $excludeId]);
             }
             break;
             

@@ -1,6 +1,6 @@
 <?php
 /**
- * Image Optimization Configuration
+ * Image Configuration
  * Tro365 - Website thuê trọ
  */
 

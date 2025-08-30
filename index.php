@@ -12,6 +12,9 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/constants.php';
 
+// Apply performance optimizations
+require_once __DIR__ . '/includes/performance/optimization.php';
+
 // Load helper functions
 require_once __DIR__ . '/includes/functions/helpers.php';
 require_once __DIR__ . '/includes/functions/auth.php';
@@ -176,6 +179,7 @@ try {
         'api/notifications' => 'router/api/notifications.php',
         'api/toggle-favorite' => 'router/api/favorites.php',
         'api/favorites' => 'router/api/favorites.php',
+        'api/favorites/toggle' => 'router/api/favorites.php',
         'api/check-favorite' => 'router/api/favorites.php',
 
         // Static pages

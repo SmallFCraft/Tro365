@@ -6,7 +6,7 @@
 
 use Tro365\Core\Auth;
 use Tro365\Core\Database;
-use Tro365\LocationService;
+use Tro365\Services\LocationService;
 
 $auth = new Auth();
 $db = Database::getInstance();
@@ -40,6 +40,10 @@ if (!$userData) {
 
 // Get location names using LocationService
 $locationService = new LocationService();
+$userData['TenTT'] = '';
+$userData['TenQH'] = '';
+$userData['TenXP'] = '';
+
 if ($userData['TinhThanhID']) {
     $province = $locationService->getProvinceById($userData['TinhThanhID']);
     $userData['TenTT'] = $province['name'] ?? '';

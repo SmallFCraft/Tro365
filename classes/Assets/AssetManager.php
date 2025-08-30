@@ -117,11 +117,11 @@ class AssetManager
         $out[] = '<!-- Modern JavaScript Libraries (Optimized for Performance) -->';
 
         // Critical libraries loaded with defer to avoid render blocking
-        $out[] = '<script src="' . $this->url('/assets/js/modern/http-client.js') . $this->ver() . '" defer></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/dom-utils.js') . $this->ver() . '" defer></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/form-validator.js') . $this->ver() . '" defer></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/toast.js') . $this->ver() . '" defer></script>';
-        $out[] = '<script src="' . $this->url('/assets/js/modern/app.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/global/http-client.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/global/dom-utils.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/global/form-validator.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/global/toast.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/global/app.js') . $this->ver() . '" defer></script>';
 
         // Local vendor libs - async for non-critical functionality
         $out[] = '<!-- Modern JavaScript Libraries (Local) -->';

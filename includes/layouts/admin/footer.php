@@ -66,10 +66,10 @@ echo $am->renderFooter();
 <script src="/assets/js/admin/dropdown.js"></script>
 
 <!-- Common JavaScript Functions -->
-<script src="/assets/js/common.js"></script>
+<script src="/assets/js/global/common.js"></script>
 
 <!-- Image Fallback JavaScript -->
-<script src="/assets/js/image-fallback.js"></script>
+<script src="/assets/js/global/image-fallback.js"></script>
 
 <!-- Additional JS for specific pages -->
 <?php if (isset($additionalJS)): ?>
@@ -191,7 +191,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             console.log('✅ DataTables initialized successfully');
         } else {
-            console.warn('⚠️ DataTables not available - skipping initialization');
+            // Only log warning if there are actually data-table elements on the page
+            if (document.querySelector('.data-table')) {
+                console.warn('⚠️ DataTables not available but .data-table elements found');
+            }
         }
     }, 500); // Wait 500ms for all scripts to load
 
@@ -208,7 +211,7 @@ window.currentUserRole = <?= $_SESSION['user_role'] ?>;
 
 <?php if (isset($_SESSION['user_role'])): ?>
 <!-- Session Auto-Refresh for admin users -->
-<script src="/assets/js/session-refresh.js"></script>
+<script src="/assets/js/global/session-refresh.js"></script>
 <?php endif; ?>
 
 <?php

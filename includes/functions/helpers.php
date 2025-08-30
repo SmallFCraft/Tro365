@@ -298,30 +298,31 @@ function writeLog($message, $level = 'info', $category = 'general', $context = [
     // Resolve log directory and file
     $logDir = rtrim(LOG_PATH, '/\\');
 
-    // Separate debug logs into debug.log file
+    // Simple log files without dates
     if ($level === 'debug' || $category === 'debug') {
         $logFile = $logDir . '/debug.log';
     } else {
         $logFile = $logDir . '/app.log';
     }
-    $timestamp = date('Y-m-d H:i:s');
 
-    // Format context data
-    $contextStr = '';
-    if (!empty($context)) {
-        $contextStr = ' | Context: ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+    // Enhanced debug logging with details
+    if ($level === 'debug' || $category === 'debug') {
+        $timestamp = date('H:i:s');
+        $requestInfo = '';
+        if (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])) {
+            $requestInfo = ' | ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
+        }
+
+        $contextStr = '';
+        if (!empty($context)) {
+            $contextStr = ' | ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+        }
+
+        $logMessage = "[{$timestamp}] [{$level}]{$requestInfo} {$message}{$contextStr}" . PHP_EOL;
+    } else {
+        // Simple format for non-debug logs
+        $logMessage = "[{$level}] {$message}" . PHP_EOL;
     }
-
-    // Add request info for web requests
-    $requestInfo = '';
-    if (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])) {
-        $requestInfo = ' | ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
-    }
-
-    // Add memory usage
-    $memoryUsage = ' | Memory: ' . formatBytes(memory_get_usage(true));
-
-    $logMessage = "[{$timestamp}] [{$level}] [{$category}]{$requestInfo}{$memoryUsage} {$message}{$contextStr}" . PHP_EOL;
 
     // Respect open_basedir restrictions on shared hosting
     $openBaseDir = ini_get('open_basedir');

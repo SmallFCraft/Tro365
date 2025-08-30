@@ -21,13 +21,31 @@ setFlashMessage(MSG_SUCCESS, 'Đăng xuất thành công!');
 </head>
 <body>
     <script>
+        // Clear all global user variables to prevent session refresh re-initialization
+        window.currentUserRole = null;
+        window.currentUserStatus = null;
+        window.TRO365_USER_ID = undefined;
+
+        // Update Tro365Config if it exists
+        if (window.Tro365Config) {
+            window.Tro365Config.userRole = null;
+            window.Tro365Config.isLoggedIn = false;
+        }
+
         // Trigger logout event to stop session refresh
         if (window.sessionRefresh) {
             window.sessionRefresh.stopRefresh();
+            window.sessionRefresh.destroy();
+            window.sessionRefresh = null;
         }
 
         // Dispatch custom logout event
         window.dispatchEvent(new CustomEvent('userLogout'));
+
+        // Clear any remaining intervals that might be running
+        for (let i = 1; i < 99999; i++) {
+            clearInterval(i);
+        }
 
         // Redirect after a short delay to ensure event is processed
         setTimeout(() => {

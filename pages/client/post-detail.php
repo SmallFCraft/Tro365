@@ -186,7 +186,7 @@ if ($auth->isLoggedIn()) {
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
-    <!-- Preload critical LCP image for immediate loading -->
+    <!-- Preload critical LCP image for immediate loading (match exact img src to avoid warnings) -->
     <?php
     $lcpImagePath = '';
     if (!empty($images)) {
@@ -196,23 +196,9 @@ if ($auth->isLoggedIn()) {
     }
 
     if ($lcpImagePath) {
-        // Check for optimized formats
-        $pathInfo = pathinfo($lcpImagePath);
-        $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
-        $avifPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.avif';
-
-        // Preload AVIF if available
-        if (file_exists($_SERVER['DOCUMENT_ROOT'] . $avifPath)) {
-            echo '<link rel="preload" as="image" href="' . e($avifPath) . '" type="image/avif">';
-        }
-        // Preload WebP if available
-        elseif (file_exists($_SERVER['DOCUMENT_ROOT'] . $webpPath)) {
-            echo '<link rel="preload" as="image" href="' . e($webpPath) . '" type="image/webp">';
-        }
-        // Fallback to original
-        else {
-            echo '<link rel="preload" as="image" href="' . e($lcpImagePath) . '">';
-        }
+        // Use the exact src used by the <img> tag to prevent unused-preload warnings
+        $actualSrc = getImageWithFallback($lcpImagePath);
+        echo '<link rel="preload" as="image" href="' . e($actualSrc) . '">';
     }
     ?>
 

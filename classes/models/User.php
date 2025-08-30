@@ -36,11 +36,12 @@ class User extends BaseModel
             'birth_date' => $data['NgaySinh'] ?? '',
             'gender' => $data['GioiTinh'] ?? ''
         ], [
-            'username' => 'required|min:3|max:50|alpha_num',
+            'username' => 'required|min:3|max:30|regex:/^[a-zA-Z0-9_]+$/',
             'email' => 'required|email',
-            'password' => 'required|min:6|max:100',
+            'password' => 'required|min:8|max:100',
             'full_name' => 'required|min:2|max:100',
-            'phone' => 'nullable|regex:/^[0-9]{10,11}$/',
+            // Standardize to Vietnam phone format (consistent with client-side)
+            'phone' => 'nullable|regex:/^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/',
             'cccd' => 'nullable|regex:/^[0-9]{9,12}$/',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:Nam,Nữ,Khác'
@@ -200,7 +201,14 @@ class User extends BaseModel
     {
         $user = $this->getByEmail($email);
         if (!$user) {
-            throw new \Exception("Email không tồn tại trong hệ thống");
+            // For security reasons, don't reveal if email exists or not
+            // Always return success to prevent email enumeration attacks
+            // But don't actually send email for non-existent accounts
+            return [
+                'token' => null,
+                'user' => null,
+                'email_exists' => false
+            ];
         }
 
         // Generate secure token
@@ -215,7 +223,8 @@ class User extends BaseModel
 
         return [
             'token' => $token,
-            'user' => $user
+            'user' => $user,
+            'email_exists' => true
         ];
     }
 

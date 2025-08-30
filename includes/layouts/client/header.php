@@ -170,6 +170,27 @@ if (isset($_SESSION['user_id'])) {
         <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Global Performance Optimization -->
+    <?php
+    // Apply global performance optimizations
+    if (class_exists('Tro365\Services\PerformanceOptimizationService')) {
+        try {
+            $globalPerfService = \Tro365\Services\PerformanceOptimizationService::getInstance();
+            $lcpOptimization = $globalPerfService->getLCPOptimization();
+
+            // Inject critical CSS if available
+            if (!empty($lcpOptimization['critical_css'])) {
+                echo $lcpOptimization['critical_css'];
+            }
+        } catch (Exception $e) {
+            // Fail silently in production
+            if (isDebugModeEnabled()) {
+                error_log("Global performance optimization failed: " . $e->getMessage());
+            }
+        }
+    }
+    ?>
+
     <?php
     /*
     // TODO: Implement DebugManager class
@@ -768,7 +789,7 @@ if ($flash):
 <script src="/assets/js/client/navigation.js" defer></script>
 
 <!-- Image Fallback JavaScript - Deferred for Performance -->
-<script src="/assets/js/image-fallback.js" defer></script>
+<script src="/assets/js/global/image-fallback.js" defer></script>
 
 <!-- Lazy Loading JavaScript - Deferred for Performance -->
 <script src="/assets/js/client/lazy-loading.js" defer></script>

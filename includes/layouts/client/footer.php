@@ -312,7 +312,7 @@ echo $am->renderFooter();
 <!-- Footer CSS is already included in layouts.css -->
 
 <!-- Common JavaScript Functions - Deferred to eliminate render blocking -->
-<script src="<?= app_url('assets/js/common.js') ?>" defer></script>
+<script src="<?= app_url('assets/js/global/common.js') ?>" defer></script>
 
 <!-- Footer JavaScript - Deferred for Performance -->
 <script src="<?= app_url('assets/js/client/footer.js') ?>" defer></script>
@@ -320,9 +320,33 @@ echo $am->renderFooter();
 <!-- Additional JS for specific pages -->
 <?php if (isset($additionalJS)): ?>
     <?php foreach ($additionalJS as $js): ?>
-        <script src="<?= $js ?>"></script>
+        <script src="<?= $js ?>"<?= isset($jsDefer) && $jsDefer ? ' defer' : '' ?>></script>
     <?php endforeach; ?>
 <?php endif; ?>
+
+<!-- Global Performance Optimization JS -->
+<?php
+// Apply global conditional JS loading
+if (class_exists('Tro365\Services\PerformanceOptimizationService')) {
+    try {
+        $globalPerfService = \Tro365\Services\PerformanceOptimizationService::getInstance();
+        $conditionalJS = $globalPerfService->getConditionalJS();
+
+        // Load conditional JS files
+        foreach ($conditionalJS as $js) {
+            // Avoid duplicate loading if already in $additionalJS
+            if (!isset($additionalJS) || !in_array($js, $additionalJS)) {
+                echo '<script src="' . $js . '" defer></script>' . "\n        ";
+            }
+        }
+    } catch (Exception $e) {
+        // Fail silently in production
+        if (isDebugModeEnabled()) {
+            error_log("Global conditional JS loading failed: " . $e->getMessage());
+        }
+    }
+}
+?>
 
 <!-- Custom JS -->
 <?php if (isset($customJS)): ?>
@@ -393,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php if (isset($_SESSION['user_role'])): ?>
 <!-- Session Auto-Refresh for all authenticated users - Deferred for Performance -->
-<script src="/assets/js/session-refresh.js" defer></script>
+<script src="/assets/js/global/session-refresh.js" defer></script>
 <?php endif; ?>
 
 <?php

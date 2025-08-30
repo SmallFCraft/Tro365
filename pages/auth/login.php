@@ -269,7 +269,7 @@ if ($flash) {
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?= app_url('assets/js/common.js') ?>" defer></script>
+    <script src="<?= app_url('assets/js/global/common.js') ?>" defer></script>
     <script src="<?= app_url('assets/js/client/auth.js') ?>" defer></script>
 
     <!-- Enhanced JavaScript Functions with Modern Integration -->

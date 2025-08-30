@@ -562,7 +562,7 @@ window.Tro365Settings = {
 
     // Create modal HTML with glassmorphism styling
     const modalHtml = `
-      <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+      <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px;">
             <div class="modal-header border-0">
@@ -588,8 +588,16 @@ window.Tro365Settings = {
     document.body.insertAdjacentHTML("beforeend", modalHtml);
 
     // Initialize and show modal
-    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+    const modalElement = document.getElementById("confirmModal");
+    const modal = new bootstrap.Modal(modalElement);
+
+    // Show modal and handle aria-hidden properly
     modal.show();
+
+    // Remove aria-hidden when modal is shown to fix accessibility issue
+    modalElement.addEventListener("shown.bs.modal", () => {
+      modalElement.removeAttribute("aria-hidden");
+    });
 
     // Handle confirm button
     document.getElementById("confirmModalBtn").addEventListener("click", () => {
@@ -598,11 +606,9 @@ window.Tro365Settings = {
     });
 
     // Handle modal close (cleanup)
-    document
-      .getElementById("confirmModal")
-      .addEventListener("hidden.bs.modal", () => {
-        document.getElementById("confirmModal").remove();
-      });
+    modalElement.addEventListener("hidden.bs.modal", () => {
+      modalElement.remove();
+    });
   },
 
   /**

@@ -102,9 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Add password validation if provided
         if (!empty($_POST['mat_khau'])) {
             $formData['password'] = $_POST['mat_khau'];
-            $rules['password'] = 'required|min:6|max:100';
+            $rules['password'] = 'required|min:8|max:100';
             $messages['password.required'] = 'Vui lòng nhập mật khẩu';
-            $messages['password.min'] = 'Mật khẩu phải có ít nhất 6 ký tự';
+            $messages['password.min'] = 'Mật khẩu phải có ít nhất 8 ký tự';
             $messages['password.max'] = 'Mật khẩu không được vượt quá 100 ký tự';
         }
 
@@ -546,12 +546,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const formText = this.nextElementSibling;
 
             if (password.length === 0) {
-                formText.textContent = 'Ít nhất 6 ký tự. Để trống nếu không muốn thay đổi';
+                formText.textContent = 'Ít nhất 8 ký tự. Để trống nếu không muốn thay đổi';
                 formText.className = 'form-text';
-            } else if (password.length < 6) {
-                formText.textContent = 'Mật khẩu quá ngắn (tối thiểu 6 ký tự)';
-                formText.className = 'form-text text-danger';
             } else if (password.length < 8) {
+                formText.textContent = 'Mật khẩu quá ngắn (tối thiểu 8 ký tự)';
+                formText.className = 'form-text text-danger';
+            } else if (password.length < 10) {
                 formText.textContent = 'Mật khẩu khá yếu';
                 formText.className = 'form-text text-warning';
             } else {

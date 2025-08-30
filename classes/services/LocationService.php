@@ -250,11 +250,13 @@ class LocationService
      */
     public function getProvinceName($code)
     {
+        static $cache = [];
+        if (isset($cache[$code])) return $cache[$code];
         try {
             $data = $this->makeRequest("/p/$code");
-            return $data['name'] ?? '';
+            return $cache[$code] = ($data['name'] ?? '');
         } catch (Exception $e) {
-            return '';
+            return $cache[$code] = '';
         }
     }
 
@@ -410,11 +412,13 @@ class LocationService
      */
     public function getDistrictName($code)
     {
+        static $cache = [];
+        if (isset($cache[$code])) return $cache[$code];
         try {
             $data = $this->makeRequest("/d/$code");
-            return $data['name'] ?? '';
+            return $cache[$code] = ($data['name'] ?? '');
         } catch (Exception $e) {
-            return '';
+            return $cache[$code] = '';
         }
     }
     
@@ -423,11 +427,13 @@ class LocationService
      */
     public function getWardName($code)
     {
+        static $cache = [];
+        if (isset($cache[$code])) return $cache[$code];
         try {
             $data = $this->makeRequest("/w/$code");
-            return $data['name'] ?? '';
+            return $cache[$code] = ($data['name'] ?? '');
         } catch (Exception $e) {
-            return '';
+            return $cache[$code] = '';
         }
     }
 

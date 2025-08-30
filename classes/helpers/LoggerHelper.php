@@ -8,7 +8,6 @@ namespace Tro365\Helpers;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use Monolog\Handler\RotatingFileHandler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Level;
 
@@ -42,17 +41,16 @@ class LoggerHelper
             mkdir($logDir, 0755, true);
         }
 
-        // Add rotating file handler (keeps 30 days of logs)
-        $fileHandler = new RotatingFileHandler(
+        // Simple file handler without rotation
+        $fileHandler = new StreamHandler(
             $logDir . '/' . $channel . '.log',
-            30,
             Level::Debug
         );
 
-        // Custom formatter
+        // Simple formatter
         $formatter = new LineFormatter(
-            "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
-            'Y-m-d H:i:s'
+            "[%level_name%] %message%\n",
+            null
         );
         $fileHandler->setFormatter($formatter);
         $logger->pushHandler($fileHandler);

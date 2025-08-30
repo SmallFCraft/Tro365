@@ -944,7 +944,7 @@ include __DIR__ . '/../../../includes/layouts/client/header.php';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Toast Notification System (unified with home.php and search.php) -->
-<script src="/assets/js/modern/toast.js"></script>
+<script src="/assets/js/global/toast.js"></script>
 
 <!-- Profile Page JavaScript loaded via footer -->
 

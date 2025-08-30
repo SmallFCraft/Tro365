@@ -39,11 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$error) {
         ];
 
         $validation = \Tro365\Helpers\ValidationHelper::enhancedValidate($formData, [
-            'password' => 'required|min:6|max:100',
+            'password' => 'required|min:8|max:100',
             'password_confirmation' => 'required|same:password'
         ], [
             'password.required' => 'Vui lòng nhập mật khẩu mới',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự',
             'password.max' => 'Mật khẩu không được vượt quá 100 ký tự',
             'password_confirmation.required' => 'Vui lòng xác nhận mật khẩu',
             'password_confirmation.same' => 'Mật khẩu xác nhận không khớp'
@@ -77,7 +77,7 @@ $additionalCSS = [
 ];
 $additionalJS = [
     '/assets/js/client/auth.js',
-    '/assets/js/common.js'
+    '/assets/js/global/common.js'
 ];
 
 // Body class for auth pages

@@ -211,6 +211,202 @@ window.Tro365Auth = {
       document.body.classList.remove("small-mobile");
     }
   },
+
+  /**
+   * Utilities: feedback ARIA and status indicator
+   */
+  ensureFeedbackARIA: function (el) {
+    if (!el) return;
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+  },
+  setupStatusIndicator: function (input, idSuffix) {
+    const group =
+      input.closest(".auth-form-group-enhanced") || input.parentElement;
+    const id = `${input.id || input.name || "field"}${idSuffix || "Status"}`;
+    let statusEl = document.getElementById(id);
+    if (!statusEl) {
+      statusEl = document.createElement("div");
+      statusEl.id = id;
+      statusEl.className = "input-status-indicator";
+      group && group.appendChild(statusEl);
+    }
+    return function setIndicator(state) {
+      statusEl.className = `input-status-indicator ${state}`;
+      if (state === "checking") {
+        statusEl.innerHTML = '<span class="spinner"></span>';
+      } else {
+        statusEl.innerHTML = "";
+      }
+    };
+  },
+
+  /**
+   * Common validators for phone and CCCD across pages
+   */
+  initCommonFieldValidation: function () {
+    // Phone fields
+    const phoneSelectors = ["#phone", "#contact_phone"];
+    phoneSelectors.forEach(sel => {
+      const field = document.querySelector(sel);
+      const feedback = field
+        ? field.nextElementSibling &&
+          field.nextElementSibling.classList &&
+          field.nextElementSibling.classList.contains("invalid-feedback")
+          ? field.nextElementSibling
+          : document.getElementById(field.id + "Feedback")
+        : null;
+      if (!field) return;
+      this.ensureFeedbackARIA(feedback);
+      const setIndicator = this.setupStatusIndicator(field);
+      const vnPhone =
+        /^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+      const onValidate = () => {
+        const v = field.value.trim();
+        if (!v) {
+          field.classList.remove("is-valid", "is-invalid");
+          feedback && (feedback.textContent = "");
+          setIndicator("idle");
+          return;
+        }
+        if (vnPhone.test(v)) {
+          field.classList.remove("is-invalid");
+          field.classList.add("is-valid");
+          if (feedback) {
+            feedback.innerHTML =
+              '<i class="fas fa-check-circle"></i> Số điện thoại hợp lệ';
+            feedback.className = "valid-feedback show";
+          }
+          setIndicator("valid");
+        } else {
+          field.classList.remove("is-valid");
+          field.classList.add("is-invalid");
+          if (feedback) {
+            feedback.innerHTML =
+              '<i class="fas fa-exclamation-circle"></i> Số điện thoại không hợp lệ';
+            feedback.className = "invalid-feedback show";
+          }
+          setIndicator("invalid");
+        }
+      };
+      field.addEventListener("input", onValidate);
+      field.addEventListener("blur", onValidate);
+    });
+
+    // CCCD fields
+    const cccd = document.getElementById("cccd");
+    if (cccd) {
+      const feedback = document.getElementById("cccdFeedback");
+      this.ensureFeedbackARIA(feedback);
+      const setIndicator = this.setupStatusIndicator(cccd);
+      const onValidate = () => {
+        const v = cccd.value.trim();
+        if (!v) {
+          cccd.classList.remove("is-valid", "is-invalid");
+          feedback && (feedback.textContent = "");
+          setIndicator("idle");
+          return;
+        }
+        if (/^[0-9]{9,12}$/.test(v)) {
+          cccd.classList.remove("is-invalid");
+          cccd.classList.add("is-valid");
+          if (feedback) {
+            feedback.innerHTML =
+              '<i class="fas fa-check-circle"></i> CCCD hợp lệ';
+            feedback.className = "valid-feedback show";
+          }
+          setIndicator("idle");
+        } else {
+          cccd.classList.remove("is-valid");
+          cccd.classList.add("is-invalid");
+          if (feedback) {
+            feedback.innerHTML =
+              '<i class="fas fa-exclamation-circle"></i> CCCD phải có từ 9-12 chữ số';
+            feedback.className = "invalid-feedback show";
+          }
+          setIndicator("idle");
+        }
+      };
+      cccd.addEventListener("input", onValidate);
+      cccd.addEventListener("blur", onValidate);
+    }
+  },
+
+  /**
+   * Login page realtime validation
+   */
+  initLoginRealtime: function () {
+    const form = document.getElementById("loginForm");
+    if (!form) return;
+    const user = document.getElementById("username");
+    const pass = document.getElementById("password");
+    if (user) {
+      const feedback =
+        user.parentElement.querySelector(".invalid-feedback") ||
+        document.getElementById("usernameFeedback");
+      this.ensureFeedbackARIA(feedback);
+      const setIndicator = this.setupStatusIndicator(user);
+      const validate = () => {
+        const v = user.value.trim();
+        if (!v) {
+          user.classList.remove("is-valid");
+          user.classList.add("is-invalid");
+          feedback &&
+            (feedback.innerHTML =
+              '<i class="fas fa-exclamation-circle"></i> Vui lòng nhập tên đăng nhập hoặc email');
+          feedback && (feedback.className = "invalid-feedback show");
+          setIndicator("invalid");
+          return;
+        }
+        if (v.includes("@")) {
+          const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+          user.classList.toggle("is-invalid", !ok);
+          user.classList.toggle("is-valid", ok);
+          if (feedback) {
+            feedback.innerHTML = ok
+              ? '<i class="fas fa-check-circle"></i> Email hợp lệ'
+              : '<i class="fas fa-exclamation-circle"></i> Email không hợp lệ';
+            feedback.className = (ok ? "valid" : "invalid") + "-feedback show";
+          }
+          setIndicator("idle");
+        } else {
+          // Username pattern
+          const ok = /^[A-Za-z0-9_]{3,30}$/.test(v);
+          user.classList.toggle("is-invalid", !ok);
+          user.classList.toggle("is-valid", ok);
+          if (feedback) {
+            feedback.innerHTML = ok
+              ? '<i class="fas fa-check-circle"></i> Tên đăng nhập hợp lệ'
+              : '<i class="fas fa-exclamation-circle"></i> 3-30 ký tự, chữ/số/gạch dưới';
+            feedback.className = (ok ? "valid" : "invalid") + "-feedback show";
+          }
+          setIndicator("idle");
+        }
+      };
+      user.addEventListener("input", validate);
+      user.addEventListener("blur", validate);
+    }
+    if (pass) {
+      const feedback = pass.parentElement.querySelector(".invalid-feedback");
+      this.ensureFeedbackARIA(feedback);
+      const setIndicator = this.setupStatusIndicator(pass);
+      const validate = () => {
+        const ok = pass.value.length >= 8;
+        pass.classList.toggle("is-invalid", !ok);
+        pass.classList.toggle("is-valid", ok);
+        if (feedback) {
+          feedback.innerHTML = ok
+            ? '<i class="fas fa-check-circle"></i> Mật khẩu hợp lệ'
+            : '<i class="fas fa-exclamation-circle"></i> Tối thiểu 8 ký tự';
+          feedback.className = (ok ? "valid" : "invalid") + "-feedback show";
+        }
+        setIndicator(ok ? "valid" : "invalid");
+      };
+      pass.addEventListener("input", validate);
+      pass.addEventListener("blur", validate);
+    }
+  },
+
   /**
    * Initialize form validation - Enhanced to work with FormValidator
    */
@@ -224,8 +420,13 @@ window.Tro365Auth = {
           "FormValidator detected, skipping auth.js validation for form:",
           form.id
         );
+        // Disable HTML5 validation to prevent duplicate messages
+        form.noValidate = true;
         return;
       }
+
+      // Disable HTML5 validation to prevent duplicate messages
+      form.noValidate = true;
 
       form.addEventListener("submit", function (event) {
         if (!form.checkValidity()) {
@@ -451,60 +652,129 @@ window.Tro365Auth = {
 
     if (!usernameField) return;
 
+    // Helper: escape HTML for safe text injection
+    const escapeHTML = str =>
+      (str || "").replace(
+        /[&<>"']/g,
+        c =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          }[c])
+      );
+
+    // Ensure status indicator exists (spinner/check/cross)
+    const group =
+      usernameField.closest(".auth-form-group-enhanced") ||
+      usernameField.parentElement;
+    let statusEl = document.getElementById("usernameStatus");
+    if (!statusEl) {
+      statusEl = document.createElement("div");
+      statusEl.id = "usernameStatus";
+      statusEl.className = "input-status-indicator";
+      group.appendChild(statusEl);
+    }
+
+    const setIndicator = state => {
+      statusEl.className = `input-status-indicator ${state}`; // states: checking|valid|invalid|idle
+      if (state === "checking") {
+        statusEl.innerHTML = '<span class="spinner"></span>';
+      } else if (state === "valid") {
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+      } else if (state === "invalid") {
+        statusEl.innerHTML = '<i class="fas fa-times-circle"></i>';
+      } else {
+        statusEl.innerHTML = "";
+      }
+    };
+
     let checkTimeout;
 
-    usernameField.addEventListener("input", function () {
-      const username = this.value.trim();
-
-      clearTimeout(checkTimeout);
-
+    const runAvailabilityCheck = username => {
       if (username.length < 3) {
-        this.classList.remove("is-valid", "is-invalid");
-        if (usernameFeedback) usernameFeedback.textContent = "";
+        usernameField.classList.remove("is-valid", "is-invalid");
+        if (usernameFeedback) {
+          usernameFeedback.textContent = "";
+          usernameFeedback.classList.remove("show");
+        }
+        setIndicator("idle");
         return;
       }
 
-      checkTimeout = setTimeout(() => {
-        fetch("/api/check-availability", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token":
-              document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute("content") || "",
-          },
-          body: JSON.stringify({ type: "username", value: username }),
-        })
-          .then(response => response.json())
-          .then(data => {
-            if (data.available) {
-              usernameField.classList.remove("is-invalid");
-              usernameField.classList.add("is-valid");
-              if (usernameFeedback) {
-                usernameFeedback.textContent =
-                  data.message || "Tên đăng nhập có thể sử dụng";
-                usernameFeedback.className = "valid-feedback";
-              }
-            } else {
-              usernameField.classList.remove("is-valid");
-              usernameField.classList.add("is-invalid");
-              if (usernameFeedback) {
-                usernameFeedback.textContent =
-                  data.message || "Tên đăng nhập đã tồn tại";
-                usernameFeedback.className = "invalid-feedback";
-              }
+      setIndicator("checking");
+      if (usernameFeedback) {
+        usernameFeedback.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+        usernameFeedback.className = "info-feedback show";
+      }
+
+      fetch("/api/check-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": (function () {
+            var m = document.querySelector('meta[name="csrf-token"]');
+            return m ? m.getAttribute("content") : "";
+          })(),
+        },
+        body: JSON.stringify({ type: "username", value: username }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.available) {
+            usernameField.classList.remove("is-invalid");
+            usernameField.classList.add("is-valid");
+            setIndicator("idle");
+            if (usernameFeedback) {
+              const msg = escapeHTML(
+                data.message || "Tên đăng nhập có thể sử dụng"
+              );
+              usernameFeedback.innerHTML = `<i class=\"fas fa-check-circle\"></i> ${msg}`;
+              usernameFeedback.className = "valid-feedback show";
             }
-          })
-          .catch(error => {
-            console.error("Error checking username:", error);
-          });
-      }, 500);
+          } else {
+            usernameField.classList.remove("is-valid");
+            usernameField.classList.add("is-invalid");
+            setIndicator("idle");
+            if (usernameFeedback) {
+              const msg = escapeHTML(
+                data.message || "Tên đăng nhập đã tồn tại"
+              );
+              usernameFeedback.innerHTML = `<i class=\"fas fa-times-circle\"></i> ${msg}`;
+              usernameFeedback.className = "invalid-feedback show";
+            }
+          }
+        })
+        .catch(error => {
+          console.error("Error checking username:", error);
+          usernameField.classList.remove("is-valid");
+          usernameField.classList.add("is-invalid");
+          setIndicator("invalid");
+          if (usernameFeedback) {
+            usernameFeedback.innerHTML = `<i class=\"fas fa-exclamation-circle\"></i> Không thể kiểm tra tên đăng nhập. Vui lòng thử lại.`;
+            usernameFeedback.className = "invalid-feedback show";
+          }
+        });
+    };
+
+    usernameField.addEventListener("input", function () {
+      const username = this.value.trim();
+      clearTimeout(checkTimeout);
+      // Show checking indicator quickly for better UX
+      setIndicator(username.length >= 3 ? "checking" : "idle");
+      checkTimeout = setTimeout(() => runAvailabilityCheck(username), 350);
+    });
+
+    usernameField.addEventListener("blur", function () {
+      runAvailabilityCheck(this.value.trim());
     });
   },
 
   /**
-   * Email validation
+   * Email validation for registration
    */
   initEmailValidation: function () {
     const emailField = document.getElementById("email");
@@ -514,66 +784,233 @@ window.Tro365Auth = {
 
     let checkTimeout;
 
-    emailField.addEventListener("input", function () {
-      const email = this.value.trim();
+    // Set up status indicator
+    const group =
+      emailField.closest(".auth-form-group-enhanced") ||
+      emailField.parentElement;
+    let statusEl = document.getElementById("emailStatus");
+    if (!statusEl) {
+      statusEl = document.createElement("div");
+      statusEl.id = "emailStatus";
+      statusEl.className = "input-status-indicator";
+      group.appendChild(statusEl);
+    }
+    const setIndicator = state => {
+      statusEl.className = `input-status-indicator ${state}`;
+      if (state === "checking")
+        statusEl.innerHTML = '<span class="spinner"></span>';
+      else if (state === "valid")
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+      else if (state === "invalid")
+        statusEl.innerHTML = '<i class="fas fa-times-circle"></i>';
+      else statusEl.innerHTML = "";
+    };
 
-      clearTimeout(checkTimeout);
-
-      // Basic email format validation
+    const runEmailCheck = email => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
       if (email === "") {
-        this.classList.remove("is-valid", "is-invalid");
-        if (emailFeedback) emailFeedback.textContent = "";
+        emailField.classList.remove("is-valid", "is-invalid");
+        if (emailFeedback) {
+          emailFeedback.textContent = "";
+          emailFeedback.classList.remove("show");
+        }
+        setIndicator("idle");
         return;
       }
-
       if (!emailRegex.test(email)) {
-        this.classList.remove("is-valid");
-        this.classList.add("is-invalid");
+        emailField.classList.remove("is-valid");
+        emailField.classList.add("is-invalid");
+        setIndicator("invalid");
         if (emailFeedback) {
-          emailFeedback.textContent = "Định dạng email không hợp lệ";
-          emailFeedback.className = "invalid-feedback";
+          emailFeedback.innerHTML =
+            '<i class="fas fa-exclamation-circle"></i> Định dạng email không hợp lệ';
+          emailFeedback.className = "invalid-feedback show";
         }
         return;
       }
 
-      checkTimeout = setTimeout(() => {
-        fetch("/api/check-availability", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token":
-              document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute("content") || "",
-          },
-          body: JSON.stringify({ type: "email", value: email }),
-        })
-          .then(response => response.json())
-          .then(data => {
-            if (data.available) {
-              emailField.classList.remove("is-invalid");
-              emailField.classList.add("is-valid");
-              if (emailFeedback) {
-                emailFeedback.textContent =
-                  data.message || "Email có thể sử dụng";
-                emailFeedback.className = "valid-feedback";
-              }
-            } else {
-              emailField.classList.remove("is-valid");
-              emailField.classList.add("is-invalid");
-              if (emailFeedback) {
-                emailFeedback.textContent =
-                  data.message || "Email đã được sử dụng";
-                emailFeedback.className = "invalid-feedback";
-              }
+      setIndicator("checking");
+      if (emailFeedback) {
+        emailFeedback.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+        emailFeedback.className = "info-feedback show";
+      }
+
+      fetch("/api/check-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": (function () {
+            var m = document.querySelector('meta[name="csrf-token"]');
+            return m ? m.getAttribute("content") : "";
+          })(),
+        },
+        body: JSON.stringify({ type: "email", value: email }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.available) {
+            emailField.classList.remove("is-invalid");
+            emailField.classList.add("is-valid");
+            setIndicator("idle");
+            if (emailFeedback) {
+              emailFeedback.innerHTML = `<i class=\"fas fa-check-circle\"></i> ${
+                data.message || "Email có thể sử dụng"
+              }`;
+              emailFeedback.className = "valid-feedback show";
             }
-          })
-          .catch(error => {
-            console.error("Error checking email:", error);
-          });
-      }, 500);
+          } else {
+            emailField.classList.remove("is-valid");
+            emailField.classList.add("is-invalid");
+            setIndicator("idle");
+            if (emailFeedback) {
+              emailFeedback.innerHTML = `<i class=\"fas fa-times-circle\"></i> ${
+                data.message || "Email đã được sử dụng"
+              }`;
+              emailFeedback.className = "invalid-feedback show";
+            }
+          }
+        })
+        .catch(error => {
+          console.error("Error checking email:", error);
+          emailField.classList.remove("is-valid");
+          emailField.classList.add("is-invalid");
+          setIndicator("invalid");
+          if (emailFeedback) {
+            emailFeedback.innerHTML = `<i class=\"fas fa-exclamation-circle\"></i> Không thể kiểm tra email. Vui lòng thử lại.`;
+            emailFeedback.className = "invalid-feedback show";
+          }
+        });
+    };
+
+    emailField.addEventListener("input", function () {
+      const email = this.value.trim();
+      clearTimeout(checkTimeout);
+      setIndicator(email.length ? "checking" : "idle");
+      checkTimeout = setTimeout(() => runEmailCheck(email), 350);
+    });
+
+    emailField.addEventListener("blur", function () {
+      runEmailCheck(this.value.trim());
+    });
+  },
+
+  /**
+   * Email validation for forgot password (opposite logic of registration)
+   */
+  initForgotPasswordEmailValidation: function () {
+    const emailField = document.getElementById("email");
+    const emailFeedback = document.getElementById("emailFeedback");
+
+    if (!emailField) return;
+
+    let checkTimeout;
+
+    // Set up status indicator
+    const group =
+      emailField.closest(".auth-form-group-enhanced") ||
+      emailField.parentElement;
+    let statusEl = document.getElementById("emailStatus");
+    if (!statusEl) {
+      statusEl = document.createElement("div");
+      statusEl.id = "emailStatus";
+      statusEl.className = "input-status-indicator";
+      group.appendChild(statusEl);
+    }
+    const setIndicator = state => {
+      statusEl.className = `input-status-indicator ${state}`;
+      if (state === "checking")
+        statusEl.innerHTML = '<span class="spinner"></span>';
+      else if (state === "valid")
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+      else if (state === "invalid")
+        statusEl.innerHTML = '<i class="fas fa-times-circle"></i>';
+      else statusEl.innerHTML = "";
+    };
+
+    const runEmailCheck = email => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (email === "") {
+        emailField.classList.remove("is-valid", "is-invalid");
+        if (emailFeedback) {
+          emailFeedback.textContent = "";
+          emailFeedback.classList.remove("show");
+        }
+        setIndicator("idle");
+        return;
+      }
+      if (!emailRegex.test(email)) {
+        emailField.classList.remove("is-valid");
+        emailField.classList.add("is-invalid");
+        setIndicator("invalid");
+        if (emailFeedback) {
+          emailFeedback.innerHTML =
+            '<i class="fas fa-exclamation-circle"></i> Định dạng email không hợp lệ';
+          emailFeedback.className = "invalid-feedback show";
+        }
+        return;
+      }
+
+      setIndicator("checking");
+      if (emailFeedback) {
+        emailFeedback.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+        emailFeedback.className = "info-feedback show";
+      }
+
+      fetch("/api/check-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": (function () {
+            var m = document.querySelector('meta[name="csrf-token"]');
+            return m ? m.getAttribute("content") : "";
+          })(),
+        },
+        body: JSON.stringify({ type: "email", value: email }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          // OPPOSITE logic for forgot password: available=false means email exists (GOOD)
+          if (!data.available) {
+            emailField.classList.remove("is-invalid");
+            emailField.classList.add("is-valid");
+            setIndicator("idle");
+            if (emailFeedback) {
+              emailFeedback.innerHTML = `<i class=\"fas fa-check-circle\"></i> Email hợp lệ`;
+              emailFeedback.className = "valid-feedback show";
+            }
+          } else {
+            emailField.classList.remove("is-valid");
+            emailField.classList.add("is-invalid");
+            setIndicator("idle");
+            if (emailFeedback) {
+              emailFeedback.innerHTML = `<i class=\"fas fa-times-circle\"></i> Email không tồn tại trong hệ thống`;
+              emailFeedback.className = "invalid-feedback show";
+            }
+          }
+        })
+        .catch(error => {
+          console.error("Email validation error:", error);
+          emailField.classList.remove("is-valid", "is-invalid");
+          setIndicator("idle");
+          if (emailFeedback) {
+            emailFeedback.innerHTML =
+              '<i class="fas fa-exclamation-triangle"></i> Lỗi kiểm tra email';
+            emailFeedback.className = "invalid-feedback show";
+          }
+        });
+    };
+
+    emailField.addEventListener("input", function () {
+      const email = this.value.trim();
+      clearTimeout(checkTimeout);
+      setIndicator(email.length ? "checking" : "idle");
+      checkTimeout = setTimeout(() => runEmailCheck(email), 350);
+    });
+
+    emailField.addEventListener("blur", function () {
+      runEmailCheck(this.value.trim());
     });
   },
 
@@ -584,33 +1021,43 @@ window.Tro365Auth = {
     const forms = document.querySelectorAll("form");
 
     forms.forEach(form => {
-      // Remove any existing submit listeners to prevent double submission
-      const newForm = form.cloneNode(true);
-      form.parentNode.replaceChild(newForm, form);
+      // Skip forms already handled by FormValidator
+      if (form.dataset.fvInitialized === "1") {
+        return;
+      }
 
-      newForm.addEventListener("submit", function (event) {
+      form.addEventListener("submit", function (event) {
         // Prevent double submission
         if (this.dataset.submitting === "true") {
           event.preventDefault();
           return false;
         }
 
-        // Only add loading state if form is valid
+        // Show loading state immediately for better UX
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.classList.add("btn-loading");
+          submitBtn.disabled = true;
+        }
+
+        // Check form validity
         if (this.checkValidity()) {
-          // Mark as submitting
+          // Mark as submitting for valid forms
           this.dataset.submitting = "true";
 
-          const submitBtn = this.querySelector('button[type="submit"]');
-          if (submitBtn) {
-            submitBtn.classList.add("btn-loading");
-            submitBtn.disabled = true;
-
-            // Re-enable after 10 seconds as fallback
-            setTimeout(() => {
+          // Re-enable after 10 seconds as fallback
+          setTimeout(() => {
+            if (submitBtn) {
               submitBtn.classList.remove("btn-loading");
               submitBtn.disabled = false;
-              this.dataset.submitting = "false";
-            }, 10000);
+            }
+            this.dataset.submitting = "false";
+          }, 10000);
+        } else {
+          // Remove loading state for invalid forms
+          if (submitBtn) {
+            submitBtn.classList.remove("btn-loading");
+            submitBtn.disabled = false;
           }
         }
       });
@@ -699,7 +1146,14 @@ window.Tro365Auth = {
     this.initPasswordConfirmation();
     this.initPasswordStrength();
     this.initUsernameChecker();
-    this.initEmailValidation();
+
+    // Skip registration email validation on forgot password page
+    if (!window.location.pathname.includes("forgot-password")) {
+      this.initEmailValidation();
+    }
+
+    this.initCommonFieldValidation();
+    this.initLoginRealtime();
     this.initFormSubmission();
 
     // Initial resize handling

@@ -310,7 +310,7 @@ window.Tro365Common = {
    * Toggle favorite functionality
    */
   toggleFavorite: function (postId, callback = null) {
-    this.ajaxRequest("/api/toggle-favorite", {
+    this.ajaxRequest("/api/favorites/toggle", {
       body: JSON.stringify({ postId: postId }),
     })
       .then(res => {
@@ -343,6 +343,12 @@ window.Tro365Common = {
               heartIcon.classList.add("text-muted");
               favoriteText.textContent = "Yêu thích";
             }
+          }
+
+          // Update global header favorites badge
+          if (data.data && typeof data.data.favorited === "boolean") {
+            window.updateFavoritesCount &&
+              window.updateFavoritesCount(data.data.favorited);
           }
 
           if (callback) callback(data);
@@ -390,6 +396,62 @@ function confirmAction(message, callback) {
 function performAction(action, id, formId) {
   return window.Tro365Common.performAction(action, id, formId);
 }
+
+// Global favorites badge updater available across all pages
+window.updateFavoritesCount = function (isAdded) {
+  try {
+    // Bottom nav (mobile)
+    const bottomNavItem = document.querySelector(
+      '.bottom-nav-item[href="/profile#favorites"], .bottom-nav-item[href="/profile/favorites"], a.bottom-nav-item[aria-label="Yêu thích"]'
+    );
+    let bottomNavBadge = bottomNavItem
+      ? bottomNavItem.querySelector(".badge")
+      : null;
+
+    // Determine current count
+    let currentCount = 0;
+    if (bottomNavBadge) {
+      const badgeText = bottomNavBadge.textContent.trim();
+      currentCount = badgeText === "99+" ? 99 : parseInt(badgeText) || 0;
+    }
+
+    const newCount = isAdded ? currentCount + 1 : Math.max(0, currentCount - 1);
+
+    if (newCount > 0) {
+      if (!bottomNavBadge && bottomNavItem) {
+        bottomNavBadge = document.createElement("span");
+        bottomNavBadge.className =
+          "badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill";
+        bottomNavBadge.style.fontSize = "0.6rem";
+        bottomNavItem.appendChild(bottomNavBadge);
+      }
+      if (bottomNavBadge)
+        bottomNavBadge.textContent = newCount > 99 ? "99+" : String(newCount);
+    } else if (bottomNavBadge) {
+      bottomNavBadge.remove();
+    }
+
+    // User dropdown (desktop)
+    const favoritesLink = document.querySelector(
+      '.dropdown-item[href="/profile/favorites"], .dropdown-item[href="/profile#favorites"]'
+    );
+    if (favoritesLink) {
+      let countSpan = favoritesLink.querySelector(".item-count");
+      if (newCount > 0) {
+        if (!countSpan) {
+          countSpan = document.createElement("span");
+          countSpan.className = "item-count";
+          favoritesLink.appendChild(countSpan);
+        }
+        countSpan.textContent = newCount.toLocaleString();
+      } else if (countSpan) {
+        countSpan.remove();
+      }
+    }
+  } catch (e) {
+    console.warn("updateFavoritesCount failed", e);
+  }
+};
 
 /**
  * Global toggleFavorite function for backward compatibility
@@ -480,6 +542,12 @@ function toggleFavorite(postId, buttonElement) {
         // Show success message
         if (window.TroToast && typeof window.TroToast.success === "function") {
           window.TroToast.success(data.message);
+        }
+
+        // Update global header favorites badge
+        if (data.data && typeof data.data.favorited === "boolean") {
+          window.updateFavoritesCount &&
+            window.updateFavoritesCount(data.data.favorited);
         }
 
         // Special handling for favorites page - remove item from DOM if unfavorited

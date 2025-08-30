@@ -22,12 +22,42 @@ if (typeof SessionRefresh === "undefined") {
      */
     isUserLoggedIn() {
       // Check for common session indicators
-      return (
-        this.currentUserRole !== null ||
-        document.body.classList.contains("logged-in") ||
-        document.querySelector("[data-user-id]") !== null ||
-        window.TRO365_USER_ID !== undefined
-      );
+      const hasUserRole =
+        this.currentUserRole !== null && this.currentUserRole !== undefined;
+      const hasGlobalUserRole =
+        window.currentUserRole !== null && window.currentUserRole !== undefined;
+      const hasBodyClass = document.body.classList.contains("logged-in");
+      const hasUserIdElement =
+        document.querySelector("[data-user-id]") !== null;
+      const hasGlobalUserId = window.TRO365_USER_ID !== undefined;
+      const hasConfigLoggedIn =
+        window.Tro365Config && window.Tro365Config.isLoggedIn === true;
+
+      // More strict checking - require at least 2 indicators to be true
+      const indicators = [
+        hasUserRole,
+        hasGlobalUserRole,
+        hasBodyClass,
+        hasUserIdElement,
+        hasGlobalUserId,
+        hasConfigLoggedIn,
+      ];
+      const trueCount = indicators.filter(Boolean).length;
+
+      if (this.debug) {
+        console.log("SessionRefresh: Login indicators:", {
+          hasUserRole,
+          hasGlobalUserRole,
+          hasBodyClass,
+          hasUserIdElement,
+          hasGlobalUserId,
+          hasConfigLoggedIn,
+          trueCount,
+          isLoggedIn: trueCount >= 2,
+        });
+      }
+
+      return trueCount >= 2;
     }
 
     /**
@@ -63,29 +93,38 @@ if (typeof SessionRefresh === "undefined") {
         }
       }, this.refreshInterval);
 
-      // Also refresh on page focus (when user comes back to tab)
-      window.addEventListener("focus", () => {
+      // Store event handlers for later removal
+      this.focusHandler = () => {
         if (this.isUserLoggedIn()) {
           this.refreshSession();
         }
-      });
+      };
 
-      // Refresh on page visibility change
-      document.addEventListener("visibilitychange", () => {
+      this.visibilityHandler = () => {
         if (!document.hidden && this.isUserLoggedIn()) {
           this.refreshSession();
         }
-      });
+      };
+
+      this.beforeUnloadHandler = () => {
+        this.stopRefresh();
+      };
+
+      this.userLogoutHandler = () => {
+        this.stopRefresh();
+      };
+
+      // Also refresh on page focus (when user comes back to tab)
+      window.addEventListener("focus", this.focusHandler);
+
+      // Refresh on page visibility change
+      document.addEventListener("visibilitychange", this.visibilityHandler);
 
       // Listen for logout events to stop session refresh immediately
-      window.addEventListener("beforeunload", () => {
-        this.stopRefresh();
-      });
+      window.addEventListener("beforeunload", this.beforeUnloadHandler);
 
       // Listen for custom logout event
-      window.addEventListener("userLogout", () => {
-        this.stopRefresh();
-      });
+      window.addEventListener("userLogout", this.userLogoutHandler);
 
       if (this.debug) {
         console.log(
@@ -311,10 +350,22 @@ if (typeof SessionRefresh === "undefined") {
 
     // Destroy instance
     destroy() {
-      // Clear interval if we stored the reference
-      // Note: We'd need to store the interval ID to clear it properly
+      // Stop refresh first
+      this.stopRefresh();
+
+      // Clear all properties
+      this.currentUserRole = null;
+      this.currentUserStatus = null;
+      this.intervalId = null;
+
+      // Remove event listeners
+      window.removeEventListener("focus", this.focusHandler);
+      document.removeEventListener("visibilitychange", this.visibilityHandler);
+      window.removeEventListener("beforeunload", this.beforeUnloadHandler);
+      window.removeEventListener("userLogout", this.userLogoutHandler);
+
       if (this.debug) {
-        console.log("SessionRefresh destroyed");
+        console.log("SessionRefresh destroyed completely");
       }
     }
   }
@@ -325,8 +376,18 @@ if (typeof SessionRefresh === "undefined") {
 
 // Auto-initialize for all authenticated areas
 document.addEventListener("DOMContentLoaded", function () {
-  // Check if user is logged in (has currentUserRole set)
-  if (window.currentUserRole !== undefined && window.currentUserRole !== null) {
+  // More comprehensive check for user authentication
+  const hasUserRole =
+    window.currentUserRole !== undefined && window.currentUserRole !== null;
+  const hasConfig =
+    window.Tro365Config && window.Tro365Config.isLoggedIn === true;
+  const hasBodyClass = document.body.classList.contains("logged-in");
+
+  // Only initialize if we have strong indicators of being logged in
+  if (
+    (hasUserRole || hasConfig) &&
+    !window.location.pathname.includes("/logout")
+  ) {
     // Get current user role and status from global variables
     const currentUserRole = window.currentUserRole;
     const currentUserStatus = window.currentUserStatus || 1; // Default to active
@@ -344,9 +405,22 @@ document.addEventListener("DOMContentLoaded", function () {
           "Session auto-refresh initialized for role:",
           currentUserRole,
           "status:",
-          currentUserStatus
+          currentUserStatus,
+          "indicators:",
+          { hasUserRole, hasConfig, hasBodyClass }
         );
       }
     }
+  } else if (window.TRO365_DEBUG) {
+    console.log(
+      "Session auto-refresh skipped - user not authenticated",
+      "indicators:",
+      {
+        hasUserRole,
+        hasConfig,
+        hasBodyClass,
+        pathname: window.location.pathname,
+      }
+    );
   }
 });

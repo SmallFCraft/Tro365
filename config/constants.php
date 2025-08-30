@@ -72,7 +72,7 @@ define('TIME_FORMAT', 'H:i');
 define('DEFAULT_POST_IMAGE', 'assets/images/default/post.jpg');
 
 // Validation rules
-define('MIN_PASSWORD_LENGTH', 6);
+define('MIN_PASSWORD_LENGTH', 8);
 define('MAX_PASSWORD_LENGTH', 50);
 define('MIN_USERNAME_LENGTH', 3);
 define('MAX_USERNAME_LENGTH', 30);

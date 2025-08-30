@@ -92,13 +92,16 @@ $hasHeroSection = true;
 // Additional CSS for home page
 $additionalCSS = ['/assets/css/client/main.css'];
 
-// Include header
+// Additional JS will be handled globally by PerformanceOptimizationService
+// No need to manually specify for homepage
+
+// Include header (critical CSS will be injected globally)
 include __DIR__ . '/../../includes/layouts/client/header.php';
 ?>
 
 
-<!-- Hero Section -->
-<section class="hero-section">
+<!-- Hero Section - LCP Optimized Globally -->
+<section class="hero-section" role="banner" data-lcp-element="true">
     <div class="container">
         <div class="hero-content text-center">
             <h1 class="hero-title">Tìm phòng trọ ưng ý</h1>
@@ -208,7 +211,7 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
         </div>
 
         <div class="row g-4">
-            <?php foreach ($featuredPosts as $post): ?>
+            <?php foreach ($featuredPosts as $index => $post): ?>
             <div class="col-lg-4 col-md-6"> <!-- Back to 3 columns layout as requested -->
                 <div class="post-card">
                     <div class="position-relative">
@@ -226,7 +229,10 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                             <img src="<?= $thumbSrc ?>"
                                  class="card-img-top"
                                  alt="<?= htmlspecialchars($post['TieuDe']) ?>"
-                                 loading="lazy" decoding="async" referrerpolicy="no-referrer" fetchpriority="low">
+                                 loading="<?= $index === 0 ? 'eager' : 'lazy' ?>"
+                                 decoding="async"
+                                 referrerpolicy="no-referrer"
+                                 fetchpriority="<?= $index === 0 ? 'high' : 'low' ?>">
                         <?php else: ?>
                             <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 220px;">
                                 <i class="fas fa-home fa-3x text-muted"></i>
@@ -538,7 +544,7 @@ if ($showCTA):
 <?php include __DIR__ . '/../../includes/layouts/client/footer.php'; ?>
 
 <!-- Additional JavaScript for Home Page -->
-<script src="/assets/js/common.js"></script>
+<script src="/assets/js/global/common.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Load provinces for home search

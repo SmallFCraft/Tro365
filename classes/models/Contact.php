@@ -120,6 +120,45 @@ class Contact extends BaseModel
     }
 
     /**
+     * Get contacts by user (for seller dashboard)
+     */
+    public function getByUser($userId, $type = 'received', $page = 1, $limit = 20, $filters = [])
+    {
+        $offset = ($page - 1) * $limit;
+        $whereClause = '1=1';
+        $params = [];
+
+        // Filter by user type
+        if ($type === 'received') {
+            $whereClause .= ' AND ChuNhaID = :userId';
+        } else {
+            $whereClause .= ' AND NguoiLienHeID = :userId';
+        }
+        $params['userId'] = $userId;
+
+        // Apply additional filters
+        if (!empty($filters['status'])) {
+            $whereClause .= ' AND TrangThai = :status';
+            $params['status'] = $filters['status'];
+        }
+
+        if (!empty($filters['search'])) {
+            $whereClause .= ' AND (HoTen LIKE :search OR Email LIKE :search OR ChuDe LIKE :search)';
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        $sql = "SELECT * FROM {$this->table}
+                WHERE {$whereClause}
+                ORDER BY NgayTao DESC
+                LIMIT :limit OFFSET :offset";
+
+        $params['limit'] = $limit;
+        $params['offset'] = $offset;
+
+        return $this->db->select($sql, $params);
+    }
+
+    /**
      * Count contacts
      */
     public function count($filters = [])

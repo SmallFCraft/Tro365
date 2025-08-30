@@ -42,60 +42,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'TrangThai' => (int)($_POST['trang_thai'] ?? 1)
         ];
         
-        // Enhanced validation using rakit/validation
-        $formData = [
-            'username' => $data['TenDN'],
-            'email' => $data['Email'],
-            'password' => $data['MatKhau'],
-            'fullname' => $data['HoTen'],
-            'phone' => $data['SDT'] ?? '',
-            'cccd' => $data['CCCD'] ?? '',
-            'birth_date' => $data['NgaySinh'] ?? '',
-            'role_id' => $data['VaiTroID'],
-            'status' => $data['TrangThai']
-        ];
+        // Basic validation using ValidationHelper
+        \Tro365\Helpers\ValidationHelper::validateRequired($data, ['TenDN', 'Email', 'MatKhau', 'HoTen']);
 
-        $validation = \Tro365\Helpers\ValidationHelper::enhancedValidate($formData, [
-            'username' => 'required|min:3|max:50|alpha_num',
-            'email' => 'required|email',
-            'password' => 'required|min:6|max:100',
-            'fullname' => 'required|min:2|max:100',
-            'phone' => 'nullable|regex:/^(84[0-9]{9}|0[3|5|7|8|9][0-9]{8})$/',
-            'cccd' => 'nullable|regex:/^[0-9]{9,12}$/',
-            'birth_date' => 'nullable|date',
-            'role_id' => 'required|integer|min:1|max:5',
-            'status' => 'required|integer|in:0,1,2'
-        ], [
-            'username.required' => 'Vui lòng nhập tên đăng nhập',
-            'username.min' => 'Tên đăng nhập phải có ít nhất 3 ký tự',
-            'username.max' => 'Tên đăng nhập không được vượt quá 50 ký tự',
-            'username.alpha_num' => 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới',
-            'email.required' => 'Vui lòng nhập email',
-            'email.email' => 'Email không hợp lệ',
-            'password.required' => 'Vui lòng nhập mật khẩu',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
-            'password.max' => 'Mật khẩu không được vượt quá 100 ký tự',
-            'fullname.required' => 'Vui lòng nhập họ tên',
-            'fullname.min' => 'Họ tên phải có ít nhất 2 ký tự',
-            'fullname.max' => 'Họ tên không được vượt quá 100 ký tự',
-            'phone.regex' => 'Số điện thoại không hợp lệ',
-            'cccd.regex' => 'Số CCCD phải có 9-12 chữ số',
-            'birth_date.date' => 'Ngày sinh không hợp lệ',
-            'role_id.required' => 'Vui lòng chọn vai trò',
-            'role_id.integer' => 'Vai trò không hợp lệ',
-            'role_id.min' => 'Vai trò không hợp lệ',
-            'role_id.max' => 'Vai trò không hợp lệ',
-            'status.required' => 'Vui lòng chọn trạng thái',
-            'status.integer' => 'Trạng thái không hợp lệ',
-            'status.in' => 'Trạng thái không hợp lệ'
-        ]);
+        // Additional validation
+        if (strlen($data['TenDN']) < 3 || strlen($data['TenDN']) > 30) {
+            throw new Exception('Tên đăng nhập phải có từ 3-30 ký tự');
+        }
 
-        if (!$validation['valid']) {
-            $errors = [];
-            foreach ($validation['errors'] as $field => $fieldErrors) {
-                $errors = array_merge($errors, $fieldErrors);
-            }
-            throw new Exception(implode(', ', $errors));
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $data['TenDN'])) {
+            throw new Exception('Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới');
+        }
+
+        if (!filter_var($data['Email'], FILTER_VALIDATE_EMAIL)) {
+            throw new Exception('Email không hợp lệ');
+        }
+
+        if (strlen($data['MatKhau']) < 6) {
+            throw new Exception('Mật khẩu phải có ít nhất 6 ký tự');
+        }
+
+        if (strlen($data['HoTen']) < 2) {
+            throw new Exception('Họ tên phải có ít nhất 2 ký tự');
         }
         
         // Check if username exists
@@ -236,8 +204,8 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                             <label class="form-label">
                                                 Tên đăng nhập <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" class="form-control" name="ten_dn" 
-                                                   placeholder="Nhập tên đăng nhập" required
+                                            <input type="text" class="form-control" name="ten_dn"
+                                                   placeholder="Nhập tên đăng nhập" required autocomplete="username"
                                                    value="<?= e($_POST['ten_dn'] ?? '') ?>">
                                             <div class="form-text">3-50 ký tự, chỉ chữ cái, số và dấu gạch dưới</div>
                                         </div>
@@ -247,8 +215,8 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                             <label class="form-label">
                                                 Email <span class="text-danger">*</span>
                                             </label>
-                                            <input type="email" class="form-control" name="email" 
-                                                   placeholder="Nhập email" required
+                                            <input type="email" class="form-control" name="email"
+                                                   placeholder="Nhập email" required autocomplete="email"
                                                    value="<?= e($_POST['email'] ?? '') ?>">
                                         </div>
                                     </div>
@@ -260,8 +228,8 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                             <label class="form-label">
                                                 Mật khẩu <span class="text-danger">*</span>
                                             </label>
-                                            <input type="password" class="form-control" name="mat_khau" 
-                                                   placeholder="Nhập mật khẩu" required>
+                                            <input type="password" class="form-control" name="mat_khau"
+                                                   placeholder="Nhập mật khẩu" required autocomplete="new-password">
                                             <div class="form-text">Ít nhất 6 ký tự</div>
                                         </div>
                                     </div>

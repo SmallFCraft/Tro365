@@ -44,24 +44,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = new User();
         $result = $user->generateResetToken($email);
 
-        // Send reset email using helper function
-        $resetLink = app_url("/auth/reset-password?token=" . $result['token']);
+        // Always show success message for security (prevent email enumeration)
+        $success = 'Nếu email này đã được đăng ký, liên kết đặt lại mật khẩu sẽ được gửi đến hộp thư của bạn. Vui lòng kiểm tra email và làm theo hướng dẫn.';
 
-        $emailSent = sendPasswordResetEmail($email, $resetLink, $result['token']);
+        // Only send email if account actually exists
+        if ($result['email_exists'] && $result['token']) {
+            $resetLink = app_url("/auth/reset-password?token=" . $result['token']);
+            $emailSent = sendPasswordResetEmail($email, $resetLink, $result['token']);
 
-        if ($emailSent) {
-            $success = 'Liên kết đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và làm theo hướng dẫn.';
-
-            // Log successful password reset request
-            \Tro365\Helpers\LoggerHelper::logAuth('password_reset_email_sent', ['email' => $email]);
+            if ($emailSent) {
+                // Log successful password reset request
+                \Tro365\Helpers\LoggerHelper::logAuth('password_reset_email_sent', ['email' => $email]);
+            } else {
+                \Tro365\Helpers\LoggerHelper::error('Password reset email failed', ['email' => $email]);
+                // Don't throw exception - still show success message for security
+            }
         } else {
-            \Tro365\Helpers\LoggerHelper::error('Password reset email failed', ['email' => $email]);
-            throw new Exception('Có lỗi xảy ra khi gửi email đặt lại mật khẩu. Vui lòng thử lại sau.');
+            // Log attempt for non-existent email (for security monitoring)
+            \Tro365\Helpers\LoggerHelper::logAuth('password_reset_attempt_invalid_email', ['email' => $email]);
         }
-        
+
+        // Handle AJAX requests (from ModernApp)
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => $success,
+                'redirect' => '/forgot-password?sent=1'
+            ]);
+            exit;
+        }
+
     } catch (Exception $e) {
         $error = $e->getMessage();
+
+        // Handle AJAX error response
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => $error
+            ]);
+            exit;
+        }
     }
+}
+
+// Handle success redirect parameter
+if (isset($_GET['sent']) && $_GET['sent'] == '1') {
+    $success = 'Nếu email này đã được đăng ký, liên kết đặt lại mật khẩu sẽ được gửi đến hộp thư của bạn. Vui lòng kiểm tra email và làm theo hướng dẫn.';
 }
 
 // Additional CSS for auth pages
@@ -70,10 +101,13 @@ $additionalCSS = [
     '/assets/css/client/auth.css'
 ];
 
-// Additional JS for auth pages
+// Additional JS for auth pages - with defer to prevent race conditions
 $additionalJS = [
     '/assets/js/client/auth.js'
 ];
+
+// Add defer attribute to prevent race conditions with FormValidator
+$jsDefer = true;
 
 // Body class for auth pages
 $bodyClass = 'auth-page';
@@ -134,23 +168,24 @@ include_once __DIR__ . '/../../includes/layouts/client/header.php';
                         </div>
 
                         <!-- Enhanced Form -->
-                        <form method="POST" class="auth-form-enhanced needs-validation" novalidate>
-                            <div class="form-group-enhanced">
+                        <form method="POST" class="auth-form-enhanced" novalidate>
+                            <div class="auth-form-group-enhanced">
                                 <label for="email" class="form-label-enhanced">
                                     <i class="fas fa-envelope"></i>
                                     Email đã đăng ký
                                 </label>
                                 <div class="input-icon-enhanced">
-                                    <input type="email"
-                                           class="form-control-enhanced"
+                                    <input type="text"
+                                           class="form-control form-control-enhanced"
                                            id="email"
                                            name="email"
                                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                                            placeholder="Nhập email của bạn"
-                                           required>
+                                           data-required="true"
+                                           data-type="email">
                                     <i class="fas fa-envelope input-icon"></i>
                                 </div>
-                                <div class="invalid-feedback auth-text-danger">
+                                <div id="emailFeedback" class="invalid-feedback auth-text-danger">
                                     Vui lòng nhập email hợp lệ.
                                 </div>
                                 <small class="auth-text-muted" style="margin-top: 0.5rem; display: block;">
@@ -224,29 +259,19 @@ include_once __DIR__ . '/../../includes/layouts/client/header.php';
 <!-- Enhanced JavaScript for better UX -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Enhanced form validation
+    // Initialize Tro365 Auth validation for forgot password
+    if (window.Tro365Auth && typeof window.Tro365Auth.initForgotPasswordEmailValidation === 'function') {
+        // Use forgot password specific email validation (opposite logic of registration)
+        window.Tro365Auth.initForgotPasswordEmailValidation();
+        console.log('📧 Forgot password: Using forgot password email validation');
+    }
+
+    // Enhanced form focus handling only (submission handled by auth.js)
     const form = document.querySelector('.auth-form-enhanced');
-    const emailInput = form?.querySelector('input[type="email"]');
-    const submitButton = form?.querySelector('button[type="submit"]');
+    const emailInput = form?.querySelector('input[name="email"]');
 
     if (form && emailInput) {
-        // Real-time email validation
-        emailInput.addEventListener('input', function() {
-            const email = this.value.trim();
-            const isValid = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-            if (isValid) {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            } else if (email) {
-                this.classList.remove('is-valid');
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-valid', 'is-invalid');
-            }
-        });
-
-        // Focus enhancement
+        // Focus enhancement only
         emailInput.addEventListener('focus', function() {
             this.parentElement.style.transform = 'translateY(-2px)';
         });
@@ -255,27 +280,8 @@ document.addEventListener('DOMContentLoaded', function() {
             this.parentElement.style.transform = 'translateY(0)';
         });
 
-        // Form submission handling
-        form.addEventListener('submit', function(event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                // Shake animation for invalid form
-                form.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    form.style.animation = '';
-                }, 500);
-            } else {
-                // Add loading state to submit button
-                if (submitButton && !submitButton.classList.contains('loading')) {
-                    submitButton.classList.add('loading');
-                    submitButton.disabled = true;
-                }
-            }
-
-            form.classList.add('was-validated');
-        });
+        // Let auth.js handle form submission to prevent duplicate handlers
+        console.log('📧 Forgot password: Using standardized form submission from auth.js');
     }
 
     // Add loading animation to buttons

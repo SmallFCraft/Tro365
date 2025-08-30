@@ -7,19 +7,19 @@
 :root {
     /* Light Mode Colors */
     --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --bg-tertiary: #e9ecef;
-    --text-primary: #212529;
-    --text-secondary: #343a40; /* Improved contrast */
-    --text-muted: #495057; /* Improved contrast - sync with layouts.css */
-    --border-color: #dee2e6;
+    --bg-secondary: #f3f4f6; /* slightly darker for better contrast than #f8f9fa */
+    --bg-tertiary: #e5e7eb;
+    --text-primary: #111827; /* darker text for better contrast */
+    --text-secondary: #1f2937; /* improved contrast */
+    --text-muted: #374151; /* improved contrast */
+    --border-color: #d1d5db;
     --shadow-color: rgba(0, 0, 0, 0.1);
     /* Glass variables moved to glass-morphism.css to avoid conflicts */
 
     /* Brand Colors */
-    --primary-color: #667eea;
-    --primary-rgb: 102, 126, 234;
-    --secondary-color: #764ba2;
+    --primary-color: #3742fa; /* deeper blue for better contrast on glass buttons */
+    --primary-rgb: 55, 66, 250;
+    --secondary-color: #5b3ea8;
     --accent-color: #f093fb;
     --success-color: #10b981;
     --warning-color: #f59e0b;
@@ -802,8 +802,8 @@ small {
     -webkit-backdrop-filter: var(--backdrop-filter);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
-    color: var(--primary-color);
-    font-weight: 600;
+    color: var(--text-primary); /* switch to text color for contrast */
+    font-weight: 700;
     padding: 1rem 2rem;
     transition: all 0.3s ease;
     position: relative;
@@ -831,7 +831,7 @@ small {
     transform: translateY(-4px);
     box-shadow: 0 12px 40px rgba(var(--primary-rgb), 0.3);
     border-color: rgba(var(--primary-rgb), 0.4);
-    color: var(--primary-color);
+    color: var(--text-primary);
     text-decoration: none;
 }
 
@@ -840,7 +840,7 @@ small {
 }
 
 .btn-glass-primary i {
-    color: var(--primary-color);
+    color: var(--text-primary);
     transition: transform 0.3s ease;
 }
 

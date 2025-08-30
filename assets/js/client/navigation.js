@@ -109,15 +109,15 @@ class ModernNavigation {
   }
 
   handleResize() {
-    // ResizeObserver now handles viewport updates efficiently
-    // Only update mobile nav visibility with throttling
-    if (this.resizeTimeout) {
-      clearTimeout(this.resizeTimeout);
+    // Use requestAnimationFrame to prevent layout thrashing
+    if (this.resizeRAF) {
+      cancelAnimationFrame(this.resizeRAF);
     }
 
-    this.resizeTimeout = setTimeout(() => {
+    this.resizeRAF = requestAnimationFrame(() => {
+      // Batch DOM reads and writes to prevent forced reflow
       this.updateMobileNavVisibility();
-    }, 150); // Increased throttle to 150ms for better performance
+    });
   }
 
   handleScroll() {

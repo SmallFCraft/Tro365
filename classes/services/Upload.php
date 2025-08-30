@@ -440,25 +440,17 @@ class Upload
                 $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
                 if (in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
 
-                    // Use ImageOptimizationService for automatic optimization
-                    require_once __DIR__ . '/ImageOptimizationService.php';
+                    // Use PerformanceOptimizationService for automatic optimization (consolidated)
+                    require_once __DIR__ . '/PerformanceOptimizationService.php';
 
-                    $optimizer = new \Tro365\Services\ImageOptimizationService([
-                        'quality' => 85,
-                        'maxWidth' => MAX_IMAGE_WIDTH ?? 1920,
-                        'maxHeight' => MAX_IMAGE_HEIGHT ?? 1080,
-                        'enableWebP' => true,
-                        'enableAVIF' => function_exists('imageavif') // Auto-detect AVIF support
-                    ]);
+                    $optimizer = \Tro365\Services\PerformanceOptimizationService::getInstance();
 
                     $results = $optimizer->optimizeUploadedImage($filePath, $type);
 
                     if ($results['success']) {
-                        writeLog("Auto-optimization successful: " . basename($filePath) .
-                                " | Saved: " . $this->formatBytes($results['savings']) .
-                                " | Formats: " . implode(', ', $results['formats_created']));
+                        writeLog("Image optimized: " . basename($filePath));
                     } else {
-                        writeLog("Auto-optimization failed: " . $results['error']);
+                        writeLog("Optimization failed: " . basename($filePath));
 
                         // Fallback to old method
                         if (function_exists('resizeImageUnified')) {
@@ -472,7 +464,7 @@ class Upload
                             \Spatie\ImageOptimizer\OptimizerChainFactory::create()->optimize($filePath);
                         }
                     } catch (\Throwable $e) {
-                        writeLog('Spatie optimizer skipped: '.$e->getMessage());
+                        // Silent fail for Spatie optimizer
                     }
                 }
             } catch (Exception $ie) {
@@ -553,7 +545,7 @@ class Upload
                         if (class_exists('\\Spatie\\ImageOptimizer\\OptimizerChainFactory')) {
                             \Spatie\ImageOptimizer\OptimizerChainFactory::create()->optimize($filePath);
                         }
-                    } catch (\Throwable $e) { writeLog('Spatie optimizer skipped: '.$e->getMessage()); }
+                    } catch (\Throwable $e) { /* Silent fail */ }
                 }
             } catch (Exception $ie) {}
 

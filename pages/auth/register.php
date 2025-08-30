@@ -263,14 +263,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <i class="fas fa-envelope"></i>
                                             Email <span class="text-danger">*</span>
                                         </label>
-                                        <input type="email"
+                                        <input type="text"
                                                class="form-control-enhanced"
                                                id="email"
                                                name="email"
                                                value="<?= e($_POST['email'] ?? '') ?>"
                                                placeholder="Nhập địa chỉ email"
                                                autocomplete="email"
-                                               required>
+                                               data-required="true"
+                                               data-type="email">
                                         <div id="emailFeedback" class="invalid-feedback"></div>
                                     </div>
                                 </div>
@@ -320,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <div class="password-strength" id="passwordStrength"></div>
                                             <div class="password-strength-text" id="passwordStrengthText"></div>
                                         </div>
-                                        <div class="auth-form-text">Tối thiểu 6 ký tự, nên có chữ hoa, chữ thường, số và ký tự đặc biệt</div>
+                                        <div class="auth-form-text">Tối thiểu 8 ký tự, nên có chữ hoa, chữ thường, số và ký tự đặc biệt</div>
                                     </div>
                                 </div>
                                 
@@ -333,12 +334,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="auth-input-group-enhanced">
                                             <input type="password"
                                                    class="form-control-enhanced form-glass"
-                                                   id="password_confirm"
+                                                   id="confirm_password"
                                                    name="password_confirm"
                                                    placeholder="Nhập lại mật khẩu"
                                                    autocomplete="new-password"
                                                    required>
-                                            <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('password_confirm', 'toggleIcon2')" aria-label="Hiện/ẩn mật khẩu">
+                                            <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('confirm_password', 'toggleIcon2')" aria-label="Hiện/ẩn mật khẩu">
                                                 <i class="fas fa-eye" id="toggleIcon2"></i>
                                             </button>
                                         </div>
@@ -350,15 +351,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <!-- Terms and Conditions -->
                             <div class="auth-form-group-enhanced">
                                 <div class="form-check d-flex align-items-start gap-3">
-                                    <input type="checkbox" class="form-check-input mt-1" id="terms" name="terms" required>
+                                    <input type="checkbox" class="form-check-input mt-1" id="terms" name="terms" data-required="true">
                                     <label class="form-check-label" for="terms">
-                                        Tôi đồng ý với 
-                                        <a href="/terms" class="text-decoration-none" style="color: var(--primary-color);" target="_blank">Điều khoản sử dụng</a> 
-                                        và 
+                                        Tôi đồng ý với
+                                        <a href="/terms" class="text-decoration-none" style="color: var(--primary-color);" target="_blank">Điều khoản sử dụng</a>
+                                        và
                                         <a href="/privacy" class="text-decoration-none" style="color: var(--primary-color);" target="_blank">Chính sách bảo mật</a>
                                     </label>
                                 </div>
-                                <div class="invalid-feedback">Bạn phải đồng ý với điều khoản sử dụng</div>
+                                <!-- Dedicated error message container for better positioning -->
+                                <div class="terms-error-container mt-2"></div>
                             </div>
                             
                             <!-- Submit Button -->
@@ -405,7 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?= app_url('assets/js/common.js') ?>" defer></script>
+    <script src="<?= app_url('assets/js/global/common.js') ?>" defer></script>
     <script src="<?= app_url('assets/js/client/auth.js') ?>" defer></script>
     <script src="<?= app_url('assets/js/client/password-strength.js') ?>" defer></script>
     
@@ -449,69 +451,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-        // Backup Password Strength Function
-        document.addEventListener('DOMContentLoaded', function() {
-            // Wait a bit for auth.js to load
-            setTimeout(function() {
-                const passwordField = document.getElementById('password');
-                const strengthBar = document.getElementById('passwordStrength');
-                const strengthText = document.getElementById('passwordStrengthText');
-
-                if (passwordField && strengthBar && strengthText) {
-                    console.log('✅ Password strength elements found, initializing backup...');
-
-                    // Remove existing listeners if any
-                    passwordField.removeEventListener('input', window.passwordStrengthHandler);
-
-                    // Create new handler
-                    window.passwordStrengthHandler = function() {
-                        const password = this.value;
-                        let strength = 0;
-
-                        // Calculate strength
-                        if (password.length >= 6) strength++;
-                        if (/[a-z]/.test(password)) strength++;
-                        if (/[A-Z]/.test(password)) strength++;
-                        if (/[0-9]/.test(password)) strength++;
-                        if (/[^A-Za-z0-9]/.test(password)) strength++;
-
-                        // Reset classes
-                        strengthBar.className = 'password-strength';
-
-                        // Apply strength styling
-                        if (password.length === 0) {
-                            strengthText.textContent = '';
-                            strengthText.className = 'password-strength-text';
-                        } else if (strength <= 2) {
-                            strengthBar.classList.add('strength-weak');
-                            strengthText.textContent = 'Yếu';
-                            strengthText.className = 'password-strength-text weak';
-                        } else if (strength <= 4) {
-                            strengthBar.classList.add('strength-medium');
-                            strengthText.textContent = 'Trung bình';
-                            strengthText.className = 'password-strength-text medium';
-                        } else {
-                            strengthBar.classList.add('strength-strong');
-                            strengthText.textContent = 'Mạnh';
-                            strengthText.className = 'password-strength-text strong';
-                        }
-
-                        console.log(`Password strength: ${strength}/5 - ${strengthText.textContent}`);
-                    };
-
-                    // Add event listener
-                    passwordField.addEventListener('input', window.passwordStrengthHandler);
-
-                    console.log('✅ Password strength backup initialized successfully');
-                } else {
-                    console.error('❌ Password strength elements not found:', {
-                        passwordField: !!passwordField,
-                        strengthBar: !!strengthBar,
-                        strengthText: !!strengthText
-                    });
-                }
-            }, 1000); // Wait 1 second for auth.js to load
-        });
+        // Password Strength Indicator is now handled by password-strength.js
+        // Auto-initialization will detect the 'password' field and initialize the modern Glass Morphism indicator
+        console.log('🔐 Register: Using modern Password Strength Indicator from password-strength.js');
     </script>
 </body>
 </html>

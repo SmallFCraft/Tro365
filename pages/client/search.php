@@ -572,16 +572,17 @@ function buildSearchUrl($params = []) {
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        .filters-sidebar .filter-group h6 {
+        .filters-sidebar .filter-group h3 {
             color: var(--text-primary);
             font-weight: 600;
+            font-size: 1rem;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .filters-sidebar .filter-group h6 i {
+        .filters-sidebar .filter-group h3 i {
             color: var(--primary-color);
             font-size: 1.1rem;
         }
@@ -743,7 +744,8 @@ function buildSearchUrl($params = []) {
                         </div>
 
                         <div class="col-lg-3 col-md-6">
-                            <select class="form-select" name="category">
+                            <label for="searchCategory" class="visually-hidden">Chọn danh mục</label>
+                            <select class="form-select" name="category" id="searchCategory" aria-label="Chọn danh mục phòng trọ">
                                 <option value="">Tất cả danh mục</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?= $cat['ID'] ?>" <?= $category == $cat['ID'] ? 'selected' : '' ?>>
@@ -754,9 +756,10 @@ function buildSearchUrl($params = []) {
                         </div>
 
                         <div class="col-lg-2 col-md-6">
-                            <button type="submit" class="btn search-btn w-100">
-                                <i class="fas fa-search me-2"></i>
+                            <button type="submit" class="btn search-btn w-100" aria-label="Tìm kiếm phòng trọ">
+                                <i class="fas fa-search me-2" aria-hidden="true"></i>
                                 <span class="d-none d-lg-inline">Tìm</span>
+                                <span class="visually-hidden">Tìm kiếm</span>
                             </button>
                         </div>
                     </div>
@@ -787,12 +790,13 @@ function buildSearchUrl($params = []) {
             <div class="col-lg-3 col-md-4 mb-4">
                 <div class="filters-sidebar">
                     <div class="filter-header">
-                        <h5 class="mb-0">
+                        <h2 class="mb-0">
                             <i class="fas fa-sliders-h me-2"></i>
                             Bộ lọc
-                        </h5>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()">
-                            <i class="fas fa-undo"></i>
+                        </h2>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()" aria-label="Đặt lại tất cả bộ lọc">
+                            <i class="fas fa-undo" aria-hidden="true"></i>
+                            <span class="visually-hidden">Đặt lại</span>
                         </button>
                     </div>
 
@@ -804,10 +808,10 @@ function buildSearchUrl($params = []) {
 
                         <!-- Price Range -->
                         <div class="filter-group">
-                            <h6>
+                            <h3>
                                 <i class="fas fa-money-bill-wave"></i>
                                 Khoảng giá
-                            </h6>
+                            </h3>
                             <div class="row g-2 mb-2">
                                 <div class="col-6">
                                     <input type="number"
@@ -836,11 +840,12 @@ function buildSearchUrl($params = []) {
 
                         <!-- Location -->
                         <div class="filter-group">
-                            <h6>
+                            <h3>
                                 <i class="fas fa-map-marker-alt"></i>
                                 Địa điểm
-                            </h6>
-                            <select class="form-select form-select-sm mb-2" name="province" id="filterProvince" data-lazy-load="true">
+                            </h3>
+                            <label for="filterProvince" class="visually-hidden">Chọn tỉnh/thành</label>
+                            <select class="form-select form-select-sm mb-2" name="province" id="filterProvince" data-lazy-load="true" aria-label="Chọn tỉnh/thành">
                                 <option value="">Chọn tỉnh/thành</option>
                                 <?php
                                 // Only load popular provinces initially to reduce DOM size
@@ -859,21 +864,23 @@ function buildSearchUrl($params = []) {
                                 <?php endif; ?>
                             </select>
 
-                            <select class="form-select form-select-sm mb-2" name="district" id="filterDistrict">
+                            <label for="filterDistrict" class="visually-hidden">Chọn quận/huyện</label>
+                            <select class="form-select form-select-sm mb-2" name="district" id="filterDistrict" aria-label="Chọn quận/huyện">
                                 <option value="">Chọn quận/huyện</option>
                             </select>
 
-                            <select class="form-select form-select-sm" name="ward" id="filterWard">
+                            <label for="filterWard" class="visually-hidden">Chọn phường/xã</label>
+                            <select class="form-select form-select-sm" name="ward" id="filterWard" aria-label="Chọn phường/xã">
                                 <option value="">Chọn phường/xã</option>
                             </select>
                         </div>
 
                         <!-- Area -->
                         <div class="filter-group">
-                            <h6>
+                            <h3>
                                 <i class="fas fa-expand-arrows-alt"></i>
                                 Diện tích (m²)
-                            </h6>
+                            </h3>
                             <div class="row g-2">
                                 <div class="col-6">
                                     <input type="number"

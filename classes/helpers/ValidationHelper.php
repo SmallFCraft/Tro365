@@ -314,7 +314,7 @@ class ValidationHelper
         $constraints = [
             new Assert\NotBlank(message: 'Mật khẩu không được để trống'),
             new Assert\Length(
-                min: 6,
+                min: 8,
                 minMessage: 'Mật khẩu phải có ít nhất {{ limit }} ký tự'
             )
         ];
@@ -334,6 +334,42 @@ class ValidationHelper
 
         return self::validateValue($email, $constraints);
     }
+
+    /**
+     * Validate required fields in an associative array
+     * Throws Exception when any required field is missing or empty
+     */
+    public static function validateRequired(array $data, array $requiredFields): void
+    {
+        $missing = [];
+        foreach ($requiredFields as $field) {
+            if (!array_key_exists($field, $data) || $data[$field] === null || $data[$field] === '' ) {
+                $missing[] = $field;
+            }
+        }
+        if (!empty($missing)) {
+            throw new \Exception('Thiếu trường bắt buộc: ' . implode(', ', $missing));
+        }
+    }
+
+    /**
+     * Validate a price value (numeric, >= 0, <= 999999999)
+     * Throws Exception when invalid
+     */
+    public static function validatePrice($price): void
+    {
+        if ($price === null || $price === '') {
+            throw new \Exception('Giá không được để trống');
+        }
+        if (!is_numeric($price)) {
+            throw new \Exception('Giá phải là số');
+        }
+        $num = (float)$price;
+        if ($num < 0 || $num > 999999999) {
+            throw new \Exception('Giá phải từ 0 đến 999,999,999');
+        }
+    }
+
 
     // ==================== ENHANCED VALIDATION METHODS ====================
 
@@ -385,14 +421,14 @@ class ValidationHelper
     {
         $rules = [
             'username' => 'required|min:3',
-            'password' => 'required|min:6'
+            'password' => 'required|min:8'
         ];
 
         $messages = [
             'username.required' => 'Tên đăng nhập là bắt buộc',
             'username.min' => 'Tên đăng nhập phải có ít nhất 3 ký tự',
             'password.required' => 'Mật khẩu là bắt buộc',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự'
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự'
         ];
 
         return self::enhancedValidate($data, $rules, $messages);
@@ -405,11 +441,12 @@ class ValidationHelper
     {
         $rules = [
             'fullname' => 'required|min:2|max:100',
-            'username' => 'required|min:3|max:50|alpha_num',
+            'username' => 'required|min:3|max:30|regex:/^[a-zA-Z0-9_]+$/',
             'email' => 'required|email',
-            'password' => 'required|min:6|max:100',
+            'password' => 'required|min:8|max:100',
             'password_confirmation' => 'required|same:password',
-            'phone' => 'regex:/^[0-9]{10,11}$/'
+            // Standardize to Vietnam phone format (consistent with client-side)
+            'phone' => 'regex:/^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/'
         ];
 
         $messages = [
@@ -418,12 +455,12 @@ class ValidationHelper
             'fullname.max' => 'Họ tên không được vượt quá 100 ký tự',
             'username.required' => 'Tên đăng nhập là bắt buộc',
             'username.min' => 'Tên đăng nhập phải có ít nhất 3 ký tự',
-            'username.max' => 'Tên đăng nhập không được vượt quá 50 ký tự',
-            'username.alpha_num' => 'Tên đăng nhập chỉ được chứa chữ cái và số',
+            'username.max' => 'Tên đăng nhập không được vượt quá 30 ký tự',
+            'username.regex' => 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới',
             'email.required' => 'Email là bắt buộc',
             'email.email' => 'Email không hợp lệ',
             'password.required' => 'Mật khẩu là bắt buộc',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự',
             'password.max' => 'Mật khẩu không được vượt quá 100 ký tự',
             'password_confirmation.required' => 'Xác nhận mật khẩu là bắt buộc',
             'password_confirmation.same' => 'Xác nhận mật khẩu không khớp',
