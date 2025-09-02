@@ -283,7 +283,7 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
             </div>
 
             <!-- Categories Table -->
-            <div class="card">
+            <div class="card admin-header-mobile admin-table-mobile">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">

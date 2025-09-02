@@ -343,7 +343,7 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
             </div>
 
             <!-- Posts List -->
-            <div class="card">
+            <div class="card posts-list-card admin-header-mobile admin-table-mobile">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -516,13 +516,14 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                                             <?php endif; ?>
                                                         </div>
 
-                                                        <div class="dropdown">
+                                                        <div class="dropdown posts-action-dropdown">
                                                             <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
                                                                     type="button"
-                                                                    data-bs-toggle="dropdown">
+                                                                    data-bs-toggle="dropdown"
+                                                                    aria-expanded="false">
                                                                 <i class="fas fa-cog me-1"></i>Thao tác
                                                             </button>
-                                                            <ul class="dropdown-menu">
+                                                            <ul class="dropdown-menu posts-actions-menu">
                                                                 <li>
                                                                     <a class="dropdown-item"
                                                                        href="/post/<?= $postItem['ID'] ?>"
@@ -616,16 +617,140 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
 <?php include __DIR__ . '/../../../includes/layouts/admin/footer.php'; ?>
 
 <style>
+/* ===== ADMIN POSTS DROPDOWN FIXES ===== */
+
+/* Force all containers to allow overflow for dropdowns */
+.posts-list-card,
+.posts-list-card .card-body,
+.posts-list-card .row,
+.posts-list-card [class^="col-"],
+.post-card {
+    overflow: visible !important;
+    position: relative;
+}
+
+/* High z-index for dropdown container */
+.posts-action-dropdown {
+    position: relative;
+    z-index: 9999;
+}
+
+/* Critical z-index for dropdown menu */
+.posts-actions-menu {
+    z-index: 10000 !important;
+    position: absolute !important;
+}
+
+/* Ensure dropdown menu is properly positioned and visible */
+.posts-list-card .dropdown-menu {
+    z-index: 10000 !important;
+    position: absolute !important;
+    min-width: 220px;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.16);
+    background: #ffffffcc;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: adminDropdownIn 160ms cubic-bezier(.2,.7,.3,1) both;
+    margin-top: 0.25rem;
+}
+
+@keyframes adminDropdownIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-6px); 
+    }
+    to   { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* Modern dropdown item styling */
+.posts-list-card .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #2d3748;
+    transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.posts-list-card .dropdown-item i {
+    width: 1.1rem;
+    text-align: center;
+    color: #667085;
+}
+
+.posts-list-card .dropdown-item:hover {
+    background: linear-gradient(135deg, rgba(102,126,234,.12), rgba(118,75,162,.12));
+    transform: translateX(4px);
+    color: #1f2937;
+}
+
+.posts-list-card .dropdown-item:hover i {
+    color: #4f46e5;
+}
+
+.posts-list-card .dropdown-item.text-danger {
+    color: #dc3545;
+}
+
+.posts-list-card .dropdown-item.text-danger:hover {
+    background: rgba(220,53,69,0.12);
+    color: #b02a37;
+}
+
+.posts-list-card .dropdown-item.text-warning {
+    color: #f59e0b;
+}
+
+.posts-list-card .dropdown-item.text-warning:hover {
+    background: rgba(245,158,11,0.12);
+    color: #b45309;
+}
+
+.posts-list-card .dropdown-item.text-success {
+    color: #198754;
+}
+
+.posts-list-card .dropdown-item.text-success:hover {
+    background: rgba(25,135,84,0.12);
+    color: #146c43;
+}
+
+.posts-list-card .dropdown-divider {
+    margin: 0.35rem 0.25rem;
+    border-color: rgba(0,0,0,0.08);
+}
+
+/* Post card hover state management */
 .post-card {
     transition: all 0.3s ease;
     border-radius: 15px;
+    position: relative;
+    z-index: 1;
 }
 
 .post-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    z-index: 2;
 }
 
+.post-card.dropdown-open {
+    z-index: 9998 !important;
+}
+
+/* Post images */
 .post-image {
     width: 80px;
     height: 60px;
@@ -666,7 +791,24 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
     opacity: 1;
 }
 
+/* Responsive dropdown fixes */
 @media (max-width: 768px) {
+    .posts-actions-menu {
+        right: 0 !important;
+        left: auto !important;
+        min-width: 200px;
+    }
+    
+    .posts-list-card .dropdown-menu {
+        min-width: 200px;
+        max-width: calc(100vw - 2rem);
+    }
+    
+    .posts-list-card .dropdown-item {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.875rem;
+    }
+
     .post-image, .post-image-placeholder {
         width: 60px;
         height: 45px;
@@ -700,6 +842,97 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Enhanced dropdown management for posts
+    const postDropdownToggles = document.querySelectorAll('.posts-action-dropdown .dropdown-toggle');
+    
+    postDropdownToggles.forEach(toggle => {
+        const dropdown = toggle.closest('.posts-action-dropdown');
+        const postCard = toggle.closest('.post-card');
+        const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+
+        // Listen for dropdown show event
+        dropdown.addEventListener('show.bs.dropdown', function(e) {
+            console.log('Posts dropdown opening');
+            
+            // Add class to post card to prevent hover conflicts
+            postCard.classList.add('dropdown-open');
+            
+            // Close any other open dropdowns
+            const otherOpenCards = document.querySelectorAll('.post-card.dropdown-open');
+            otherOpenCards.forEach(card => {
+                if (card !== postCard) {
+                    const otherDropdown = card.querySelector('.posts-action-dropdown');
+                    if (otherDropdown) {
+                        const otherToggle = otherDropdown.querySelector('.dropdown-toggle');
+                        if (otherToggle) {
+                            const bsDropdown = bootstrap.Dropdown.getInstance(otherToggle);
+                            if (bsDropdown) {
+                                bsDropdown.hide();
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Ensure dropdown menu is properly positioned
+            setTimeout(() => {
+                if (dropdownMenu) {
+                    dropdownMenu.style.zIndex = '10000';
+                    dropdownMenu.style.position = 'absolute';
+                    
+                    // Check if dropdown would go off-screen and adjust
+                    const rect = dropdownMenu.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    
+                    if (rect.right > viewportWidth) {
+                        dropdownMenu.classList.add('dropdown-menu-end');
+                    }
+                }
+            }, 10);
+        });
+
+        // Listen for dropdown shown event
+        dropdown.addEventListener('shown.bs.dropdown', function() {
+            console.log('Posts dropdown fully opened');
+            // Force z-index after Bootstrap positioning
+            if (dropdownMenu) {
+                dropdownMenu.style.zIndex = '10000';
+            }
+        });
+
+        // Listen for dropdown hide event
+        dropdown.addEventListener('hide.bs.dropdown', function() {
+            console.log('Posts dropdown closing');
+            // Remove class to restore normal hover effects
+            postCard.classList.remove('dropdown-open');
+        });
+        
+        // Handle click outside to close
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                const bsDropdown = bootstrap.Dropdown.getInstance(toggle);
+                if (bsDropdown && dropdown.classList.contains('show')) {
+                    bsDropdown.hide();
+                }
+            }
+        });
+    });
+    
+    // Prevent dropdown from closing when clicking inside dropdown menu
+    document.querySelectorAll('.posts-actions-menu').forEach(menu => {
+        menu.addEventListener('click', function(e) {
+            // Allow buttons to work normally
+            if (e.target.tagName === 'BUTTON') {
+                return true;
+            }
+            
+            // For non-button elements, stop propagation to prevent dropdown close
+            if (e.target.tagName !== 'A') {
+                e.stopPropagation();
+            }
+        });
     });
 });
 
@@ -797,7 +1030,24 @@ function bulkReject() {
 }
 
 function refreshPosts() {
-    window.location.reload();
+    const btn = document.querySelector('[onclick="refreshPosts()"]');
+    if (btn) { btn.innerHTML = '<i class="fas fa-sync-alt fa-spin me-2"></i>Đang làm mới...'; btn.disabled = true; }
+    const params = new URLSearchParams(window.location.search);
+    fetch(`/admin/posts?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+      .then(res => res.text())
+      .then(html => {
+        const temp = document.createElement('div'); temp.innerHTML = html;
+        const newCard = temp.querySelector('.posts-list-card');
+        const oldCard = document.querySelector('.posts-list-card');
+        if (newCard && oldCard) {
+          oldCard.replaceWith(newCard);
+          showToast('Đã làm mới danh sách bài đăng', 'info');
+        } else {
+          window.location.reload();
+        }
+      })
+      .catch(() => window.location.reload())
+      .finally(() => { if (btn) { btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Làm mới'; btn.disabled = false; } });
 }
 
 function exportPosts() {

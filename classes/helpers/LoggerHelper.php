@@ -47,10 +47,12 @@ class LoggerHelper
             Level::Debug
         );
 
-        // Simple formatter
+        // Consistent formatter with timestamps (Y-m-d H:i:s) and context
         $formatter = new LineFormatter(
-            "[%level_name%] %message%\n",
-            null
+            "[%datetime%] [%level_name%] %message% %context%\n",
+            'Y-m-d H:i:s',
+            true,
+            true
         );
         $fileHandler->setFormatter($formatter);
         $logger->pushHandler($fileHandler);

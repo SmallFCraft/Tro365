@@ -4,8 +4,8 @@
  * Tro365 - Website thuê trọ
  */
 
-// Set 403 response code
-http_response_code(403);
+// Note: HTTP status code is handled by the calling context
+// Don't set http_response_code(403) here to avoid server interception
 
 // Include autoloader and configuration
 require_once __DIR__ . '/../../vendor/autoload.php';

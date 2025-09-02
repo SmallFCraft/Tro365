@@ -61,7 +61,7 @@ class DebugManager
         
         logDebug('Debug Manager initialized', [
             'memory_start' => formatBytes($this->startMemory),
-            'time_start' => $this->startTime
+            'time_start' => date('Y-m-d H:i:s', (int)$this->startTime)
         ]);
     }
 
@@ -84,7 +84,7 @@ class DebugManager
             'sql' => $sql,
             'params' => $params,
             'execution_time' => $executionTime,
-            'timestamp' => microtime(true),
+            'timestamp' => date('Y-m-d H:i:s'),
             'memory' => memory_get_usage(true),
             'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
         ];
@@ -103,7 +103,7 @@ class DebugManager
             'file' => $file,
             'line' => $line,
             'context' => $context,
-            'timestamp' => microtime(true),
+            'timestamp' => date('Y-m-d H:i:s'),
             'memory' => memory_get_usage(true),
             'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10)
         ];
@@ -128,7 +128,7 @@ class DebugManager
             'response' => $responseData,
             'status_code' => $statusCode,
             'execution_time' => $executionTime,
-            'timestamp' => microtime(true),
+            'timestamp' => date('Y-m-d H:i:s'),
             'memory' => memory_get_usage(true)
         ];
         

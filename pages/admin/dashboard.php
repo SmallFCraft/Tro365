@@ -14,7 +14,7 @@ use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
 
-echo "<!-- Debug: Starting auth check -->";
+// echo "<!-- Debug: Starting auth check -->";
 
 // Require moderator role or higher - show 403 for unauthenticated users
 requireModeratorStrict();

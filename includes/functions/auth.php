@@ -69,7 +69,7 @@ function requireRole($roleId) {
     requireLogin();
 
     if (!hasRole($roleId)) {
-        http_response_code(403);
+        // Don't set HTTP 403 status code to avoid server intercepting the response
         include_once __DIR__ . '/../../pages/errors/403.php';
         exit;
     }
@@ -80,7 +80,8 @@ function requireRole($roleId) {
  */
 function requireRoleStrict($roleId) {
     if (!isLoggedIn() || !hasRole($roleId)) {
-        http_response_code(403);
+        // Don't set HTTP 403 status code to avoid server intercepting the response
+        // The custom error page will handle the display appropriately
         include_once __DIR__ . '/../../pages/errors/403.php';
         exit;
     }

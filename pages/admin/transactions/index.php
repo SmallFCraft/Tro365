@@ -22,11 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $action = $_POST['action'] ?? '';
         $transactionId = (int)($_POST['transaction_id'] ?? 0);
-        
+
         if ($action === 'update_status' && $transactionId > 0) {
             $newStatus = $_POST['status'] ?? '';
             $validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
-            
+
             if (in_array($newStatus, $validStatuses)) {
                 $transaction->updateStatus($transactionId, $newStatus);
                 $success = "Cập nhật trạng thái giao dịch thành công!";
@@ -72,7 +72,7 @@ $statusCounts = [
 
 // Get commission stats
 $commissionStats = $db->selectOne(
-    "SELECT 
+    "SELECT
         COUNT(*) as total_commissions,
         SUM(SoTien) as total_amount,
         SUM(CASE WHEN TrangThai = 'paid' THEN SoTien ELSE 0 END) as paid_amount,
@@ -305,8 +305,8 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tìm kiếm</label>
-                            <input type="text" name="search" class="form-control" 
-                                   placeholder="Tìm theo tên khách hàng, bài đăng..." 
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="Tìm theo tên khách hàng, bài đăng..."
                                    value="<?= e($search) ?>">
                         </div>
                         <div class="col-md-3">
@@ -322,7 +322,7 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
             </div>
 
             <!-- Transactions List -->
-            <div class="card">
+            <div class="card admin-header-mobile admin-table-mobile">
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-handshake me-2"></i>
@@ -395,6 +395,16 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                                 $statusInfo = $statusLabels[$trans['TrangThai']] ?? ['Không xác định', 'secondary'];
                                                 ?>
                                                 <span class="badge bg-<?= $statusInfo[1] ?>"><?= $statusInfo[0] ?></span>
+                                                <span class="badge bg-${statusInfo[1]}">
+                                                    <i class="fas fa-${
+                                                        $trans['TrangThai'] === 'completed' ? 'trophy' : (
+                                                            $trans['TrangThai'] === 'confirmed' ? 'check-circle' : (
+                                                                $trans['TrangThai'] === 'pending' ? 'clock' : 'times-circle'
+                                                            )
+                                                        )
+                                                    } me-1"></i>
+                                                    ${statusInfo[0]}
+                                                </span>
                                             </td>
                                             <td>
                                                 <small class="text-muted">
@@ -560,9 +570,28 @@ function refreshTransactions() {
         refreshBtn.disabled = true;
     }
 
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
+    // Soft refresh only the transactions card
+    const params = new URLSearchParams(window.location.search);
+    fetch(`/admin/transactions?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+      .then(res => res.text())
+      .then(html => {
+        const temp = document.createElement('div'); temp.innerHTML = html;
+        const newCard = temp.querySelector('.card.admin-header-mobile');
+        const oldCard = document.querySelector('.card.admin-header-mobile');
+        if (newCard && oldCard) {
+            oldCard.replaceWith(newCard);
+            showToast('Đã làm mới danh sách giao dịch', 'info');
+        } else {
+            window.location.reload();
+        }
+      })
+      .catch(() => window.location.reload())
+      .finally(() => {
+        if (refreshBtn) {
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Làm mới';
+            refreshBtn.disabled = false;
+        }
+      });
 }
 
 function generateReport() {
@@ -577,9 +606,9 @@ function generateReport() {
         Báo cáo chi tiết sẽ có trong cập nhật tiếp theo. Hiện tại bạn có thể xuất dữ liệu CSV.
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         if (notification.parentNode) {
@@ -619,9 +648,9 @@ function bulkUpdateStatus(status) {
             Cập nhật hàng loạt sẽ có trong cập nhật tiếp theo.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();

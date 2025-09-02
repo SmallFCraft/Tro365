@@ -192,6 +192,11 @@ try {
         // SEO files
         'robots.txt' => 'robots.php',
         'sitemap.xml' => 'sitemap.php',
+
+        // Error pages
+        'error/403' => 'pages/errors/403.php',
+        'error/404' => 'pages/errors/404.php',
+        'error/500' => 'pages/errors/500.php',
     ];
 
     // Check if route exists

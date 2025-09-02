@@ -723,46 +723,6 @@ if (isset($_SESSION['user_id'])) {
 </div>
 
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto ms-lg-4">
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom <?= ($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '') ? 'active' : '' ?>" href="/">
-                        <i class="fas fa-home me-2"></i>Trang chủ
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom <?= strpos($_SERVER['REQUEST_URI'], '/search') === 0 ? 'active' : '' ?>" href="/search">
-                        <i class="fas fa-search me-2"></i>Tìm kiếm
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom <?= strpos($_SERVER['REQUEST_URI'], '/about') === 0 ? 'active' : '' ?>" href="/about">
-                        <i class="fas fa-info-circle me-2"></i>Giới thiệu
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom <?= strpos($_SERVER['REQUEST_URI'], '/contact') === 0 ? 'active' : '' ?>" href="/contact">
-                        <i class="fas fa-phone me-2"></i>Liên hệ
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav align-items-center">
-                <!-- Temporarily simplified for debugging -->
-                <li class="nav-item me-2">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/login">
-                        <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-primary btn-sm px-3" href="/register">
-                        <i class="fas fa-user-plus me-1"></i>Đăng ký
-                    </a>
-                </li>
-            </ul>
-            </ul>
-        </div>
-    </div>
-</nav>
 
 <!-- Flash Messages -->
 <?php /*

@@ -82,7 +82,7 @@ try {
 }
 
 // Set page variables for header
-$pageTitle = 'Trang chủ'; // Header layout will automatically append " - " . getWebsiteName()
+$pageTitle = 'Trang chủ';
 $pageDescription = getMetaDescription();
 $pageKeywords = getMetaKeywords();
 
@@ -92,15 +92,12 @@ $hasHeroSection = true;
 // Additional CSS for home page
 $additionalCSS = ['/assets/css/client/main.css'];
 
-// Additional JS will be handled globally by PerformanceOptimizationService
-// No need to manually specify for homepage
-
 // Include header (critical CSS will be injected globally)
 include __DIR__ . '/../../includes/layouts/client/header.php';
 ?>
 
 
-<!-- Hero Section - LCP Optimized Globally -->
+<!-- Hero Section -->
 <section class="hero-section" role="banner" data-lcp-element="true">
     <div class="container">
         <div class="hero-content text-center">

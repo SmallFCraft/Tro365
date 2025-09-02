@@ -1,47 +1,12 @@
 <?php
 /**
- * Admin Footer Layout
+ * Admin Footer Layout (Scripts Only - No Visual Footer)
  * Tro365 - Website thuê trọ
  */
 ?>
 
 </div>
 <!-- End Main Content Wrapper -->
-
-<!-- Admin Footer -->
-<footer class="mt-5">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
-                <div class="d-flex align-items-center justify-content-center justify-content-lg-start">
-                    <div class="me-3">
-                        <i class="fas fa-shield-alt fa-2x" style="background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-                    </div>
-                    <div>
-                        <strong class="fw-bold"><?= getWebsiteName() ?> Admin</strong>
-                        <br><small class="text-muted">Phiên bản <?= getAppVersion() ?></small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 mb-3 mb-lg-0 text-center">
-                <!-- Status indicators removed -->
-            </div>
-
-            <div class="col-lg-4 col-12 text-center text-lg-end">
-                <div class="mb-2">
-                    <small class="text-muted">
-                        <i class="fas fa-clock me-1"></i>
-                        Đăng nhập: <?= date('d/m/Y H:i', strtotime($currentUser['LanDangNhapCuoi'] ?? 'now')) ?>
-                    </small>
-                </div>
-                <small class="text-muted">
-                    &copy; <?= date('Y') ?> <?= COMPANY_NAME ?>
-                </small>
-            </div>
-        </div>
-    </div>
-</footer>
 
 <!-- Modern JavaScript Libraries (AssetManager) -->
 <?php
@@ -64,6 +29,9 @@ echo $am->renderFooter();
 
 <!-- Admin Dropdown Manager -->
 <script src="/assets/js/admin/dropdown.js"></script>
+
+<!-- Admin Mobile Navigation -->
+<script src="/assets/js/admin/mobile-nav.js"></script>
 
 <!-- Common JavaScript Functions -->
 <script src="/assets/js/global/common.js"></script>
@@ -215,8 +183,8 @@ window.currentUserRole = <?= $_SESSION['user_role'] ?>;
 <?php endif; ?>
 
 <?php
-// Render Debug Panel for admin pages
-if (isDebugModeEnabled()) {
+// Render Debug Panel for admin pages (skip for AJAX requests)
+if (isDebugModeEnabled() && !defined('DISABLE_DEBUG_PANEL')) {
     $debugManager = \Tro365\Services\DebugManager::getInstance();
     echo $debugManager->renderDebugPanel();
 }

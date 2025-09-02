@@ -32,10 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
             throw new Exception('Token bảo mật không hợp lệ');
         }
-        
+
         $action = $_POST['action'] ?? '';
         $sellerId = (int)($_POST['seller_id'] ?? 0);
-        
+
         switch ($action) {
             case 'approve':
                 // Approve seller registration
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'NguoiDuyet' => $currentUser['ID'],
                     'NgayDuyet' => date('Y-m-d H:i:s')
                 ], 'ID = :id', ['id' => $sellerId]);
-                
+
                 // Update user role to seller
                 $sellerData = $db->selectOne("SELECT ds.KhachHangID, kh.HoTen FROM DangKySeller ds JOIN KhachHang kh ON ds.KhachHangID = kh.ID WHERE ds.ID = :id", ['id' => $sellerId]);
                 if ($sellerData) {
@@ -68,13 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 setFlashMessage(MSG_SUCCESS, 'Duyệt đăng ký seller thành công');
                 break;
-                
+
             case 'reject':
                 $reason = $_POST['reason'] ?? '';
                 if (empty($reason)) {
                     throw new Exception('Vui lòng nhập lý do từ chối');
                 }
-                
+
                 // Get seller info for logging
                 $sellerData = $db->selectOne("SELECT ds.KhachHangID, kh.HoTen FROM DangKySeller ds JOIN KhachHang kh ON ds.KhachHangID = kh.ID WHERE ds.ID = :id", ['id' => $sellerId]);
 
@@ -146,9 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
         }
-        
+
         redirect('/admin/sellers');
-        
+
     } catch (Exception $e) {
         setFlashMessage(MSG_ERROR, $e->getMessage());
     }
@@ -332,8 +332,8 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tìm kiếm</label>
-                            <input type="text" name="search" class="form-control" 
-                                   placeholder="Tìm theo tên, email, số điện thoại..." 
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="Tìm theo tên, email, số điện thoại..."
                                    value="<?= e($search) ?>">
                         </div>
                         <div class="col-md-3">
@@ -349,7 +349,7 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
             </div>
 
             <!-- Sellers List -->
-            <div class="card">
+            <div class="card sellers-list-card admin-header-mobile admin-table-mobile">
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-list me-2"></i>
@@ -454,7 +454,7 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                                             title="Xem chi tiết người dùng">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    
+
                                                     <?php if ($seller['TrangThai'] == 0): ?>
                                                         <button type="button" class="btn btn-outline-success"
                                                                 onclick="approveSeller(<?= $seller['ID'] ?>)"
@@ -600,8 +600,28 @@ function viewSellerDetails(userId) {
 
 function approveSeller(sellerId) {
     if (confirm('Bạn có chắc chắn muốn duyệt đăng ký seller này?')) {
-        document.getElementById('approveSellerId').value = sellerId;
-        document.getElementById('approveForm').submit();
+        fetch('/admin/sellers/approve-ajax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                seller_id: sellerId,
+                csrf_token: '<?= csrf_token() ?>'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Duyệt seller thành công', 'success');
+                loadPendingSellers();
+                refreshSellersStats();
+            } else {
+                showToast(data.message || 'Có lỗi xảy ra', 'error');
+            }
+        })
+        .catch(() => showToast('Không thể duyệt seller', 'error'));
     }
 }
 
@@ -617,10 +637,30 @@ function changeSellerStatus(sellerId, newStatus) {
         confirmMessage = 'Bạn có chắc chắn muốn chuyển trạng thái về "Chờ duyệt"?\n\nHành động này sẽ reset tất cả thông tin duyệt trước đó.';
     }
 
-    if (confirm(confirmMessage)) {
-        document.getElementById('changeStatusSellerId').value = sellerId;
-        document.getElementById('changeStatusNewStatus').value = newStatus;
-        document.getElementById('changeStatusForm').submit();
+    if (!confirmMessage || confirm(confirmMessage)) {
+        fetch('/admin/sellers/change-status-ajax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                seller_id: sellerId,
+                new_status: newStatus,
+                csrf_token: '<?= csrf_token() ?>'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Cập nhật trạng thái thành công', 'success');
+                loadPendingSellers();
+                refreshSellersStats();
+            } else {
+                showToast(data.message || 'Có lỗi xảy ra', 'error');
+            }
+        })
+        .catch(() => showToast('Không thể cập nhật trạng thái', 'error'));
     }
 }
 
@@ -700,11 +740,25 @@ function approveSellerModal(sellerId) {
                 // Refresh the pending list
                 loadPendingSellers();
                 // Show success message
-                showToast('success', data.message || 'Duyệt seller thành công');
-                // Refresh main page stats
-                setTimeout(() => window.location.reload(), 1500);
+                showToast(data.message || 'Duyệt seller thành công', 'success');
+                // Soft refresh stats area only (avoid full reload)
+                refreshSellersStats();
             } else {
-                showToast('error', data.message || 'Có lỗi xảy ra');
+
+function refreshSellersStats(){
+    // Soft refresh the stats counters (no full page reload)
+    fetch('/admin/sellers?'+new URLSearchParams(window.location.search),{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(r=>r.text())
+      .then(html=>{
+        const tmp=document.createElement('div'); tmp.innerHTML=html;
+        const newRow=tmp.querySelector('.row.mb-4'); // stats row block
+        const oldRow=document.querySelector('.row.mb-4');
+        if(newRow && oldRow){ oldRow.replaceWith(newRow); }
+      })
+      .catch(()=>{});
+}
+
+                showToast(data.message || 'Có lỗi xảy ra', 'error');
             }
         })
         .catch(error => {
@@ -736,11 +790,11 @@ function rejectSellerModal(sellerId) {
                 // Refresh the pending list
                 loadPendingSellers();
                 // Show success message
-                showToast('success', data.message || 'Từ chối seller thành công');
-                // Refresh main page stats
-                setTimeout(() => window.location.reload(), 1500);
+                showToast(data.message || 'Từ chối seller thành công', 'success');
+                // Soft refresh stats area only (avoid full reload)
+                refreshSellersStats();
             } else {
-                showToast('error', data.message || 'Có lỗi xảy ra');
+                showToast(data.message || 'Có lỗi xảy ra', 'error');
             }
         })
         .catch(error => {
@@ -751,7 +805,7 @@ function rejectSellerModal(sellerId) {
 }
 
 // Show toast notification
-function showToast(type, message) {
+function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toastContainer') || createToastContainer();
     const toastId = 'toast-' + Date.now();
     const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';

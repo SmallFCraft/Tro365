@@ -325,6 +325,7 @@ $requestInfo = $debugData['request_info'] ?? [];
                 <div class="debug-query">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <strong>Query #<?= $index + 1 ?></strong>
+                        <span class="text-muted"><?= isset($query['timestamp']) ? htmlspecialchars($query['timestamp']) : '' ?></span>
                         <span class="text-warning"><?= $query['execution_time'] ?>ms</span>
                     </div>
                     <code style="color: #61dafb;"><?= htmlspecialchars($query['sql']) ?></code>
@@ -350,7 +351,7 @@ $requestInfo = $debugData['request_info'] ?? [];
             <div class="debug-error">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                     <strong>Error #<?= $index + 1 ?></strong>
-                    <span class="text-muted"><?= $error['file'] ?>:<?= $error['line'] ?></span>
+                    <span class="text-muted"><?= isset($error['timestamp']) ? htmlspecialchars($error['timestamp']) : '' ?> | <?= $error['file'] ?>:<?= $error['line'] ?></span>
                 </div>
                 <div class="text-danger"><?= htmlspecialchars($error['message']) ?></div>
                 <?php if (!empty($error['context'])): ?>
@@ -377,7 +378,10 @@ $requestInfo = $debugData['request_info'] ?? [];
                     <strong><?= $call['method'] ?> <?= htmlspecialchars($call['url']) ?></strong>
                     <span class="text-info"><?= $call['execution_time'] ?>ms</span>
                 </div>
-                <div>Status: <span class="<?= $call['status_code'] >= 200 && $call['status_code'] < 300 ? 'text-success' : 'text-danger' ?>"><?= $call['status_code'] ?></span></div>
+                <div>
+                            <span class="text-muted me-2"><?= isset($call['timestamp']) ? htmlspecialchars($call['timestamp']) : '' ?></span>
+                            Status: <span class="<?= $call['status_code'] >= 200 && $call['status_code'] < 300 ? 'text-success' : 'text-danger' ?>"><?= $call['status_code'] ?></span>
+                        </div>
             </div>
             <?php endforeach; ?>
         </div>

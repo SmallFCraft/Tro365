@@ -305,24 +305,20 @@ function writeLog($message, $level = 'info', $category = 'general', $context = [
         $logFile = $logDir . '/app.log';
     }
 
-    // Enhanced debug logging with details
-    if ($level === 'debug' || $category === 'debug') {
-        $timestamp = date('H:i:s');
-        $requestInfo = '';
-        if (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])) {
-            $requestInfo = ' | ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
-        }
-
-        $contextStr = '';
-        if (!empty($context)) {
-            $contextStr = ' | ' . json_encode($context, JSON_UNESCAPED_UNICODE);
-        }
-
-        $logMessage = "[{$timestamp}] [{$level}]{$requestInfo} {$message}{$contextStr}" . PHP_EOL;
-    } else {
-        // Simple format for non-debug logs
-        $logMessage = "[{$level}] {$message}" . PHP_EOL;
+    // Unified logging with full timestamp
+    $timestamp = date('Y-m-d H:i:s');
+    $requestInfo = '';
+    if (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])) {
+        $requestInfo = ' | ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
     }
+
+    $contextStr = '';
+    if (!empty($context)) {
+        $contextStr = ' | ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+    }
+
+    // Always include timestamp and level
+    $logMessage = "[{$timestamp}] [{$level}]{$requestInfo} {$message}{$contextStr}" . PHP_EOL;
 
     // Respect open_basedir restrictions on shared hosting
     $openBaseDir = ini_get('open_basedir');

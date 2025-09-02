@@ -32,7 +32,7 @@ class SettingsController
     public function checkAdminAccess()
     {
         if (!$this->auth->isLoggedIn() || !$this->auth->hasRole(ROLE_ADMIN)) {
-            http_response_code(403);
+            // Don't set HTTP 403 status code to avoid server intercepting the response
             include dirname(__DIR__, 2) . '/pages/errors/403.php';
             exit;
         }

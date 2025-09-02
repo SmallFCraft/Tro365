@@ -3476,15 +3476,15 @@ h3.section-title,
 /* ===== FIXED NAVBAR SPACING ===== */
 /* Add top padding to body to prevent content being hidden behind fixed navbar */
 body {
-  padding-top: 80px;
-  /* Approximate navbar height + spacing */
+  padding-top: 70px;
+  /* Modern navbar height + spacing */
 }
 
 /* Responsive navbar spacing adjustments */
 @media (max-width: 767.98px) {
   body {
-    padding-top: 70px;
-    /* Smaller navbar on mobile */
+    padding-top: 45px;
+    /* Exact navbar height on mobile - no extra spacing */
     padding-bottom: 80px;
     /* Mobile bottom nav */
   }
@@ -3492,8 +3492,8 @@ body {
 
 @media (min-width: 768px) {
   body {
-    padding-top: 85px;
-    /* Tablet navbar height */
+    padding-top: 75px;
+    /* Tablet navbar height - reduced from 85px */
     padding-bottom: 0;
     /* No bottom nav on tablet+ */
   }
@@ -3501,8 +3501,8 @@ body {
 
 @media (min-width: 992px) {
   body {
-    padding-top: 90px;
-    /* Desktop navbar height */
+    padding-top: 80px;
+    /* Desktop navbar height - reduced from 90px */
   }
 }
 

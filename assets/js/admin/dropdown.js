@@ -413,15 +413,26 @@ window.Tro365UniversalBootstrapComponents = {
 
 // Auto-initialize on DOM ready
 document.addEventListener("DOMContentLoaded", function () {
-  // Initialize universal dropdown manager
-  window.Tro365UniversalDropdownManager.autoInit();
+  // Skip universal dropdown manager on Admin Users page to avoid conflicts
+  const path = window.location.pathname || "";
+  const skipUniversal = path.startsWith("/admin/users");
 
-  // Initialize universal Bootstrap components
+  if (!skipUniversal) {
+    // Initialize universal dropdown manager
+    window.Tro365UniversalDropdownManager.autoInit();
+  }
+
+  // Initialize universal Bootstrap components (safe on all pages)
   window.Tro365UniversalBootstrapComponents.initAll();
 });
 
 // Re-initialize on dynamic content changes (for AJAX loaded content)
 document.addEventListener("contentChanged", function () {
-  window.Tro365UniversalDropdownManager.initializeDropdowns();
+  const path = window.location.pathname || "";
+  const skipUniversal = path.startsWith("/admin/users");
+
+  if (!skipUniversal) {
+    window.Tro365UniversalDropdownManager.initializeDropdowns();
+  }
   window.Tro365UniversalBootstrapComponents.initAll();
 });
