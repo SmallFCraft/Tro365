@@ -879,11 +879,13 @@ class ModernNavigation {
         const errCode =
           error && typeof error.code !== "undefined" ? error.code : "UNKNOWN";
         const errMsg = error && error.message ? error.message : "";
+        // Chỉ log chi tiết khi bật debug, và log dạng chuỗi để tránh [object Object]
         if (window.TRO365_DEBUG) {
-          console.warn("Geolocation error:", {
-            code: errCode,
-            message: errMsg,
-          });
+          console.warn(
+            `Geolocation error (code: ${errCode})${
+              errMsg ? ` - ${errMsg}` : ""
+            }`
+          );
         }
 
         let errorMessage = "Không thể xác định vị trí của bạn";
@@ -946,6 +948,13 @@ class ModernNavigation {
             name: "filterProvince",
           },
           {
+            // Quick Search modal in footer
+            province: document.getElementById("quick-search-province"),
+            district: document.getElementById("quick-search-district"),
+            ward: document.getElementById("quick-search-ward"),
+            name: "quickSearch",
+          },
+          {
             province: document.querySelector("select[name='province']"),
             district: document.querySelector("select[name='district']"),
             ward: document.querySelector("select[name='ward']"),
@@ -964,6 +973,14 @@ class ModernNavigation {
         // Find the best dropdown that has the required province option
         for (const dropdown of provinceDropdowns) {
           if (dropdown.province && dropdown.province.options) {
+            // Ensure full list if current select is still showing only popular provinces
+            if (
+              dropdown.province._popularOnly &&
+              dropdown.province._fullProvinces &&
+              typeof this.loadAllProvinces === "function"
+            ) {
+              this.loadAllProvinces(dropdown.province);
+            }
             const hasOption = Array.from(dropdown.province.options).some(
               opt => opt.value == location.province.ID
             );

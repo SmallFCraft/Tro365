@@ -2,9 +2,9 @@
 /logs/
 *.zip
 .env
-/assets/uploads/*
+/assets/uploads/
 
-/var/cache/*
+/var/
 .github/
 .qoder/
 

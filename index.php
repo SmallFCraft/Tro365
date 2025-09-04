@@ -70,6 +70,13 @@ try {
         }
     }
 
+    // Handle Chrome DevTools well-known request to avoid noisy 404s
+    if ($route === '.well-known/appspecific/com.chrome.devtools.json') {
+        header('Content-Type: application/json');
+        echo json_encode(["status" => "ok", "app" => "Tro365", "devtools" => true]);
+        exit;
+    }
+
     // Parse route
     $routeParts = explode('/', $route);
     $controller = $routeParts[0] ?? 'home';

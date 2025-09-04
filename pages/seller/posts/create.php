@@ -819,7 +819,7 @@ $categories = $post->getCategories();
         });
         
         // Drag and drop
-        const uploadArea = document.querySelector('.upload-area');
+        const uploadArea = document.querySelector('.upload-area-glass');
         
         uploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();

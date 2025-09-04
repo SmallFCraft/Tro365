@@ -631,11 +631,13 @@ class PerformanceOptimizationService
             // Homepage LCP optimization
             header('Link: </assets/images/hero_section.jpg>; rel=preload; as=image; fetchpriority=high');
             header('Link: </assets/css/client/main.css>; rel=preload; as=style');
-            header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
+            // Removed preload of performance-observer.js; it will be conditionally loaded in footer if needed to avoid preload-not-used warning
+            // header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
 
         } elseif ($this->isSearchPage()) {
             // Search page optimization
-            header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
+            // Removed preload of performance-observer.js; it will be conditionally loaded in footer if needed to avoid preload-not-used warning
+            // header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
             header('Link: </assets/js/client/lazy-loading.js>; rel=preload; as=script');
 
         } elseif ($this->isPostPage()) {

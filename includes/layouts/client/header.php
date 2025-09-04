@@ -49,12 +49,7 @@ if (isset($_SESSION['user_id'])) {
     <link rel="preload" href="/assets/images/hero_section.jpg" as="image" fetchpriority="high">
     <?php endif; ?>
 
-    <!-- Preload critical CSS and fonts -->
-    <link rel="preload" href="/assets/css/client/layouts.css" as="style">
-    <link rel="preload" href="/assets/css/client/main.css" as="style">
-
-
-    <!-- Preload critical JavaScript -->
+    <!-- Preload critical JavaScript (CSS preloads removed to avoid 'preloaded but not used' warnings) -->
     <link rel="preload" href="/assets/js/client/navigation.js" as="script">
 
     <?php if (getGoogleSearchConsole()): ?>
@@ -92,8 +87,8 @@ if (isset($_SESSION['user_id'])) {
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
     <link rel="preload" href="/assets/css/client/layouts.css" as="style">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Removed fa-brands-400.woff2 preload to avoid 'preloaded but not used' warning -->
 
     <!-- Bootstrap CSS (async load with preload swap) -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -122,7 +117,8 @@ if (isset($_SESSION['user_id'])) {
     <!-- Non-critical local CSS (async) -->
     <link rel="preload" href="/assets/css/components/common.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="/assets/css/components/common.css" rel="stylesheet"></noscript>
-    <link rel="preload" href="/assets/css/client/main.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- Load main.css asynchronously without preload to avoid 'preloaded but not used' warning -->
+    <link href="/assets/css/client/main.css" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="/assets/css/client/main.css" rel="stylesheet"></noscript>
 
     <!-- Favicon -->

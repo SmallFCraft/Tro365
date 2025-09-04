@@ -140,12 +140,14 @@ class PerformanceOptimization {
                 // Homepage LCP optimization
                 header('Link: </assets/images/hero_section.jpg>; rel=preload; as=image; fetchpriority=high');
                 header('Link: </assets/css/client/main.css>; rel=preload; as=style');
-                header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
+                // Removed preload of performance-observer.js to avoid 'preloaded but not used' warnings; script is loaded conditionally via footer when needed
+                // header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
                 break;
 
             case 'search':
                 // Search page optimization
-                header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
+                // Removed preload of performance-observer.js to avoid 'preloaded but not used' warnings; script is loaded conditionally via footer when needed
+                // header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
                 header('Link: </assets/js/client/lazy-loading.js>; rel=preload; as=script');
                 break;
 
