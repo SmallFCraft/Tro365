@@ -8,30 +8,28 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/constants.php';
+
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 require_once __DIR__ . '/../../includes/functions/auth.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
 
-// echo "<!-- Debug: Starting auth check -->";
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 // Require moderator role or higher - show 403 for unauthenticated users
 requireModeratorStrict();
 
-echo "<!-- Debug: Auth check passed -->";
-
 try {
     $auth = new Auth();
-    echo "<!-- Debug: Auth object created -->";
-
     $post = new Post();
-    echo "<!-- Debug: Post object created -->";
-
     $db = Database::getInstance();
-    echo "<!-- Debug: Database object created -->";
 } catch (Exception $e) {
-    echo "<!-- Debug Error: " . $e->getMessage() . " -->";
     die("Error creating objects: " . $e->getMessage());
 }
 
@@ -43,56 +41,101 @@ $auth->requireAdmin();
 
 $currentUser = $auth->getCurrentUser();
 
-// Get statistics with error handling
-try {
-    $stats = [
-        'total_posts' => $post->count([]),
-        'pending_posts' => $post->count(['status' => POST_STATUS_PENDING]),
-        'approved_posts' => $post->count(['status' => POST_STATUS_APPROVED]),
-        'rejected_posts' => $post->count(['status' => POST_STATUS_REJECTED]),
-        'total_users' => $db->count('KhachHang', '1=1'),
-        'total_sellers' => $db->count('KhachHang', 'VaiTroID = :role', ['role' => ROLE_SELLER]),
-        'pending_sellers' => $db->count('KhachHang', 'VaiTroID = :role AND TrangThai = :status', ['role' => ROLE_SELLER, 'status' => 0])
-    ];
-} catch (Exception $e) {
-    // Fallback stats if database error
-    $stats = [
-        'total_posts' => 0,
-        'pending_posts' => 0,
-        'approved_posts' => 0,
-        'rejected_posts' => 0,
-        'total_users' => 0,
-        'total_sellers' => 0,
-        'pending_sellers' => 0
-    ];
-    error_log("Dashboard stats error: " . $e->getMessage());
+// Get admin dashboard statistics with caching for better performance
+$statsCacheKey = "admin_dashboard_stats";
+$stats = cache_get($statsCacheKey);
+
+if ($stats === null) {
+    try {
+        // Optimized single query to get all statistics at once
+        $statsResult = $db->selectOne("
+            SELECT
+                (SELECT COUNT(*) FROM BaiDang) as total_posts,
+                (SELECT COUNT(*) FROM BaiDang WHERE TrangThai = :pending) as pending_posts,
+                (SELECT COUNT(*) FROM BaiDang WHERE TrangThai = :approved) as approved_posts,
+                (SELECT COUNT(*) FROM BaiDang WHERE TrangThai = :rejected) as rejected_posts,
+                (SELECT COUNT(*) FROM BaiDang WHERE TrangThai = :hidden) as hidden_posts,
+                (SELECT COUNT(*) FROM KhachHang) as total_users,
+                (SELECT COUNT(*) FROM KhachHang WHERE VaiTroID = :seller_role1) as total_sellers,
+                (SELECT COUNT(*) FROM KhachHang WHERE VaiTroID = :seller_role2 AND TrangThai = 0) as pending_sellers,
+                (SELECT COALESCE(SUM(LuotXem), 0) FROM BaiDang) as total_views
+        ", [
+            'pending' => POST_STATUS_PENDING,
+            'approved' => POST_STATUS_APPROVED,
+            'rejected' => POST_STATUS_REJECTED,
+            'hidden' => POST_STATUS_HIDDEN,
+            'seller_role1' => ROLE_SELLER,
+            'seller_role2' => ROLE_SELLER
+        ]);
+
+        $stats = [
+            'total_posts' => (int)($statsResult['total_posts'] ?? 0),
+            'pending_posts' => (int)($statsResult['pending_posts'] ?? 0),
+            'approved_posts' => (int)($statsResult['approved_posts'] ?? 0),
+            'rejected_posts' => (int)($statsResult['rejected_posts'] ?? 0),
+            'hidden_posts' => (int)($statsResult['hidden_posts'] ?? 0),
+            'total_users' => (int)($statsResult['total_users'] ?? 0),
+            'total_sellers' => (int)($statsResult['total_sellers'] ?? 0),
+            'pending_sellers' => (int)($statsResult['pending_sellers'] ?? 0),
+            'total_views' => (int)($statsResult['total_views'] ?? 0)
+        ];
+
+        // Cache for 10 minutes
+        cache_set($statsCacheKey, $stats, 600);
+
+    } catch (Exception $e) {
+        error_log("Admin dashboard stats error: " . $e->getMessage());
+        $stats = [
+            'total_posts' => 0,
+            'pending_posts' => 0,
+            'approved_posts' => 0,
+            'rejected_posts' => 0,
+            'hidden_posts' => 0,
+            'total_users' => 0,
+            'total_sellers' => 0,
+            'pending_sellers' => 0,
+            'total_views' => 0
+        ];
+    }
 }
 
-// Get recent posts needing approval with error handling
-try {
-    $pendingPosts = $post->getAll(1, 10, ['status' => POST_STATUS_PENDING]);
-} catch (Exception $e) {
-    $pendingPosts = [];
-    error_log("Dashboard pending posts error: " . $e->getMessage());
+// Get recent posts needing approval with caching
+$pendingPostsCacheKey = "admin_dashboard_pending_posts";
+$pendingPosts = cache_get($pendingPostsCacheKey);
+
+if ($pendingPosts === null) {
+    try {
+        $pendingPosts = $post->getAll(1, 10, ['status' => POST_STATUS_PENDING]);
+
+        // Cache for 5 minutes
+        cache_set($pendingPostsCacheKey, $pendingPosts, 300);
+
+    } catch (Exception $e) {
+        error_log("Admin dashboard pending posts error: " . $e->getMessage());
+        $pendingPosts = [];
+    }
 }
 
-// Get recent users with error handling
-try {
-    $recentUsers = $db->select(
-        "SELECT * FROM KhachHang ORDER BY NgayTao DESC LIMIT 10"
-    );
-} catch (Exception $e) {
-    $recentUsers = [];
-    error_log("Dashboard recent users error: " . $e->getMessage());
-}
+// Get recent users with caching
+$recentUsersCacheKey = "admin_dashboard_recent_users";
+$recentUsers = cache_get($recentUsersCacheKey);
 
-// Get total views with error handling
-try {
-    $viewsResult = $db->selectOne("SELECT SUM(LuotXem) as total_views FROM BaiDang");
-    $stats['total_views'] = (int)($viewsResult['total_views'] ?? 0);
-} catch (Exception $e) {
-    $stats['total_views'] = 0;
-    error_log("Dashboard total views error: " . $e->getMessage());
+if ($recentUsers === null) {
+    try {
+        $recentUsers = $db->select(
+            "SELECT ID, HoTen, Email, VaiTroID, TrangThai, NgayTao
+             FROM KhachHang
+             ORDER BY NgayTao DESC
+             LIMIT 10"
+        );
+
+        // Cache for 5 minutes
+        cache_set($recentUsersCacheKey, $recentUsers, 300);
+
+    } catch (Exception $e) {
+        error_log("Admin dashboard recent users error: " . $e->getMessage());
+        $recentUsers = [];
+    }
 }
 ?>
 <?php include __DIR__ . '/../../includes/layouts/admin/header.php'; ?>
@@ -625,7 +668,7 @@ function exportDashboard() {
     document.body.removeChild(link);
 }
 
-
 </script>
+
 </body>
 </html>

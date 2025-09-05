@@ -135,8 +135,8 @@ class ValidationHelper
             'content' => [
                 new Assert\NotBlank(message: 'Nội dung không được để trống'),
                 new Assert\Length(
-                    min: 100,
-                    minMessage: 'Nội dung phải có ít nhất {{ limit }} ký tự (vì không còn mô tả ngắn riêng)'
+                    min: 50,
+                    minMessage: 'Nội dung phải có ít nhất {{ limit }} ký tự'
                 )
             ],
             'price' => [
@@ -483,9 +483,9 @@ class ValidationHelper
             'area' => 'required|numeric|min:1',
             'rooms' => 'required|integer|min:1|max:50',
             'address' => 'required|min:10|max:500',
-            'province_id' => 'required|integer|min:1',
-            'district_id' => 'required|integer|min:1',
-            'ward_id' => 'required|integer|min:1'
+            'province_id' => 'nullable|integer|min:1',
+            'district_id' => 'nullable|integer|min:1',
+            'ward_id' => 'nullable|integer|min:1'
         ];
 
         $messages = [

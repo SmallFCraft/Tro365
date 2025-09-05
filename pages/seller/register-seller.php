@@ -6,12 +6,19 @@
 
 // Config and autoloader are already loaded by index.php
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
+use Tro365\Services\PerformanceOptimizationService;
 use Tro365\Models\User;
 use Tro365\Services\Upload;
 use Tro365\Core\Database;
 use Tro365\Models\Activity;
 use Tro365\Services\DataConsistencyService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $user = new User();

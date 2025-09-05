@@ -1,6 +1,17 @@
 <?php
 /**
- * Performance Optimization Headers
+ * Performance Optimization Headers (Static Layer)
+ *
+ * ARCHITECTURE RESPONSIBILITIES:
+ * - HTTP headers (gzip, cache, security)
+ * - Static asset optimization
+ * - Basic DNS prefetch
+ * - Page-specific preload hints
+ *
+ * WORKS WITH: PerformanceOptimizationService (Dynamic Layer)
+ * - Service handles: Advanced caching, monitoring, image optimization
+ * - No conflicts: Headers are coordinated to avoid duplicates
+ *
  * Reduces document request latency and improves PageSpeed scores
  */
 
@@ -329,96 +340,27 @@ class OptimizedImage {
     }
 
     /**
-     * Render optimized image for post cards
+     * DEPRECATED: Unused methods removed to reduce code bloat
+     * The website uses generateImageHtml(), getUserAvatarHtml(),
+     * getOptimizedImageUrl(), and generateResponsiveSrcset() instead
+     *
+     * If you need these methods, use the existing helper functions:
+     * - generateImageHtml() for general images
+     * - getUserAvatarHtml() for avatars
+     * - getOptimizedImageUrl() for optimized URLs
+     * - generateResponsiveSrcset() for responsive images
      */
-    public static function renderPostImage($imagePath, $alt = '', $options = []) {
-        $defaults = [
-            'width' => 400,
-            'height' => 300,
-            'class' => 'post-image img-fluid',
-            'loading' => 'lazy',
-            'sizes' => '(max-width: 576px) 100vw, (max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw',
-            'responsive_sizes' => [300, 400, 600, 800]
-        ];
-
-        $options = array_merge($defaults, $options);
-        return self::render($imagePath, $alt, $options);
-    }
-
-    /**
-     * Render optimized image for hero sections
-     */
-    public static function renderHeroImage($imagePath, $alt = '', $options = []) {
-        $defaults = [
-            'width' => 1200,
-            'height' => 600,
-            'class' => 'hero-image img-fluid',
-            'loading' => 'eager', // Hero images should load immediately
-            'sizes' => '100vw',
-            'responsive_sizes' => [800, 1200, 1600, 2000]
-        ];
-
-        $options = array_merge($defaults, $options);
-        return self::render($imagePath, $alt, $options);
-    }
-
-    /**
-     * Render optimized avatar image
-     */
-    public static function renderAvatar($imagePath, $alt = '', $options = []) {
-        $defaults = [
-            'width' => 100,
-            'height' => 100,
-            'class' => 'avatar-image rounded-circle',
-            'loading' => 'lazy',
-            'sizes' => '100px',
-            'responsive_sizes' => [50, 100, 150, 200]
-        ];
-
-        $options = array_merge($defaults, $options);
-        return self::render($imagePath, $alt, $options);
-    }
-
-    /**
-     * Render optimized thumbnail image
-     */
-    public static function renderThumbnail($imagePath, $alt = '', $options = []) {
-        $defaults = [
-            'width' => 150,
-            'height' => 150,
-            'class' => 'thumbnail-image img-fluid',
-            'loading' => 'lazy',
-            'sizes' => '150px',
-            'responsive_sizes' => [100, 150, 200, 300]
-        ];
-
-        $options = array_merge($defaults, $options);
-        return self::render($imagePath, $alt, $options);
-    }
 }
 
 /**
- * Helper functions for easy access (Consolidated from OptimizedImage.php)
+ * DEPRECATED: Helper functions removed - use existing functions instead
+ *
+ * Use these existing functions instead:
+ * - generateImageHtml($imagePath, $alt, $class, $attributes) for general images
+ * - getUserAvatarHtml($avatarPath, $cssClass, $alt, $style) for avatars
+ * - getOptimizedImageUrl($imagePath, $width, $height) for optimized URLs
+ * - generateResponsiveSrcset($imagePath, $sizes) for responsive images
  */
-function optimizedImage($imagePath, $alt = '', $options = []) {
-    return OptimizedImage::render($imagePath, $alt, $options);
-}
-
-function optimizedPostImage($imagePath, $alt = '', $options = []) {
-    return OptimizedImage::renderPostImage($imagePath, $alt, $options);
-}
-
-function optimizedHeroImage($imagePath, $alt = '', $options = []) {
-    return OptimizedImage::renderHeroImage($imagePath, $alt, $options);
-}
-
-function optimizedAvatar($imagePath, $alt = '', $options = []) {
-    return OptimizedImage::renderAvatar($imagePath, $alt, $options);
-}
-
-function optimizedThumbnail($imagePath, $alt = '', $options = []) {
-    return OptimizedImage::renderThumbnail($imagePath, $alt, $options);
-}
 
 // Apply performance optimizations automatically
 if (!defined('SKIP_PERFORMANCE_HEADERS')) {

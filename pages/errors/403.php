@@ -12,6 +12,14 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/constants.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
+
 $pageTitle = '403 - Không có quyền truy cập';
 $pageDescription = 'Bạn không có quyền truy cập vào trang này. Vui lòng đăng nhập hoặc liên hệ quản trị viên.';
 

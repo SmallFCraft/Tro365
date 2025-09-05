@@ -4,9 +4,16 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
 use Tro365\Models\Transaction;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $transaction = new Transaction();
@@ -56,9 +63,25 @@ if (!empty($search)) {
     $filters['search'] = $search;
 }
 
-// Get transactions
-$transactions = $transaction->getAll($page, $limit, $filters);
-$total = $transaction->count($filters);
+// Get transactions - with caching
+$cacheKey = 'admin_transactions_' . md5(serialize([$page, $limit, $filters]));
+$transactions = cache_get($cacheKey);
+
+if ($transactions === null) {
+    $transactions = $transaction->getAll($page, $limit, $filters);
+    // Cache for 2 minutes (transactions change frequently)
+    cache_set($cacheKey, $transactions, 120);
+}
+
+// Get total count - with caching
+$countCacheKey = 'admin_transactions_count_' . md5(serialize($filters));
+$total = cache_get($countCacheKey);
+
+if ($total === null) {
+    $total = $transaction->count($filters);
+    cache_set($countCacheKey, $total, 120);
+}
+
 $totalPages = ceil($total / $limit);
 
 // Get status counts
@@ -134,7 +157,6 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                     </div>
                 </div>
             </div>
-
 
             <!-- Alerts -->
             <?php if (isset($success)): ?>
@@ -675,5 +697,6 @@ setInterval(() => {
     }
 }, 30000);
 </script>
+
 </body>
 </html>

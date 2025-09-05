@@ -10,6 +10,9 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../../config/app.php';
 require_once __DIR__ . '/../../../config/constants.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 // Load helper functions
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
@@ -20,6 +23,10 @@ use Tro365\Models\User;
 use Tro365\Services\Upload;
 use Tro365\Activity;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $user = new User();
@@ -691,7 +698,6 @@ include __DIR__ . '/../../../includes/layouts/client/header.php';
                             return;
                         }
 
-
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             // Update both preview images with smooth transition
@@ -898,3 +904,5 @@ include __DIR__ . '/../../../includes/layouts/client/header.php';
             }
         }
     </style>
+
+    

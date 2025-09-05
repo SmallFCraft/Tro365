@@ -4,8 +4,15 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Helpers\ValidationHelper;
 use Tro365\Models\User;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {

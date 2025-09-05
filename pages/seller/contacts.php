@@ -8,12 +8,20 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/constants.php';
+
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 require_once __DIR__ . '/../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../includes/functions/auth.php';
 require_once __DIR__ . '/../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Contact;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $contact = new Contact();
@@ -435,5 +443,10 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
         modal.show();
     }
 </script>
+
+<?php
+// Debug panel removed - using unified footer DebugManager system
+?>
+
 </body>
 </html>

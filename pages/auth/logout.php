@@ -4,7 +4,14 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 
@@ -53,5 +60,6 @@ setFlashMessage(MSG_SUCCESS, 'Đăng xuất thành công!');
         }, 100);
     </script>
     <p>Đang đăng xuất...</p>
-</body>
+
+    </body>
 </html>

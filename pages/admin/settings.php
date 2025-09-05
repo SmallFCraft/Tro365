@@ -4,10 +4,17 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../classes/controllers/SettingsController.php';
 
 use Tro365\Controllers\SettingsController;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 // Initialize controller
 $settingsController = new SettingsController();
@@ -230,11 +237,6 @@ include __DIR__ . '/../../includes/layouts/admin/header.php';
                             <?php include __DIR__ . '/../../includes/layouts/admin/settings/email-tab.php'; ?>
                             <?php include __DIR__ . '/../../includes/layouts/admin/settings/seo-tab.php'; ?>
                             <?php include __DIR__ . '/../../includes/layouts/admin/settings/advanced-tab.php'; ?>
-
-
-
-
-
 
                         </div>
                     </div>

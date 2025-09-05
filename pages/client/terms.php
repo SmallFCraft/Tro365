@@ -12,6 +12,15 @@ require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../includes/functions/auth.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
+// Use performance optimization service
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
+
 // Load system settings for dynamic content
 $config = new \Tro365\Core\Config();
 $siteSettings = $config->getSystemSettings();
@@ -2302,3 +2311,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php include __DIR__ . '/../../includes/layouts/client/footer.php'; ?>
+
+<?php
+// Debug panel removed - using unified footer DebugManager system
+?>

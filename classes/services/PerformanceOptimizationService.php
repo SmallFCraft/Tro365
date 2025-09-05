@@ -3,7 +3,19 @@
 namespace Tro365\Services;
 
 /**
- * Performance Optimization Service
+ * Performance Optimization Service (Dynamic Layer)
+ *
+ * ARCHITECTURE RESPONSIBILITIES:
+ * - Advanced caching with Symfony FilesystemAdapter
+ * - Performance monitoring and metrics collection
+ * - Image optimization integration
+ * - Database query optimization
+ * - Cache warming and invalidation strategies
+ *
+ * WORKS WITH: PerformanceOptimization (Static Layer)
+ * - Static layer handles: HTTP headers, gzip, basic DNS prefetch
+ * - No conflicts: Coordinated to avoid duplicate headers
+ *
  * Manages LCP optimization, conditional loading, performance monitoring, and cache integration
  */
 class PerformanceOptimizationService
@@ -15,7 +27,7 @@ class PerformanceOptimizationService
     // Cache integration properties
     private $cacheMetrics = [];
     private $cacheStartTime;
-    private $enableCacheWarming = false; // Disabled for maximum performance
+    private $enableCacheWarming = true; // Re-enabled with intelligent warming
     private $cacheThresholds = [
         'hit_ratio_warning' => 0.7,  // Warn if cache hit ratio < 70%
         'hit_ratio_critical' => 0.5, // Critical if cache hit ratio < 50%
@@ -45,8 +57,8 @@ class PerformanceOptimizationService
         $this->detectOptimizations();
         $this->initializeImageOptimization();
 
-        // Cache warming is disabled for maximum performance
-        // All cache integration features remain available for monitoring
+        // Cache warming is now enabled with intelligent warming for better performance
+        // All cache integration features are available for monitoring
     }
 
     /**
@@ -599,12 +611,12 @@ class PerformanceOptimizationService
 
     /**
      * Apply HTTP headers for performance - Global system (enhanced with cache headers)
+     * Note: Basic DNS prefetch headers are handled by PerformanceOptimization class
      */
     public function applyPerformanceHeaders(): void
     {
-        // DNS prefetch for external domains
-        header('Link: <//fonts.googleapis.com>; rel=dns-prefetch');
-        header('Link: <//cdnjs.cloudflare.com>; rel=dns-prefetch');
+        // DNS prefetch headers are handled by PerformanceOptimization class to avoid duplicates
+        // Only apply advanced service-specific headers here
 
         // Glass-morphism CSS loads naturally via header.php - no preload needed
 
@@ -912,7 +924,12 @@ class PerformanceOptimizationService
             case 'jpeg':
                 return imagecreatefromjpeg($imagePath);
             case 'png':
-                return imagecreatefrompng($imagePath);
+                // Suppress libpng warnings about incorrect sRGB profiles
+                $image = @imagecreatefrompng($imagePath);
+                if ($image === false) {
+                    throw new \Exception("Failed to create PNG image from: $imagePath");
+                }
+                return $image;
             case 'gif':
                 return imagecreatefromgif($imagePath);
             case 'webp':

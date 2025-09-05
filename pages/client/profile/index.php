@@ -10,6 +10,9 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../../config/app.php';
 require_once __DIR__ . '/../../../config/constants.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 // Load helper functions
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
@@ -19,6 +22,10 @@ use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
 use Tro365\Models\Activity;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 // Helper function to get activity icons
 function getActivityIcon($description) {
@@ -1139,3 +1146,7 @@ function showToast(message, type = 'info', duration = 3000) {
 
 
 <?php include __DIR__ . '/../../../includes/layouts/client/footer.php'; ?>
+
+<?php
+// Debug panel removed - using unified footer DebugManager system
+?>

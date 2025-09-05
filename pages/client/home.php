@@ -4,81 +4,126 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 // Import required classes
 use Tro365\Services\LocationService;
+use Tro365\Services\PerformanceOptimizationService;
 use Tro365\Core\Database;
 
-// Get featured posts from database
-$featuredPosts = [];
-try {
-    $db = Database::getInstance();
-    
-    // Get featured posts with related data
-    $sql = "
-        SELECT bd.*, kh.HoTen as NguoiDang, dm.TenDM as DanhMuc,
-               (SELECT DuongDan FROM HinhAnhBaiDang WHERE BaiDangID = bd.ID ORDER BY ThuTu LIMIT 1) as AnhDaiDien
-        FROM BaiDang bd
-        LEFT JOIN KhachHang kh ON bd.NguoiDangID = kh.ID
-        LEFT JOIN DanhMuc dm ON bd.DanhMucID = dm.ID
-        WHERE bd.TrangThai = :status
-        ORDER BY bd.LuotXem DESC, bd.NgayTao DESC
-        LIMIT :limit
-    ";
-    
-    $featuredPosts = $db->select($sql, [
-        'status' => POST_STATUS_APPROVED,
-        'limit' => 6
-    ]);
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
-    // Check favorite status for each post if user is logged in
-    if (isset($_SESSION['user_id'])) {
-        $userId = $_SESSION['user_id'];
-        foreach ($featuredPosts as &$post) {
-            $favoriteResult = $db->selectOne(
-                "SELECT ID FROM YeuThich WHERE KhachHangID = :userId AND BaiDangID = :postId",
-                ['userId' => $userId, 'postId' => $post['ID']]
-            );
-            $post['isFavorited'] = $favoriteResult !== false;
+// Get featured posts with caching for better performance
+$userId = $_SESSION['user_id'] ?? null;
+$featuredPostsCacheKey = "homepage_featured_posts_" . ($userId ? $userId : 'guest');
+$featuredPosts = cache_get($featuredPostsCacheKey);
+
+if ($featuredPosts === null) {
+    $featuredPosts = [];
+    try {
+        $db = Database::getInstance();
+
+        if ($userId) {
+            // Optimized query with LEFT JOIN to get favorite status in single query
+            $sql = "
+                SELECT bd.*, kh.HoTen as NguoiDang, dm.TenDM as DanhMuc,
+                       (SELECT DuongDan FROM HinhAnhBaiDang WHERE BaiDangID = bd.ID ORDER BY ThuTu LIMIT 1) as AnhDaiDien,
+                       CASE WHEN yt.ID IS NOT NULL THEN 1 ELSE 0 END as isFavorited
+                FROM BaiDang bd
+                LEFT JOIN KhachHang kh ON bd.NguoiDangID = kh.ID
+                LEFT JOIN DanhMuc dm ON bd.DanhMucID = dm.ID
+                LEFT JOIN YeuThich yt ON bd.ID = yt.BaiDangID AND yt.KhachHangID = :userId
+                WHERE bd.TrangThai = :status
+                ORDER BY bd.LuotXem DESC, bd.NgayTao DESC
+                LIMIT :limit
+            ";
+
+            $featuredPosts = $db->select($sql, [
+                'status' => POST_STATUS_APPROVED,
+                'limit' => 6,
+                'userId' => $userId
+            ]);
+
+            // Convert isFavorited to boolean
+            foreach ($featuredPosts as &$post) {
+                $post['isFavorited'] = (bool)$post['isFavorited'];
+            }
+            unset($post);
+        } else {
+            // Guest user - simpler query without favorites
+            $sql = "
+                SELECT bd.*, kh.HoTen as NguoiDang, dm.TenDM as DanhMuc,
+                       (SELECT DuongDan FROM HinhAnhBaiDang WHERE BaiDangID = bd.ID ORDER BY ThuTu LIMIT 1) as AnhDaiDien
+                FROM BaiDang bd
+                LEFT JOIN KhachHang kh ON bd.NguoiDangID = kh.ID
+                LEFT JOIN DanhMuc dm ON bd.DanhMucID = dm.ID
+                WHERE bd.TrangThai = :status
+                ORDER BY bd.LuotXem DESC, bd.NgayTao DESC
+                LIMIT :limit
+            ";
+
+            $featuredPosts = $db->select($sql, [
+                'status' => POST_STATUS_APPROVED,
+                'limit' => 6
+            ]);
+
+            // Set all posts as not favorited for guest users
+            foreach ($featuredPosts as &$post) {
+                $post['isFavorited'] = false;
+            }
+            unset($post);
         }
-        unset($post); // Break reference
-    } else {
-        // Set all posts as not favorited for non-logged-in users
-        foreach ($featuredPosts as &$post) {
-            $post['isFavorited'] = false;
-        }
-        unset($post); // Break reference
+
+        // Cache for 5 minutes
+        cache_set($featuredPostsCacheKey, $featuredPosts, 300);
+
+    } catch (Exception $e) {
+        error_log("Error fetching featured posts: " . $e->getMessage());
+        $featuredPosts = [];
     }
-} catch (Exception $e) {
-    error_log("Error fetching featured posts: " . $e->getMessage());
 }
 
-// Get statistics
-$stats = [
-    'total_posts' => 0,
-    'total_users' => 0,
-    'total_views' => 0
-];
+// Get statistics with caching for better performance
+$statsCacheKey = "homepage_statistics";
+$stats = cache_get($statsCacheKey);
 
-try {
-    $db = Database::getInstance();
-    
-    // Get total approved posts
-    $result = $db->selectOne("SELECT COUNT(*) as total FROM BaiDang WHERE TrangThai = :status", [
-        'status' => POST_STATUS_APPROVED
-    ]);
-    $stats['total_posts'] = $result['total'] ?? 0;
+if ($stats === null) {
+    $stats = [
+        'total_posts' => 0,
+        'total_users' => 0,
+        'total_views' => 0
+    ];
 
-    // Get total active users
-    $result = $db->selectOne("SELECT COUNT(*) as total FROM KhachHang WHERE TrangThai = :status", [
-        'status' => USER_STATUS_ACTIVE
-    ]);
-    $stats['total_users'] = $result['total'] ?? 0;
+    try {
+        $db = Database::getInstance();
 
-    // Get total views
-    $result = $db->selectOne("SELECT SUM(LuotXem) as total FROM BaiDang");
-    $stats['total_views'] = $result['total'] ?? 0;
-} catch (Exception $e) {
-    error_log("Error fetching stats: " . $e->getMessage());
+        // Optimized single query to get all statistics at once
+        $sql = "
+            SELECT
+                (SELECT COUNT(*) FROM BaiDang WHERE TrangThai = :post_status) as total_posts,
+                (SELECT COUNT(*) FROM KhachHang WHERE TrangThai = :user_status) as total_users,
+                (SELECT COALESCE(SUM(LuotXem), 0) FROM BaiDang) as total_views
+        ";
+
+        $result = $db->selectOne($sql, [
+            'post_status' => POST_STATUS_APPROVED,
+            'user_status' => USER_STATUS_ACTIVE
+        ]);
+
+        if ($result) {
+            $stats['total_posts'] = (int)($result['total_posts'] ?? 0);
+            $stats['total_users'] = (int)($result['total_users'] ?? 0);
+            $stats['total_views'] = (int)($result['total_views'] ?? 0);
+        }
+
+        // Cache for 5 minutes
+        cache_set($statsCacheKey, $stats, 300);
+
+    } catch (Exception $e) {
+        error_log("Error fetching stats: " . $e->getMessage());
+    }
 }
 
 // Set page variables for header
@@ -95,7 +140,6 @@ $additionalCSS = ['/assets/css/client/main.css'];
 // Include header (critical CSS will be injected globally)
 include __DIR__ . '/../../includes/layouts/client/header.php';
 ?>
-
 
 <!-- Hero Section -->
 <section class="hero-section" role="banner" data-lcp-element="true">
@@ -194,7 +238,6 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
         </div>
     </div>
 </section>
-
 
 <!-- Featured Posts Section -->
 <?php if (!empty($featuredPosts)): ?>
@@ -342,8 +385,6 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                 </div>
             </div>
 
-            
-
             <div class="col-lg-4 col-md-6">
                 <div class="feature-card">
                     <div class="card-body text-center">
@@ -355,8 +396,6 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                     </div>
                 </div>
             </div>
-
-            
 
             <div class="col-lg-4 col-md-6">
                 <div class="feature-card">
@@ -370,7 +409,6 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                 </div>
             </div>
 
-            
         </div>
     </div>
 </section>

@@ -4,6 +4,22 @@
  * Tro365 - Website thuê trọ
  */
 
+// Load configuration and dependencies first
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../includes/functions/helpers.php';
+require_once __DIR__ . '/../../includes/functions/auth.php';
+
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
+// Use performance optimization service
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
+
 // Set page variables for header
 $pageTitle = 'Liên hệ';
 $pageDescription = 'Liên hệ với Trọ 365 để được hỗ trợ tốt nhất. Chúng tôi luôn sẵn sàng giải đáp mọi thắc mắc của bạn về dịch vụ thuê trọ.';
@@ -382,3 +398,7 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
 </section>
 
 <?php include __DIR__ . '/../../includes/layouts/client/footer.php'; ?>
+
+<?php
+// Debug panel removed - using unified footer DebugManager system
+?>

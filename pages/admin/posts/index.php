@@ -4,9 +4,16 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $db = Database::getInstance();
@@ -75,8 +82,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'delete':
-                $db->delete('BaiDang', 'ID = :id', ['id' => $postId]);
-                $success = 'Xóa bài đăng thành công!';
+                // Enhanced deletion with automatic image cleanup
+                try {
+                    // Get post data before deletion to access image paths
+                    $postData = $db->selectOne('SELECT AnhDaiDien FROM BaiDang WHERE ID = :id', ['id' => $postId]);
+
+                    if ($postData) {
+                        // Initialize Post model for image cleanup
+                        $postModel = new Post();
+
+                        // Delete all additional images (HinhAnhBaiDang table + files)
+                        $postModel->deletePostImages($postId);
+
+                        // Delete main image and all its versions (original, WebP, thumbnails)
+                        if (!empty($postData['AnhDaiDien'])) {
+                            deleteImageWithAllVersions($postData['AnhDaiDien']);
+                        }
+                    }
+
+                    // Finally delete the post record from database
+                    $db->delete('BaiDang', 'ID = :id', ['id' => $postId]);
+                    $success = 'Xóa bài đăng và tất cả hình ảnh thành công!';
+
+                } catch (Exception $deleteError) {
+                    // If image cleanup fails, still try to delete the post record
+                    error_log("Image cleanup failed for post $postId: " . $deleteError->getMessage());
+                    $db->delete('BaiDang', 'ID = :id', ['id' => $postId]);
+                    $success = 'Xóa bài đăng thành công! (Một số hình ảnh có thể chưa được xóa)';
+                }
                 break;
 
             default:
@@ -134,13 +167,38 @@ try {
     $total = $totalResult['total'] ?? 0;
     $totalPages = ceil($total / $limit);
     
-    // Get statistics
-    $stats = [
-        'total' => $db->selectOne("SELECT COUNT(*) as count FROM BaiDang")['count'] ?? 0,
-        'pending' => $db->selectOne("SELECT COUNT(*) as count FROM BaiDang WHERE TrangThai = " . POST_STATUS_PENDING)['count'] ?? 0,
-        'approved' => $db->selectOne("SELECT COUNT(*) as count FROM BaiDang WHERE TrangThai = " . POST_STATUS_APPROVED)['count'] ?? 0,
-        'rejected' => $db->selectOne("SELECT COUNT(*) as count FROM BaiDang WHERE TrangThai = " . POST_STATUS_REJECTED)['count'] ?? 0
-    ];
+    // Get statistics with caching for better performance
+    $statsCacheKey = "admin_posts_stats";
+    $stats = cache_get($statsCacheKey);
+
+    if ($stats === null) {
+        // Optimized single query to get all statistics at once
+        $statsResult = $db->selectOne("
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN TrangThai = :pending THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN TrangThai = :approved THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN TrangThai = :rejected THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN TrangThai = :hidden THEN 1 ELSE 0 END) as hidden
+            FROM BaiDang
+        ", [
+            'pending' => POST_STATUS_PENDING,
+            'approved' => POST_STATUS_APPROVED,
+            'rejected' => POST_STATUS_REJECTED,
+            'hidden' => POST_STATUS_HIDDEN
+        ]);
+
+        $stats = [
+            'total' => (int)($statsResult['total'] ?? 0),
+            'pending' => (int)($statsResult['pending'] ?? 0),
+            'approved' => (int)($statsResult['approved'] ?? 0),
+            'rejected' => (int)($statsResult['rejected'] ?? 0),
+            'hidden' => (int)($statsResult['hidden'] ?? 0)
+        ];
+
+        // Cache for 5 minutes
+        cache_set($statsCacheKey, $stats, 300);
+    }
 } catch (Exception $e) {
     // Log error and use default values
     error_log("Admin posts query error: " . $e->getMessage());
@@ -1112,5 +1170,6 @@ document.addEventListener('change', function(e) {
     }
 });
 </script>
+
 </body>
 </html>

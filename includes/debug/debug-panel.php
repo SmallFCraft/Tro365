@@ -305,11 +305,28 @@ $requestInfo = $debugData['request_info'] ?? [];
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
                 <div><strong>Execution Time:</strong> <span class="text-info"><?= $performance['execution_time'] ?? 0 ?>ms</span></div>
                 <div><strong>Memory Usage:</strong> <span class="text-warning"><?= $performance['memory_usage'] ?? '0B' ?></span></div>
-                <div><strong>Peak Memory:</strong> <span class="text-danger"><?= $performance['memory_peak'] ?? '0B' ?></span></div>
+                <div><strong>Peak Memory:</strong> <span class="text-danger"><?= $performance['peak_memory'] ?? '0B' ?></span></div>
                 <div><strong>Memory Diff:</strong> <span class="text-success"><?= $performance['memory_diff'] ?? '0B' ?></span></div>
                 <div><strong>Database Queries:</strong> <span class="text-info"><?= $performance['queries_count'] ?? 0 ?></span></div>
                 <div><strong>Errors:</strong> <span class="<?= ($performance['errors_count'] ?? 0) > 0 ? 'text-danger' : 'text-success' ?>"><?= $performance['errors_count'] ?? 0 ?></span></div>
+
+                <?php if (isset($performance['cache_hits'])): ?>
+                <div><strong>Cache Hits:</strong> <span class="text-success"><?= $performance['cache_hits'] ?? 0 ?></span></div>
+                <div><strong>Cache Misses:</strong> <span class="text-warning"><?= $performance['cache_misses'] ?? 0 ?></span></div>
+                <div><strong>Cache Hit Ratio:</strong> <span class="text-info"><?= round(($performance['cache_hit_ratio'] ?? 0) * 100, 1) ?>%</span></div>
+                <?php endif; ?>
             </div>
+
+            <?php if (!empty($performance['recommendations'])): ?>
+            <div style="margin-top: 15px;">
+                <h5><i class="fas fa-lightbulb text-warning"></i> Performance Recommendations</h5>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <?php foreach ($performance['recommendations'] as $recommendation): ?>
+                        <li style="margin-bottom: 5px; color: #ffc107;"><?= htmlspecialchars($recommendation) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <?php endif; ?>
         </div>
         
         <!-- Queries Tab -->

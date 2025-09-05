@@ -8,6 +8,10 @@
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../../config/app.php';
 require_once __DIR__ . '/../../../config/constants.php';
+
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
 require_once __DIR__ . '/../../../includes/functions/validation.php';
@@ -15,8 +19,12 @@ require_once __DIR__ . '/../../../includes/functions/validation.php';
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Services\Upload;
+use Tro365\Services\PerformanceOptimizationService;
 use Tro365\Core\Database;
 use Tro365\Activity;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $post = new Post();
@@ -67,9 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'area' => (float)($_POST['area'] ?? 0),
             'rooms' => (int)($_POST['rooms'] ?? 1),
             'address' => cleanInput($_POST['address'] ?? ''),
-            'province_id' => !empty($provinceCode) ? (int)$provinceCode : 0,
-            'district_id' => !empty($districtCode) ? (int)$districtCode : 0,
-            'ward_id' => !empty($wardCode) ? (int)$wardCode : 0
+            'province_id' => !empty($provinceCode) ? (int)$provinceCode : null,
+            'district_id' => !empty($districtCode) ? (int)$districtCode : null,
+            'ward_id' => !empty($wardCode) ? (int)$wardCode : null
         ];
 
         $validationResult = \Tro365\Helpers\ValidationHelper::validatePostForm($formData);
@@ -156,15 +164,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         setFlashMessage(MSG_SUCCESS, 'Tạo bài đăng thành công! Bài đăng đang chờ duyệt.');
         redirect('/seller/posts');
-        
-    } catch (Exception $e) {
+        exit;
+
+    } catch (\Throwable $e) {
         $error = $e->getMessage();
     }
 }
 
-// Get form data
-$categories = $post->getCategories();
-// Provinces will be loaded via API in JavaScript
+// Get form data with caching for better performance
+$categoriesCacheKey = "post_create_categories";
+$categories = cache_get($categoriesCacheKey);
+
+if ($categories === null) {
+    $categories = $post->getCategories();
+    // Cache categories for 10 minutes
+    cache_set($categoriesCacheKey, $categories, 600);
+}
+
+// Provinces will be loaded via API in JavaScript (already cached in LocationService)
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -544,7 +561,7 @@ $categories = $post->getCategories();
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" enctype="multipart/form-data" id="createPostForm">
+                        <form method="POST" enctype="multipart/form-data" id="createPostForm" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
                             <!-- Basic Information -->
@@ -564,7 +581,15 @@ $categories = $post->getCategories();
                                            name="title"
                                            value="<?= e($_POST['title'] ?? '') ?>"
                                            placeholder="Nhập tiêu đề bài đăng..."
+                                           minlength="10"
+                                           maxlength="255"
+                                           data-pattern-message="Tiêu đề phải có từ 10-255 ký tự"
                                            required>
+                                    <div id="titleFeedback" class="invalid-feedback"></div>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Tiêu đề từ 10-255 ký tự, ngắn gọn và thu hút
+                                    </div>
                                 </div>
                                 
                                 <!-- Mô tả ngắn field removed - content will be used for both full content and auto-generated excerpts -->
@@ -576,7 +601,14 @@ $categories = $post->getCategories();
                                               name="content"
                                               rows="6"
                                               placeholder="Mô tả chi tiết về phòng trọ, tiện ích, quy định..."
+                                              minlength="50"
+                                              data-pattern-message="Mô tả phải có ít nhất 50 ký tự"
                                               required><?= e($_POST['content'] ?? '') ?></textarea>
+                                    <div id="contentFeedback" class="invalid-feedback"></div>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Mô tả chi tiết ít nhất 50 ký tự về tiện ích, quy định, vị trí
+                                    </div>
                                 </div>
 
                                 <div class="row">
@@ -593,6 +625,7 @@ $categories = $post->getCategories();
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
+                                        <div id="categoryFeedback" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -606,7 +639,10 @@ $categories = $post->getCategories();
                                                value="<?= e($_POST['price'] ?? '') ?>"
                                                placeholder="0"
                                                min="0"
+                                               max="999999999"
+                                               data-pattern-message="Giá thuê phải từ 0 đến 999,999,999 VNĐ"
                                                required>
+                                        <div id="priceFeedback" class="invalid-feedback"></div>
                                     </div>
                                 </div>
                                 
@@ -622,8 +658,11 @@ $categories = $post->getCategories();
                                                value="<?= e($_POST['area'] ?? '') ?>"
                                                placeholder="0"
                                                step="0.1"
-                                               min="0"
+                                               min="1"
+                                               max="10000"
+                                               data-pattern-message="Diện tích phải từ 1 đến 10,000 m²"
                                                required>
+                                        <div id="areaFeedback" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -639,7 +678,9 @@ $categories = $post->getCategories();
                                                value="<?= e($_POST['rooms'] ?? '1') ?>"
                                                min="1"
                                                max="<?= $maxRooms ?>"
+                                               data-pattern-message="Số phòng phải từ 1 đến <?= $maxRooms ?> phòng"
                                                required>
+                                        <div id="roomsFeedback" class="invalid-feedback"></div>
                                         <div class="form-text">
                                             <i class="fas fa-info-circle me-1"></i>
                                             Số phòng có thể đăng từ 1 đến <?= $maxRooms ?> phòng.
@@ -665,7 +706,11 @@ $categories = $post->getCategories();
                                            name="address"
                                            value="<?= e($_POST['address'] ?? '') ?>"
                                            placeholder="Số nhà, tên đường..."
+                                           minlength="10"
+                                           maxlength="500"
+                                           data-pattern-message="Địa chỉ phải có từ 10-500 ký tự"
                                            required>
+                                    <div id="addressFeedback" class="invalid-feedback"></div>
                                 </div>
 
                                 <div class="row">
@@ -675,6 +720,7 @@ $categories = $post->getCategories();
                                             <option value="">Chọn tỉnh/thành</option>
                                             <!-- Provinces will be loaded via API -->
                                         </select>
+                                        <div id="provinceFeedback" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
@@ -682,6 +728,7 @@ $categories = $post->getCategories();
                                         <select class="form-select form-control-glass" id="district" name="district">
                                             <option value="">Chọn quận/huyện</option>
                                         </select>
+                                        <div id="districtFeedback" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
@@ -689,6 +736,7 @@ $categories = $post->getCategories();
                                         <select class="form-select form-control-glass" id="ward" name="ward">
                                             <option value="">Chọn phường/xã</option>
                                         </select>
+                                        <div id="wardFeedback" class="invalid-feedback"></div>
                                     </div>
                                 </div>
                             </div>
@@ -843,80 +891,8 @@ $categories = $post->getCategories();
             document.getElementById('images').dispatchEvent(event);
         });
         
-        // Location cascading dropdowns
-        document.getElementById('province').addEventListener('change', function() {
-            const provinceId = this.value;
-            const districtSelect = document.getElementById('district');
-            const wardSelect = document.getElementById('ward');
-
-            // Clear districts and wards
-            districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
-            wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
-
-            if (provinceId) {
-                console.log('Loading districts for province:', provinceId);
-                fetch(`/api/locations/districts?province_id=${provinceId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Districts loaded:', data);
-                        if (Array.isArray(data)) {
-                            data.forEach(district => {
-                                const option = document.createElement('option');
-                                option.value = district.ID;
-                                option.textContent = district.TenQH;
-                                districtSelect.appendChild(option);
-                            });
-                        } else {
-                            console.error('Invalid districts data:', data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading districts:', error);
-                        alert('Lỗi tải danh sách quận/huyện. Vui lòng thử lại.');
-                    });
-            }
-        });
-
-        document.getElementById('district').addEventListener('change', function() {
-            const districtId = this.value;
-            const wardSelect = document.getElementById('ward');
-
-            // Clear wards
-            wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
-
-            if (districtId) {
-                console.log('Loading wards for district:', districtId);
-                fetch(`/api/locations/wards?district_id=${districtId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Wards loaded:', data);
-                        if (Array.isArray(data)) {
-                            data.forEach(ward => {
-                                const option = document.createElement('option');
-                                option.value = ward.ID;
-                                option.textContent = ward.TenXP;
-                                wardSelect.appendChild(option);
-                            });
-                        } else {
-                            console.error('Invalid wards data:', data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading wards:', error);
-                        alert('Lỗi tải danh sách phường/xã. Vui lòng thử lại.');
-                    });
-            }
-        });
+        // Location cascading dropdowns are handled by global common.js
+        // Removed duplicate handlers to prevent duplication in dropdowns
 
         // Load provinces and restore selected values on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -1009,5 +985,180 @@ $categories = $post->getCategories();
             });
         });
     </script>
+
+    <!-- Initialize Real-time Form Validation with Smart Toast -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('createPostForm');
+            if (!form) {
+                console.error('Create post form not found');
+                return;
+            }
+
+            // Validation rules
+            const validationRules = {
+                title: { min: 10, max: 255, message: 'Tiêu đề phải có từ 10-255 ký tự' },
+                content: { min: 50, message: 'Mô tả phải có ít nhất 50 ký tự' },
+                category: { message: 'Vui lòng chọn danh mục' },
+                price: { min: 0, max: 999999999, message: 'Giá thuê phải từ 0 đến 999,999,999 VNĐ' },
+                area: { min: 1, max: 10000, message: 'Diện tích phải từ 1 đến 10,000 m²' },
+                rooms: { min: 1, max: <?= $maxRooms ?>, message: 'Số phòng phải từ 1 đến <?= $maxRooms ?> phòng' },
+                address: { min: 10, max: 500, message: 'Địa chỉ phải có từ 10-500 ký tự' }
+            };
+
+            // Track toast messages to prevent spam
+            const toastTracker = new Map();
+
+            // Validation functions
+            function validateField(field, showToast = false) {
+                const name = field.name;
+                const value = field.value.trim();
+                const rule = validationRules[name];
+                const feedback = document.getElementById(name + 'Feedback');
+
+                if (!rule) return true;
+
+                let isValid = true;
+                let message = '';
+
+                // Required validation
+                if (field.hasAttribute('required') && !value) {
+                    isValid = false;
+                    message = rule.message || 'Trường này là bắt buộc';
+                }
+                // Length validation for text fields
+                else if (rule.min && value.length < rule.min) {
+                    isValid = false;
+                    message = rule.message;
+                }
+                else if (rule.max && value.length > rule.max) {
+                    isValid = false;
+                    message = rule.message;
+                }
+                // Number validation
+                else if (field.type === 'number') {
+                    const numValue = parseFloat(value);
+                    if (rule.min !== undefined && numValue < rule.min) {
+                        isValid = false;
+                        message = rule.message;
+                    } else if (rule.max !== undefined && numValue > rule.max) {
+                        isValid = false;
+                        message = rule.message;
+                    }
+                }
+
+                // Update UI
+                if (isValid) {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                    if (feedback) feedback.textContent = '';
+                    // Clear toast tracker for this field
+                    toastTracker.delete(name);
+                } else {
+                    field.classList.remove('is-valid');
+                    field.classList.add('is-invalid');
+                    if (feedback) feedback.textContent = message;
+
+                    // Show toast only on blur/submit and prevent spam
+                    if (showToast && window.TroToast) {
+                        const lastToast = toastTracker.get(name);
+                        const now = Date.now();
+                        // Only show toast if it's been more than 3 seconds since last toast for this field
+                        if (!lastToast || (now - lastToast) > 3000) {
+                            TroToast.error(message, 2500);
+                            toastTracker.set(name, now);
+                        }
+                    }
+                }
+
+                return isValid;
+            }
+
+            // Special validation for TinyMCE
+            function validateTinyMCE(showToast = false) {
+                const contentField = document.getElementById('content');
+                const feedback = document.getElementById('contentFeedback');
+
+                if (tinymce.get('content')) {
+                    const textContent = tinymce.get('content').getContent({format: 'text'});
+                    const isValid = textContent.trim().length >= 50;
+
+                    if (isValid) {
+                        contentField.classList.remove('is-invalid');
+                        contentField.classList.add('is-valid');
+                        if (feedback) feedback.textContent = '';
+                        toastTracker.delete('content');
+                    } else {
+                        contentField.classList.remove('is-valid');
+                        contentField.classList.add('is-invalid');
+                        if (feedback) feedback.textContent = 'Mô tả phải có ít nhất 50 ký tự';
+
+                        if (showToast && window.TroToast) {
+                            const lastToast = toastTracker.get('content');
+                            const now = Date.now();
+                            if (!lastToast || (now - lastToast) > 3000) {
+                                TroToast.error('Mô tả phải có ít nhất 50 ký tự', 2500);
+                                toastTracker.set('content', now);
+                            }
+                        }
+                    }
+
+                    return isValid;
+                }
+                return false;
+            }
+
+            // Add real-time validation to all form fields
+            const fields = form.querySelectorAll('input, select, textarea');
+            fields.forEach(field => {
+                // Validate on input/change (no toast)
+                field.addEventListener('input', () => validateField(field, false));
+                field.addEventListener('change', () => validateField(field, false));
+                // Show toast only on blur (when user leaves field)
+                field.addEventListener('blur', () => validateField(field, true));
+            });
+
+            // TinyMCE validation setup
+            let tinyMCEReady = false;
+            const setupTinyMCE = () => {
+                if (tinymce.get('content') && !tinyMCEReady) {
+                    tinyMCEReady = true;
+                    const editor = tinymce.get('content');
+
+                    editor.on('change keyup', function() {
+                        const content = editor.getContent();
+                        document.getElementById('content').value = content;
+                        validateTinyMCE(false); // No toast on typing
+                    });
+
+                    editor.on('blur', function() {
+                        validateTinyMCE(true); // Show toast on blur
+                    });
+                }
+            };
+
+            // Check for TinyMCE periodically
+            const tinyMCEInterval = setInterval(() => {
+                if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
+                    setupTinyMCE();
+                    clearInterval(tinyMCEInterval);
+                }
+            }, 100);
+
+            // NO JavaScript form handler - let form submit completely naturally
+            // Only update TinyMCE content before form submission using form's built-in submit event
+            form.addEventListener('submit', function(e) {
+                // Update TinyMCE content before submission - this is the ONLY thing we do
+                if (tinymce.get('content')) {
+                    const content = tinymce.get('content').getContent();
+                    document.getElementById('content').value = content;
+                }
+                // No preventDefault, no validation, no loading states - pure natural submission
+            });
+
+            console.log('Smart real-time form validation initialized');
+        });
+    </script>
+
 </body>
 </html>

@@ -1,8 +1,9 @@
 /**
  * Performance-Optimized Intersection Observer
  * Reduces layout thrashing by batching DOM operations
+ * Renamed to avoid conflict with native browser PerformanceObserver API
  */
-class PerformanceObserver {
+class Tro365PerformanceObserver {
   constructor() {
     this.observers = new Map();
     this.pendingUpdates = new Set();
@@ -14,26 +15,29 @@ class PerformanceObserver {
    */
   createObserver(options = {}) {
     const defaultOptions = {
-      rootMargin: '50px 0px',
+      rootMargin: "50px 0px",
       threshold: 0.1,
       // Batch updates to prevent layout thrashing
       batchUpdates: true,
-      ...options
+      ...options,
     };
 
-    const observer = new IntersectionObserver((entries) => {
-      if (defaultOptions.batchUpdates) {
-        // Batch DOM updates in next animation frame
-        entries.forEach(entry => this.pendingUpdates.add(entry));
-        this.scheduleUpdate(defaultOptions.callback);
-      } else {
-        // Immediate callback for critical updates
-        defaultOptions.callback(entries);
+    const observer = new IntersectionObserver(
+      entries => {
+        if (defaultOptions.batchUpdates) {
+          // Batch DOM updates in next animation frame
+          entries.forEach(entry => this.pendingUpdates.add(entry));
+          this.scheduleUpdate(defaultOptions.callback);
+        } else {
+          // Immediate callback for critical updates
+          defaultOptions.callback(entries);
+        }
+      },
+      {
+        rootMargin: defaultOptions.rootMargin,
+        threshold: defaultOptions.threshold,
       }
-    }, {
-      rootMargin: defaultOptions.rootMargin,
-      threshold: defaultOptions.threshold
-    });
+    );
 
     return observer;
   }
@@ -61,13 +65,13 @@ class PerformanceObserver {
    */
   createLazyLoadObserver(callback) {
     return this.createObserver({
-      rootMargin: '100px 0px',
+      rootMargin: "100px 0px",
       threshold: 0.01,
       batchUpdates: true,
-      callback: (entries) => {
+      callback: entries => {
         // Separate reads and writes to prevent layout thrashing
         const toLoad = [];
-        
+
         // Read phase - no DOM writes
         entries.forEach(entry => {
           if (entry.isIntersecting) {
@@ -83,7 +87,7 @@ class PerformanceObserver {
             });
           });
         }
-      }
+      },
     });
   }
 
@@ -92,21 +96,21 @@ class PerformanceObserver {
    */
   createAnimationObserver(callback) {
     return this.createObserver({
-      rootMargin: '0px 0px -50px 0px',
+      rootMargin: "0px 0px -50px 0px",
       threshold: 0.1,
       batchUpdates: true,
-      callback: (entries) => {
+      callback: entries => {
         // Group animations by type to optimize CSS changes
         const animations = {
           fadeIn: [],
           slideUp: [],
-          scale: []
+          scale: [],
         };
 
         // Read phase
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            const animationType = entry.target.dataset.animation || 'fadeIn';
+            const animationType = entry.target.dataset.animation || "fadeIn";
             if (animations[animationType]) {
               animations[animationType].push(entry.target);
             }
@@ -126,27 +130,43 @@ class PerformanceObserver {
             });
           }
         });
-      }
+      },
     });
   }
 
   /**
-   * Cleanup observers
+   * Cleanup observers (Enhanced with memory leak protection)
    */
   cleanup() {
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
-    this.observers.forEach(observer => observer.disconnect());
+
+    // Disconnect all observers
+    this.observers.forEach(observer => {
+      if (observer && typeof observer.disconnect === "function") {
+        observer.disconnect();
+      }
+    });
+
+    // Clear all collections
     this.observers.clear();
     this.pendingUpdates.clear();
+
+    // Prevent memory leaks by nullifying references
+    this.observers = new Map();
+    this.pendingUpdates = new Set();
   }
 }
 
-// Global instance
-window.PerformanceObserver = new PerformanceObserver();
+// Global instance (renamed to avoid conflict with native API)
+window.Tro365PerformanceObserver = new Tro365PerformanceObserver();
+
+// Backward compatibility alias (deprecated)
+window.PerformanceObserver = window.Tro365PerformanceObserver;
 
 // Auto-cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  window.PerformanceObserver.cleanup();
+window.addEventListener("beforeunload", () => {
+  window.Tro365PerformanceObserver.cleanup();
 });

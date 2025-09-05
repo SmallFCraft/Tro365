@@ -8,6 +8,10 @@
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../../config/app.php';
 require_once __DIR__ . '/../../../config/constants.php';
+
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
 require_once __DIR__ . '/../../../includes/functions/validation.php';
@@ -15,6 +19,10 @@ require_once __DIR__ . '/../../../includes/functions/validation.php';
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Services\Upload;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $post = new Post();
@@ -33,8 +41,18 @@ if (!$postId) {
     redirect('/seller/posts');
 }
 
-// Get post data
-$postData = $post->getById($postId);
+// Get post data with caching for better performance
+$postDataCacheKey = "post_edit_data_" . $postId;
+$postData = cache_get($postDataCacheKey);
+
+if ($postData === null) {
+    $postData = $post->getById($postId);
+
+    if ($postData) {
+        // Cache post data for 5 minutes
+        cache_set($postDataCacheKey, $postData, 300);
+    }
+}
 
 if (!$postData) {
     setFlashMessage(MSG_ERROR, 'Bài đăng không tồn tại');
@@ -140,12 +158,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get form data
-$categories = $post->getCategories();
-// Provinces will be loaded via API in JavaScript
+// Get form data with caching for better performance
+$categoriesCacheKey = "post_edit_categories";
+$categories = cache_get($categoriesCacheKey);
 
-// Get existing images
-$existingImages = $post->getImages($postId);
+if ($categories === null) {
+    $categories = $post->getCategories();
+    // Cache categories for 10 minutes
+    cache_set($categoriesCacheKey, $categories, 600);
+}
+
+// Provinces will be loaded via API in JavaScript (already cached in LocationService)
+
+// Get existing images with caching
+$existingImagesCacheKey = "post_edit_images_" . $postId;
+$existingImages = cache_get($existingImagesCacheKey);
+
+if ($existingImages === null) {
+    $existingImages = $post->getImages($postId);
+    // Cache images for 5 minutes
+    cache_set($existingImagesCacheKey, $existingImages, 300);
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -775,5 +808,6 @@ $existingImages = $post->getImages($postId);
             });
         });
     </script>
+
 </body>
 </html>

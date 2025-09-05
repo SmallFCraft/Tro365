@@ -12,9 +12,16 @@ require_once __DIR__ . '/../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../includes/functions/auth.php';
 require_once __DIR__ . '/../../includes/functions/validation.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
+use Tro365\Services\PerformanceOptimizationService;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $post = new Post();

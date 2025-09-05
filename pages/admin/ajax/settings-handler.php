@@ -223,6 +223,7 @@ try {
 
             // Save to database
             $config = new \Tro365\Core\Config();
+            $config->setValue('tinymce_api_key', $apiKey, 'TinyMCE API Key cho Rich Text Editor');
 
             echo json_encode([
                 'success' => true,
@@ -244,6 +245,7 @@ try {
 
             // Save to database
             $config = new \Tro365\Core\Config();
+            $config->setValue('max_rooms_per_post', $maxRooms, 'Số phòng tối đa có thể đăng trong một bài đăng');
 
             echo json_encode([
                 'success' => true,
@@ -284,7 +286,8 @@ try {
                     'enable_registration' => isset($_POST['enable_registration']) ? 1 : 0,
                     'enable_seller_registration' => isset($_POST['enable_seller_registration']) ? 1 : 0,
                     'require_email_verification' => isset($_POST['require_email_verification']) ? 1 : 0,
-                    'enable_maintenance_mode' => isset($_POST['enable_maintenance_mode']) ? 1 : 0
+                    'enable_maintenance_mode' => isset($_POST['enable_maintenance_mode']) ? 1 : 0,
+                    'max_rooms_per_post' => (int)($_POST['max_rooms_per_post'] ?? 50)
                 ];
 
                 foreach ($systemSettings as $key => $value) {

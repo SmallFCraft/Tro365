@@ -5,9 +5,16 @@
  * Mobile-First Responsive Design with Glassmorphism UI
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Core\Database;
 use Tro365\Services\LocationService;
+use Tro365\Services\PerformanceOptimizationService;
 use Tro365\Core\Auth;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $db = Database::getInstance();
 $auth = new Auth();
@@ -1338,7 +1345,6 @@ function buildSearchUrl($params = []) {
                 alert(message);
             }
         }
-
 
         // Global function for favorite toggle (copied from working home.php implementation)
         function toggleFavorite(postId, buttonElement) {

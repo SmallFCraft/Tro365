@@ -7,10 +7,17 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/app.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Core\Database;
 use Tro365\Core\Auth;
 use Tro365\Models\Contact;
 use Tro365\Services\LocationService;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $db = Database::getInstance();
 $auth = new Auth();
@@ -84,24 +91,66 @@ if (!$postId) {
     exit;
 }
 
-// Get post details
-$sql = "SELECT bd.*, dm.TenDM, kh.HoTen as NguoiDang, kh.SDT as SDTNguoiDang, kh.Email as EmailNguoiDang
-        FROM BaiDang bd
-        LEFT JOIN DanhMuc dm ON bd.DanhMucID = dm.ID
-        LEFT JOIN KhachHang kh ON bd.NguoiDangID = kh.ID
-        WHERE bd.ID = :id AND bd.TrangThai = :status";
+// Get post details with caching for better performance
+$postCacheKey = "post_detail_" . $postId;
+$post = cache_get($postCacheKey);
 
-$post = $db->selectOne($sql, [
-    'id' => $postId,
-    'status' => POST_STATUS_APPROVED
-]);
+if ($post === null) {
+    $sql = "SELECT bd.*, dm.TenDM, kh.HoTen as NguoiDang, kh.SDT as SDTNguoiDang, kh.Email as EmailNguoiDang
+            FROM BaiDang bd
+            LEFT JOIN DanhMuc dm ON bd.DanhMucID = dm.ID
+            LEFT JOIN KhachHang kh ON bd.NguoiDangID = kh.ID
+            WHERE bd.ID = :id AND bd.TrangThai = :status";
 
-if ($post) {
-    // Get location names from API
-    $locationService = new LocationService();
-    $post['TenTT'] = $post['TinhThanhID'] ? $locationService->getProvinceName($post['TinhThanhID']) : '';
-    $post['TenQH'] = $post['QuanHuyenID'] ? $locationService->getDistrictName($post['QuanHuyenID']) : '';
-    $post['TenXP'] = $post['XaPhuongID'] ? $locationService->getWardName($post['XaPhuongID']) : '';
+    $post = $db->selectOne($sql, [
+        'id' => $postId,
+        'status' => POST_STATUS_APPROVED
+    ]);
+
+    if ($post) {
+        // Get location names from API with caching
+        $locationService = new LocationService();
+
+        // Cache location lookups
+        if ($post['TinhThanhID']) {
+            $provinceCacheKey = "location_province_" . $post['TinhThanhID'];
+            $provinceName = cache_get($provinceCacheKey);
+            if ($provinceName === null) {
+                $provinceName = $locationService->getProvinceName($post['TinhThanhID']) ?: '';
+                cache_set($provinceCacheKey, $provinceName, 86400); // 24 hours
+            }
+            $post['TenTT'] = $provinceName;
+        } else {
+            $post['TenTT'] = '';
+        }
+
+        if ($post['QuanHuyenID']) {
+            $districtCacheKey = "location_district_" . $post['QuanHuyenID'];
+            $districtName = cache_get($districtCacheKey);
+            if ($districtName === null) {
+                $districtName = $locationService->getDistrictName($post['QuanHuyenID']) ?: '';
+                cache_set($districtCacheKey, $districtName, 86400); // 24 hours
+            }
+            $post['TenQH'] = $districtName;
+        } else {
+            $post['TenQH'] = '';
+        }
+
+        if ($post['XaPhuongID']) {
+            $wardCacheKey = "location_ward_" . $post['XaPhuongID'];
+            $wardName = cache_get($wardCacheKey);
+            if ($wardName === null) {
+                $wardName = $locationService->getWardName($post['XaPhuongID']) ?: '';
+                cache_set($wardCacheKey, $wardName, 86400); // 24 hours
+            }
+            $post['TenXP'] = $wardName;
+        } else {
+            $post['TenXP'] = '';
+        }
+
+        // Cache the complete post data for 10 minutes
+        cache_set($postCacheKey, $post, 600);
+    }
 }
 
 if (!$post) {
@@ -113,43 +162,65 @@ if (!$post) {
 // Update view count
 $db->execute("UPDATE BaiDang SET LuotXem = LuotXem + 1 WHERE ID = :id", ['id' => $postId]);
 
-// Get post images
-$images = $db->select("SELECT * FROM HinhAnhBaiDang WHERE BaiDangID = :id ORDER BY ThuTu", ['id' => $postId]);
+// Get post images with caching
+$imagesCacheKey = "post_images_" . $postId;
+$images = cache_get($imagesCacheKey);
 
-// Get related posts
-$relatedPosts = $db->select("
-    SELECT bd.*
-    FROM BaiDang bd
-    WHERE bd.ID != :id
-    AND bd.TrangThai = :status
-    AND (bd.DanhMucID = :category OR bd.TinhThanhID = :province)
-    ORDER BY bd.NgayTao DESC
-    LIMIT 6
-", [
-    'id' => $postId,
-    'status' => POST_STATUS_APPROVED,
-    'category' => $post['DanhMucID'],
-    'province' => $post['TinhThanhID']
-]);
-
-// Add location names to related posts using LocationService
-if (!empty($relatedPosts)) {
-    $locationService = new LocationService();
-    foreach ($relatedPosts as &$relatedPost) {
-        if ($relatedPost['TinhThanhID']) {
-            $province = $locationService->getProvinceById($relatedPost['TinhThanhID']);
-            $relatedPost['TenTT'] = $province['name'] ?? '';
-        }
-        if ($relatedPost['QuanHuyenID']) {
-            $district = $locationService->getDistrictById($relatedPost['QuanHuyenID']);
-            $relatedPost['TenQH'] = $district['name'] ?? '';
-        }
-    }
+if ($images === null) {
+    $images = $db->select("SELECT * FROM HinhAnhBaiDang WHERE BaiDangID = :id ORDER BY ThuTu", ['id' => $postId]);
+    cache_set($imagesCacheKey, $images, 600); // 10 minutes
 }
 
+// Get related posts with caching
+$relatedPostsCacheKey = "related_posts_" . $postId . "_" . $post['DanhMucID'] . "_" . $post['TinhThanhID'];
+$relatedPosts = cache_get($relatedPostsCacheKey);
 
+if ($relatedPosts === null) {
+    $relatedPosts = $db->select("
+        SELECT bd.*
+        FROM BaiDang bd
+        WHERE bd.ID != :id
+        AND bd.TrangThai = :status
+        AND (bd.DanhMucID = :category OR bd.TinhThanhID = :province)
+        ORDER BY bd.NgayTao DESC
+        LIMIT 6
+    ", [
+        'id' => $postId,
+        'status' => POST_STATUS_APPROVED,
+        'category' => $post['DanhMucID'],
+        'province' => $post['TinhThanhID']
+    ]);
 
+    // Add location names to related posts using cached LocationService
+    if (!empty($relatedPosts)) {
+        $locationService = new LocationService();
+        foreach ($relatedPosts as &$relatedPost) {
+            if ($relatedPost['TinhThanhID']) {
+                $provinceCacheKey = "location_province_" . $relatedPost['TinhThanhID'];
+                $provinceName = cache_get($provinceCacheKey);
+                if ($provinceName === null) {
+                    $province = $locationService->getProvinceById($relatedPost['TinhThanhID']);
+                    $provinceName = $province['name'] ?? '';
+                    cache_set($provinceCacheKey, $provinceName, 86400); // 24 hours
+                }
+                $relatedPost['TenTT'] = $provinceName;
+            }
+            if ($relatedPost['QuanHuyenID']) {
+                $districtCacheKey = "location_district_" . $relatedPost['QuanHuyenID'];
+                $districtName = cache_get($districtCacheKey);
+                if ($districtName === null) {
+                    $district = $locationService->getDistrictById($relatedPost['QuanHuyenID']);
+                    $districtName = $district['name'] ?? '';
+                    cache_set($districtCacheKey, $districtName, 86400); // 24 hours
+                }
+                $relatedPost['TenQH'] = $districtName;
+            }
+        }
+    }
 
+    // Cache related posts for 5 minutes
+    cache_set($relatedPostsCacheKey, $relatedPosts, 300);
+}
 
 // Check if user has favorited this post
 $isFavorited = false;
@@ -332,8 +403,6 @@ if ($auth->isLoggedIn()) {
             background: rgba(0, 0, 0, 0.8);
             transform: scale(1.1);
         }
-
-
 
         /* Thumbnail Carousel */
         .thumbnail-carousel {
@@ -1544,7 +1613,6 @@ if ($auth->isLoggedIn()) {
                                 <i class="fas fa-expand"></i>
                             </button>
 
-
                         </div>
 
                         <!-- Thumbnail Carousel -->
@@ -1714,8 +1782,6 @@ if ($auth->isLoggedIn()) {
                     <div class="price-period">/ tháng</div>
                 </div>
 
-
-
                 <!-- Contact Widget -->
                 <div class="sidebar-widget contact-widget">
                     <div class="sidebar-widget-title">
@@ -1844,11 +1910,6 @@ if ($auth->isLoggedIn()) {
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
-
-
-
-
-
 
             </div>
         </div>
@@ -1995,7 +2056,6 @@ if ($auth->isLoggedIn()) {
             }
         }
 
-        
         function sharePost() {
             if (navigator.share) {
                 navigator.share({
@@ -2267,5 +2327,6 @@ if ($auth->isLoggedIn()) {
             }
         });
     </script>
+
 </body>
 </html>

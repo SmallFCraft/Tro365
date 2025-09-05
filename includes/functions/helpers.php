@@ -522,6 +522,155 @@ function getUserAvatar($avatarPath = null)
 }
 
 /**
+ * Delete image file and all its optimized versions (WebP, AVIF, thumbnails)
+ * This function handles the complete cleanup of all image variants created by the optimization system
+ *
+ * @param string $imagePath Relative path to the image (e.g., "assets/uploads/posts/2025/08/image.jpg")
+ * @return array Results of deletion attempts with detailed status
+ */
+function deleteImageWithAllVersions($imagePath)
+{
+    $results = [
+        'success' => false,
+        'deleted_files' => [],
+        'failed_files' => [],
+        'total_deleted' => 0,
+        'total_failed' => 0,
+        'storage_freed' => 0
+    ];
+
+    try {
+        // Convert relative path to absolute path
+        $basePath = __DIR__ . '/../../';
+        $fullPath = $basePath . ltrim($imagePath, '/');
+
+        // Get file info
+        $pathInfo = pathinfo($fullPath);
+        $directory = $pathInfo['dirname'];
+        $filename = $pathInfo['filename'];
+        $extension = $pathInfo['extension'] ?? '';
+
+        // List of all possible file variants to delete
+        $filesToDelete = [];
+
+        // 1. Original file
+        if (file_exists($fullPath)) {
+            $filesToDelete[] = [
+                'path' => $fullPath,
+                'type' => 'original',
+                'size' => filesize($fullPath)
+            ];
+        }
+
+        // 2. WebP version
+        $webpPath = $directory . '/' . $filename . '.webp';
+        if (file_exists($webpPath)) {
+            $filesToDelete[] = [
+                'path' => $webpPath,
+                'type' => 'webp',
+                'size' => filesize($webpPath)
+            ];
+        }
+
+        // 3. AVIF version
+        $avifPath = $directory . '/' . $filename . '.avif';
+        if (file_exists($avifPath)) {
+            $filesToDelete[] = [
+                'path' => $avifPath,
+                'type' => 'avif',
+                'size' => filesize($avifPath)
+            ];
+        }
+
+        // 4. Thumbnail versions (multiple possible formats)
+        $thumbnailPatterns = [
+            'thumb_' . $filename . '.' . $extension,
+            'thumb_' . $filename . '.webp',
+            'thumb_' . $filename . '.avif'
+        ];
+
+        foreach ($thumbnailPatterns as $thumbPattern) {
+            $thumbPath = $directory . '/' . $thumbPattern;
+            if (file_exists($thumbPath)) {
+                $filesToDelete[] = [
+                    'path' => $thumbPath,
+                    'type' => 'thumbnail',
+                    'size' => filesize($thumbPath)
+                ];
+            }
+        }
+
+        // 5. Additional optimized versions (check for common patterns)
+        $optimizedPatterns = [
+            $filename . '_optimized.' . $extension,
+            $filename . '_compressed.' . $extension,
+            $filename . '_resized.' . $extension
+        ];
+
+        foreach ($optimizedPatterns as $optPattern) {
+            $optPath = $directory . '/' . $optPattern;
+            if (file_exists($optPath)) {
+                $filesToDelete[] = [
+                    'path' => $optPath,
+                    'type' => 'optimized',
+                    'size' => filesize($optPath)
+                ];
+            }
+        }
+
+        // Delete all found files
+        foreach ($filesToDelete as $fileInfo) {
+            try {
+                if (unlink($fileInfo['path'])) {
+                    $results['deleted_files'][] = [
+                        'path' => $fileInfo['path'],
+                        'type' => $fileInfo['type'],
+                        'size' => $fileInfo['size']
+                    ];
+                    $results['total_deleted']++;
+                    $results['storage_freed'] += $fileInfo['size'];
+                } else {
+                    $results['failed_files'][] = [
+                        'path' => $fileInfo['path'],
+                        'type' => $fileInfo['type'],
+                        'error' => 'Failed to delete file'
+                    ];
+                    $results['total_failed']++;
+                }
+            } catch (Exception $e) {
+                $results['failed_files'][] = [
+                    'path' => $fileInfo['path'],
+                    'type' => $fileInfo['type'],
+                    'error' => $e->getMessage()
+                ];
+                $results['total_failed']++;
+            }
+        }
+
+        // Set overall success status
+        $results['success'] = ($results['total_deleted'] > 0 && $results['total_failed'] === 0);
+
+        // Log the deletion results
+        if ($results['total_deleted'] > 0) {
+            writeLog("Image cleanup completed: {$results['total_deleted']} files deleted, " .
+                    formatBytes($results['storage_freed']) . " storage freed for image: $imagePath",
+                    'info', 'image_cleanup');
+        }
+
+        if ($results['total_failed'] > 0) {
+            writeLog("Image cleanup had {$results['total_failed']} failures for image: $imagePath",
+                    'warning', 'image_cleanup');
+        }
+
+    } catch (Exception $e) {
+        $results['error'] = $e->getMessage();
+        writeLog("Image cleanup failed for $imagePath: " . $e->getMessage(), 'error', 'image_cleanup');
+    }
+
+    return $results;
+}
+
+/**
  * Get user avatar HTML
  */
 function getUserAvatarHtml($avatarPath = null, $cssClass = '', $alt = 'Avatar', $style = '')
@@ -668,18 +817,22 @@ function getPostValidityDays()
 
 /**
  * Get max upload size from database (in MB)
+ * @deprecated Use getUploadMaxSizeMB() instead for consistency
  */
 function getMaxUploadSize()
 {
-    return (int)getSystemSetting('max_upload_size', 5);
+    // Redirect to the unified function
+    return (int)getUploadMaxSizeMB();
 }
 
 /**
  * Get allowed file types from database
+ * @deprecated Use getUploadAllowedExtensions() instead for consistency
  */
 function getAllowedFileTypes()
 {
-    return getSystemSetting('allowed_file_types', 'jpg,jpeg,png,webp');
+    // Redirect to the unified function
+    return getUploadAllowedExtensions();
 }
 
 /**
@@ -1383,12 +1536,12 @@ if (!function_exists('sys_auto_prune_cache')) {
     function sys_auto_prune_cache(array $opts = [])
     {
         try {
-            // Sampling to avoid running every request
-            $samplePercent = $opts['samplePercent'] ?? 2; // 2% of requests
+            // Sampling to avoid running every request - Reduced frequency for better performance
+            $samplePercent = $opts['samplePercent'] ?? 0.5; // 0.5% of requests (was 2%)
             if (random_int(1, 100) > max(1, min(100, (int)$samplePercent))) return;
 
-            // Do not run too frequently
-            $cooldown = (int)($opts['cooldownSeconds'] ?? 300); // 5 minutes
+            // Do not run too frequently - Extended cooldown to reduce performance impact
+            $cooldown = (int)($opts['cooldownSeconds'] ?? 1800); // 30 minutes (was 5 minutes)
             $now = time();
             $next = cache_get('sys:cache_prune_next', 0, $cooldown);
             if ($now < (int)$next) return;

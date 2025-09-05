@@ -158,28 +158,33 @@ class FormValidator {
   }
 
   /**
-   * Check if this is an authentication form that needs natural submission
+   * Check if this is a form that needs natural submission (auth forms + post creation forms)
    */
-  isAuthenticationForm() {
-    // Check form ID, action, or class to identify auth forms
+  needsNaturalSubmission() {
+    // Check form ID, action, or class to identify forms that need natural submission
     const formId = this.form.id;
     const formAction = this.form.action;
     const formClasses = this.form.className;
 
-    // Auth form indicators
-    const authIndicators = [
+    // Forms that need natural submission (auth forms + post creation forms)
+    const naturalSubmissionIndicators = [
       "loginForm",
       "registerForm",
       "forgotPasswordForm",
+      "createPostForm",
+      "editPostForm",
       "/login",
       "/register",
       "/forgot-password",
+      "/posts/create",
+      "/posts/edit",
       "auth-form",
       "login-form",
       "register-form",
+      "post-form",
     ];
 
-    return authIndicators.some(
+    return naturalSubmissionIndicators.some(
       indicator =>
         formId.includes(indicator) ||
         formAction.includes(indicator) ||
@@ -209,11 +214,11 @@ class FormValidator {
    * Handle form submission
    */
   async handleSubmit(event) {
-    // Check if this is an authentication form that needs natural submission
-    const isAuthForm = this.isAuthenticationForm();
+    // Check if this is a form that needs natural submission
+    const needsNatural = this.needsNaturalSubmission();
 
-    if (isAuthForm) {
-      // For auth forms, only prevent submission if validation fails
+    if (needsNatural) {
+      // For forms that need natural submission, only prevent submission if validation fails
       const isValid = await this.validateForm();
 
       if (!isValid) {
@@ -226,7 +231,7 @@ class FormValidator {
         return;
       }
 
-      // For valid auth forms, allow natural submission
+      // For valid forms that need natural submission, allow natural submission
       // Just add loading state and let browser handle redirect
       const submitBtn = this.form.querySelector('button[type="submit"]');
       if (submitBtn) {
@@ -238,7 +243,7 @@ class FormValidator {
       return;
     }
 
-    // For non-auth forms, use original logic
+    // For forms that don't need natural submission, use original logic
     // Prevent all default form submission behavior including HTML5 validation
     event.preventDefault();
     event.stopPropagation();

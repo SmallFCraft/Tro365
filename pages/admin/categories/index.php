@@ -4,9 +4,16 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
 use Tro365\Models\Category;
 use Tro365\Activity;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $category = new Category();
@@ -136,8 +143,15 @@ if ($status !== '') {
     $filters['status'] = (int)$status;
 }
 
-// Get all categories with post count (for admin)
-$categories = $category->getAllCategoriesWithPostCount();
+// Get all categories with post count (for admin) - with caching
+$cacheKey = 'admin_categories_with_count_' . md5(serialize($filters));
+$categories = cache_get($cacheKey);
+
+if ($categories === null) {
+    $categories = $category->getAllCategoriesWithPostCount();
+    // Cache for 5 minutes (categories don't change frequently)
+    cache_set($cacheKey, $categories, 300);
+}
 
 // Filter categories if needed
 if (!empty($filters)) {

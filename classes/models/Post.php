@@ -42,15 +42,15 @@ class Post extends BaseModel
                 'errors' => $validation['errors'],
                 'user_id' => $data['NguoiDangID'] ?? 'unknown'
             ]);
-            throw new Exception(implode(', ', $validation['errors']));
+            throw new \Exception(implode(', ', $validation['errors']));
         }
 
         // Process content with Markdown (NoiDung only)
         if (!empty($data['NoiDung'])) {
             // Validate markdown content
-            $markdownValidation = MarkdownHelper::validate($data['NoiDung']);
+            $markdownValidation = \Tro365\Helpers\MarkdownHelper::validate($data['NoiDung']);
             if (!$markdownValidation['valid']) {
-                throw new Exception(implode(', ', $markdownValidation['errors']));
+                throw new \Exception(implode(', ', $markdownValidation['errors']));
             }
 
             // Store processed HTML (NoiDung already contains markdown)
@@ -95,7 +95,7 @@ class Post extends BaseModel
         unset($data['ID'], $data['NgayTao'], $data['LuotXem']);
 
         if (empty($data)) {
-            throw new Exception("Không có dữ liệu để cập nhật");
+            throw new \Exception("Không có dữ liệu để cập nhật");
         }
 
         // Validate price if provided using Symfony Validator
@@ -111,13 +111,13 @@ class Post extends BaseModel
             ]);
 
             if (!$validation['valid']) {
-                throw new Exception(implode(', ', $validation['errors']));
+                throw new \Exception(implode(', ', $validation['errors']));
             }
         }
 
         // Validate title length if provided
         if (isset($data['TieuDe']) && strlen($data['TieuDe']) > MAX_TITLE_LENGTH) {
-            throw new Exception("Tiêu đề không được quá " . MAX_TITLE_LENGTH . " ký tự");
+            throw new \Exception("Tiêu đề không được quá " . MAX_TITLE_LENGTH . " ký tự");
         }
 
         // MoTa field removed - no longer needed
@@ -200,23 +200,23 @@ class Post extends BaseModel
     {
         $where = "1=1";
         $params = [];
-        
+
         // Apply same filters as getAll
         if (isset($filters['status']) && $filters['status'] !== null && $filters['status'] !== '') {
             $where .= " AND TrangThai = :status";
             $params['status'] = $filters['status'];
         }
-        
+
         if (!empty($filters['user_id'])) {
             $where .= " AND NguoiDangID = :user_id";
             $params['user_id'] = $filters['user_id'];
         }
-        
+
         if (!empty($filters['category'])) {
             $where .= " AND DanhMucID = :category";
             $params['category'] = $filters['category'];
         }
-        
+
         if (!empty($filters['search'])) {
             $where .= " AND (TieuDe LIKE :search1 OR MoTa LIKE :search2 OR DiaChi LIKE :search3)";
             $searchTerm = '%' . $filters['search'] . '%';
@@ -224,8 +224,61 @@ class Post extends BaseModel
             $params['search2'] = $searchTerm;
             $params['search3'] = $searchTerm;
         }
-        
+
         return $this->db->count('BaiDang', $where, $params);
+    }
+
+    /**
+     * Get post statistics for a user (optimized single query)
+     */
+    public function getStatistics($userId, $filters = [])
+    {
+        $where = "NguoiDangID = :user_id";
+        $params = ['user_id' => $userId];
+
+        // Apply additional filters if provided
+        if (!empty($filters['search'])) {
+            $where .= " AND (TieuDe LIKE :search1 OR MoTa LIKE :search2 OR DiaChi LIKE :search3)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params['search1'] = $searchTerm;
+            $params['search2'] = $searchTerm;
+            $params['search3'] = $searchTerm;
+        }
+
+        if (!empty($filters['category'])) {
+            $where .= " AND DanhMucID = :category";
+            $params['category'] = $filters['category'];
+        }
+
+        $sql = "SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN TrangThai = 0 THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN TrangThai = 1 THEN 1 ELSE 0 END) as approved,
+                    SUM(CASE WHEN TrangThai = 2 THEN 1 ELSE 0 END) as rejected,
+                    SUM(CASE WHEN TrangThai = 3 THEN 1 ELSE 0 END) as hidden
+                FROM BaiDang
+                WHERE {$where}";
+
+        $result = $this->db->select($sql, $params);
+
+        if (empty($result)) {
+            return [
+                'total' => 0,
+                'pending' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+                'hidden' => 0
+            ];
+        }
+
+        $row = $result[0];
+        return [
+            'total' => (int)$row['total'],
+            'pending' => (int)$row['pending'],
+            'approved' => (int)$row['approved'],
+            'rejected' => (int)$row['rejected'],
+            'hidden' => (int)$row['hidden']
+        ];
     }
     
     /**
@@ -289,7 +342,7 @@ class Post extends BaseModel
     {
         $post = $this->getById($id);
         if (!$post) {
-            throw new Exception("Không tìm thấy bài đăng");
+            throw new \Exception("Không tìm thấy bài đăng");
         }
 
         // Only toggle between APPROVED and HIDDEN status
@@ -298,7 +351,7 @@ class Post extends BaseModel
         } elseif ($post['TrangThai'] == StatusHelper::POST_HIDDEN) {
             return $this->show($id, $userId);
         } else {
-            throw new Exception("Chỉ có thể ẩn/hiện bài đăng đã được duyệt");
+            throw new \Exception("Chỉ có thể ẩn/hiện bài đăng đã được duyệt");
         }
     }
     
@@ -314,7 +367,7 @@ class Post extends BaseModel
                 'ThuTu' => $order
             ]);
             
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new Exception("Lỗi thêm hình ảnh: " . $e->getMessage());
         }
     }
@@ -352,7 +405,7 @@ class Post extends BaseModel
 
             return true;
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new Exception("Lỗi xóa hình ảnh: " . $e->getMessage());
         }
     }
@@ -377,7 +430,7 @@ class Post extends BaseModel
             // Get image info
             $image = $this->getImageById($imageId);
             if (!$image) {
-                throw new Exception("Hình ảnh không tồn tại");
+                throw new \Exception("Hình ảnh không tồn tại");
             }
 
             // Delete from database
@@ -403,7 +456,7 @@ class Post extends BaseModel
 
             return $result;
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new Exception("Lỗi xóa hình ảnh: " . $e->getMessage());
         }
     }
@@ -415,7 +468,7 @@ class Post extends BaseModel
     {
         try {
             $this->db->execute("UPDATE BaiDang SET LuotXem = LuotXem + 1 WHERE ID = :id", ['id' => $id]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Log error but don't throw exception
             error_log("Failed to increment view count: " . $e->getMessage());
         }

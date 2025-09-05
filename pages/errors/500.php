@@ -12,6 +12,14 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/constants.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
+
 $pageTitle = '500 - Lỗi máy chủ nội bộ';
 $pageDescription = 'Đã xảy ra lỗi không mong muốn trên máy chủ. Chúng tôi đang khắc phục sự cố này.';
 

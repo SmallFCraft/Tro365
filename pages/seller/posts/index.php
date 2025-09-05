@@ -8,15 +8,23 @@
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../../config/app.php';
 require_once __DIR__ . '/../../../config/constants.php';
+
+// Apply performance optimizations
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
 require_once __DIR__ . '/../../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
+use Tro365\Services\PerformanceOptimizationService;
 
 $auth = new Auth();
 $post = new Post();
+
+// Initialize performance optimization service
+$perfService = PerformanceOptimizationService::getInstance();
 
 // Require seller role
 $auth->requireSeller();
@@ -42,10 +50,33 @@ if (!empty($search)) {
     $filters['search'] = $search;
 }
 
-// Get posts
-$posts = $post->getAll($page, $limit, $filters);
+// Get posts and statistics (optimized with caching)
+$postsCacheKey = "seller_posts_" . $currentUser['ID'] . "_p{$page}_" . md5(serialize($filters));
+$posts = cache_get($postsCacheKey);
+
+if ($posts === null) {
+    $posts = $post->getAll($page, $limit, $filters);
+    // Cache posts for 2 minutes (120 seconds) - shorter cache for dynamic content
+    cache_set($postsCacheKey, $posts, 120);
+}
+
 $total = $post->count($filters);
 $totalPages = ceil($total / $limit);
+
+// Get statistics with caching for better performance
+$cacheKey = "seller_stats_" . $currentUser['ID'] . "_" . md5($search);
+$statistics = cache_get($cacheKey);
+
+if ($statistics === null) {
+    // Get statistics in a single optimized query
+    $statistics = $post->getStatistics($currentUser['ID'], [
+        'search' => $search
+        // Note: Don't include status filter here as we want all statuses for statistics
+    ]);
+
+    // Cache for 5 minutes (300 seconds)
+    cache_set($cacheKey, $statistics, 300);
+}
 
 // Handle actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -321,24 +352,24 @@ $flash = getFlashMessage();
                     <div class="card-body">
                         <div class="row text-center">
                             <div class="col-md-3">
-                                <h4 class="text-primary"><?= number_format($total) ?></h4>
+                                <h4 class="text-primary"><?= number_format($statistics['total']) ?></h4>
                                 <small class="text-muted">Tổng bài đăng</small>
                             </div>
                             <div class="col-md-3">
                                 <h4 class="text-warning">
-                                    <?= number_format($post->count(['user_id' => $currentUser['ID'], 'status' => POST_STATUS_PENDING])) ?>
+                                    <?= number_format($statistics['pending']) ?>
                                 </h4>
                                 <small class="text-muted">Chờ duyệt</small>
                             </div>
                             <div class="col-md-3">
                                 <h4 class="text-success">
-                                    <?= number_format($post->count(['user_id' => $currentUser['ID'], 'status' => POST_STATUS_APPROVED])) ?>
+                                    <?= number_format($statistics['approved']) ?>
                                 </h4>
                                 <small class="text-muted">Đã duyệt</small>
                             </div>
                             <div class="col-md-3">
                                 <h4 class="text-danger">
-                                    <?= number_format($post->count(['user_id' => $currentUser['ID'], 'status' => POST_STATUS_REJECTED])) ?>
+                                    <?= number_format($statistics['rejected']) ?>
                                 </h4>
                                 <small class="text-muted">Từ chối</small>
                             </div>
@@ -372,5 +403,6 @@ $flash = getFlashMessage();
             }
         }
     </script>
-</body>
+
+    </body>
 </html>

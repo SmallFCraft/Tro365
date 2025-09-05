@@ -143,21 +143,46 @@ class DebugManager
     public function getPerformanceMetrics()
     {
         if (!$this->enabled) return [];
-        
+
         $currentTime = microtime(true);
         $currentMemory = memory_get_usage(true);
         $peakMemory = memory_get_peak_usage(true);
-        
-        return [
+
+        $metrics = [
             'execution_time' => round(($currentTime - $this->startTime) * 1000, 2), // ms
             'memory_usage' => formatBytes($currentMemory),
-            'memory_peak' => formatBytes($peakMemory),
+            'peak_memory' => formatBytes($peakMemory),
             'memory_start' => formatBytes($this->startMemory),
             'memory_diff' => formatBytes($currentMemory - $this->startMemory),
             'queries_count' => count($this->queries),
             'errors_count' => count($this->errors),
             'api_calls_count' => count($this->apiCalls)
         ];
+
+        // Integrate with PerformanceOptimizationService if available
+        try {
+            if (class_exists('Tro365\Services\PerformanceOptimizationService')) {
+                $perfService = \Tro365\Services\PerformanceOptimizationService::getInstance();
+                $perfReport = $perfService->generatePerformanceReport();
+
+                // Add cache statistics
+                if (isset($perfReport['cache_stats'])) {
+                    $metrics['cache_hits'] = $perfReport['cache_stats']['hits'] ?? 0;
+                    $metrics['cache_misses'] = $perfReport['cache_stats']['misses'] ?? 0;
+                    $metrics['cache_hit_ratio'] = $perfReport['cache_stats']['hit_ratio'] ?? 0;
+                }
+
+                // Add performance recommendations
+                if (isset($perfReport['recommendations'])) {
+                    $metrics['recommendations'] = array_slice($perfReport['recommendations'], 0, 5);
+                }
+            }
+        } catch (Exception $e) {
+            // Silently continue if PerformanceOptimizationService is not available
+            error_log("DebugManager: Could not integrate with PerformanceOptimizationService: " . $e->getMessage());
+        }
+
+        return $metrics;
     }
 
     public function getAllDebugData()

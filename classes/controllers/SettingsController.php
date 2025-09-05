@@ -165,7 +165,8 @@ class SettingsController
             'enable_seller_registration' => isset($data['enable_seller_registration']) ? 1 : 0,
             'require_email_verification' => isset($data['require_email_verification']) ? 1 : 0,
             'enable_maintenance_mode' => isset($data['enable_maintenance_mode']) ? 1 : 0,
-            'app_debug' => isset($data['app_debug']) ? 1 : 0
+            'app_debug' => isset($data['app_debug']) ? 1 : 0,
+            'max_rooms_per_post' => (int)($data['max_rooms_per_post'] ?? 50)
         ];
 
         foreach ($systemSettings as $key => $value) {

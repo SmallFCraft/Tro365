@@ -4,9 +4,16 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
 use Tro365\Models\User;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $user = new User();
@@ -82,13 +89,39 @@ $totalResult = $db->selectOne($countSql, $countParams);
 $total = $totalResult['total'] ?? 0;
 $totalPages = ceil($total / $limit);
 
-// Get statistics
-$stats = [
-    'total' => $db->selectOne("SELECT COUNT(*) as count FROM KhachHang")['count'] ?? 0,
-    'active' => $db->selectOne("SELECT COUNT(*) as count FROM KhachHang WHERE TrangThai = 1")['count'] ?? 0,
-    'sellers' => $db->selectOne("SELECT COUNT(*) as count FROM KhachHang WHERE VaiTroID = " . ROLE_SELLER)['count'] ?? 0,
-    'pending' => $db->selectOne("SELECT COUNT(*) as count FROM KhachHang WHERE TrangThai = 0")['count'] ?? 0
-];
+// Get statistics with caching for better performance
+$statsCacheKey = "admin_users_stats";
+$stats = cache_get($statsCacheKey);
+
+if ($stats === null) {
+    // Optimized single query to get all statistics at once
+    $statsResult = $db->selectOne("
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN TrangThai = 1 THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN TrangThai = 0 THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN VaiTroID = :seller_role THEN 1 ELSE 0 END) as sellers,
+            SUM(CASE WHEN VaiTroID = :admin_role THEN 1 ELSE 0 END) as admins,
+            SUM(CASE WHEN VaiTroID = :moderator_role THEN 1 ELSE 0 END) as moderators
+        FROM KhachHang
+    ", [
+        'seller_role' => ROLE_SELLER,
+        'admin_role' => ROLE_ADMIN,
+        'moderator_role' => ROLE_MODERATOR
+    ]);
+
+    $stats = [
+        'total' => (int)($statsResult['total'] ?? 0),
+        'active' => (int)($statsResult['active'] ?? 0),
+        'pending' => (int)($statsResult['pending'] ?? 0),
+        'sellers' => (int)($statsResult['sellers'] ?? 0),
+        'admins' => (int)($statsResult['admins'] ?? 0),
+        'moderators' => (int)($statsResult['moderators'] ?? 0)
+    ];
+
+    // Cache for 5 minutes
+    cache_set($statsCacheKey, $stats, 300);
+}
 
 $pageTitle = 'Quản lý người dùng';
 include __DIR__ . '/../../../includes/layouts/admin/header.php';
@@ -522,7 +555,6 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                                                 </li>
                                                             <?php endif; ?>
 
-
                                                                 <li class="dropdown-submenu">
                                                                     <a class="dropdown-item" href="#" onclick="openRoleModal(<?= $userItem['ID'] ?>, <?= (int)$userItem['VaiTroID'] ?>); return false;">
                                                                         <i class="fas fa-user-shield me-2"></i>Quản lý vai trò
@@ -572,8 +604,6 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                             </ul>
                         </nav>
                     </div>
-
-
 
                 <?php endif; ?>
             </div>

@@ -4,7 +4,14 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 
@@ -455,5 +462,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Auto-initialization will detect the 'password' field and initialize the modern Glass Morphism indicator
         console.log('🔐 Register: Using modern Password Strength Indicator from password-strength.js');
     </script>
+
 </body>
 </html>

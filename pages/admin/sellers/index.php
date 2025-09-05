@@ -4,11 +4,18 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
 use Tro365\Core\Database;
 use Tro365\Services\DataConsistencyService;
 use Tro365\Services\LocationService;
 use Tro365\Models\Activity;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $db = Database::getInstance();
@@ -188,23 +195,45 @@ $sql = "SELECT ds.*,
 $params['limit'] = $limit;
 $params['offset'] = $offset;
 
-$sellers = $db->select($sql, $params);
+// Cache sellers data
+$cacheKey = 'admin_sellers_' . md5($sql . serialize($params));
+$sellers = cache_get($cacheKey);
 
-// Get total count for pagination
-$countSql = "SELECT COUNT(*) as total
-             FROM DangKySeller ds
-             LEFT JOIN KhachHang kh ON ds.KhachHangID = kh.ID
-             $whereClause";
-$totalCount = $db->selectOne($countSql, array_diff_key($params, ['limit' => '', 'offset' => '']))['total'] ?? 0;
+if ($sellers === null) {
+    $sellers = $db->select($sql, $params);
+    // Cache for 2 minutes (sellers data changes frequently)
+    cache_set($cacheKey, $sellers, 120);
+}
+
+// Get total count for pagination - with caching
+$countCacheKey = 'admin_sellers_count_' . md5($countSql . serialize(array_diff_key($params, ['limit' => '', 'offset' => ''])));
+$totalCount = cache_get($countCacheKey);
+
+if ($totalCount === null) {
+    $countSql = "SELECT COUNT(*) as total
+                 FROM DangKySeller ds
+                 LEFT JOIN KhachHang kh ON ds.KhachHangID = kh.ID
+                 $whereClause";
+    $totalCount = $db->selectOne($countSql, array_diff_key($params, ['limit' => '', 'offset' => '']))['total'] ?? 0;
+    cache_set($countCacheKey, $totalCount, 120);
+}
+
 $totalPages = ceil($totalCount / $limit);
 
-// Get statistics
-$stats = [
-    'total' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller")['count'] ?? 0,
-    'pending' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller WHERE TrangThai = 0")['count'] ?? 0,
-    'approved' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller WHERE TrangThai = 1")['count'] ?? 0,
-    'rejected' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller WHERE TrangThai = 2")['count'] ?? 0
-];
+// Get statistics - with caching
+$statsCacheKey = 'admin_sellers_stats';
+$stats = cache_get($statsCacheKey);
+
+if ($stats === null) {
+    $stats = [
+        'total' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller")['count'] ?? 0,
+        'pending' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller WHERE TrangThai = 0")['count'] ?? 0,
+        'approved' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller WHERE TrangThai = 1")['count'] ?? 0,
+        'rejected' => $db->selectOne("SELECT COUNT(*) as count FROM DangKySeller WHERE TrangThai = 2")['count'] ?? 0
+    ];
+    // Cache stats for 5 minutes
+    cache_set($statsCacheKey, $stats, 300);
+}
 
 // Get flash message
 $flash = getFlashMessage();
@@ -891,7 +920,6 @@ function refreshSellers() {
 function bulkActions() {
     alert('Chức năng thao tác hàng loạt sẽ được phát triển trong phiên bản tiếp theo.');
 }
-
 
 </script>
 

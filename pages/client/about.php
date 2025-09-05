@@ -4,6 +4,14 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
+
 // Set page variables for header
 $pageTitle = 'Giới thiệu';
 $pageDescription = 'Tìm hiểu về Trọ 365 - nền tảng thuê trọ uy tín hàng đầu Việt Nam. Kết nối hàng triệu người tìm nhà với chủ nhà trên toàn quốc.';

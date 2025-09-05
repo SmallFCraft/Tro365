@@ -9,6 +9,9 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/constants.php';
 
+// Performance optimization includes
+require_once __DIR__ . '/../../includes/performance/optimization.php';
+
 // Load helper functions
 require_once __DIR__ . '/../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../includes/functions/auth.php';
@@ -17,6 +20,10 @@ require_once __DIR__ . '/../../includes/functions/validation.php';
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $post = new Post();
@@ -27,46 +34,100 @@ $auth->requireSeller();
 
 $currentUser = $auth->getCurrentUser();
 
-// Get statistics
-$stats = [
-    'total_posts' => $post->count(['user_id' => $currentUser['ID']]),
-    'pending_posts' => $post->count(['user_id' => $currentUser['ID'], 'status' => POST_STATUS_PENDING]),
-    'approved_posts' => $post->count(['user_id' => $currentUser['ID'], 'status' => POST_STATUS_APPROVED]),
-    'rejected_posts' => $post->count(['user_id' => $currentUser['ID'], 'status' => POST_STATUS_REJECTED])
-];
+// Get dashboard statistics with caching for better performance
+$statsCacheKey = "seller_dashboard_stats_" . $currentUser['ID'];
+$stats = cache_get($statsCacheKey);
 
-// Get recent posts
-try {
-    $recentPosts = $post->getAll(1, 5, [
-        'user_id' => $currentUser['ID'],
-        'order_by' => 'NgayTao',
-        'order_direction' => 'DESC'
-    ]);
-} catch (Exception $e) {
-    $recentPosts = [];
+if ($stats === null) {
+    try {
+        // Optimized single query to get all statistics at once
+        $statsResult = $db->selectOne("
+            SELECT
+                COUNT(*) as total_posts,
+                SUM(CASE WHEN TrangThai = :pending THEN 1 ELSE 0 END) as pending_posts,
+                SUM(CASE WHEN TrangThai = :approved THEN 1 ELSE 0 END) as approved_posts,
+                SUM(CASE WHEN TrangThai = :rejected THEN 1 ELSE 0 END) as rejected_posts,
+                SUM(CASE WHEN TrangThai = :hidden THEN 1 ELSE 0 END) as hidden_posts,
+                COALESCE(SUM(LuotXem), 0) as total_views
+            FROM BaiDang
+            WHERE NguoiDangID = :user_id
+        ", [
+            'user_id' => $currentUser['ID'],
+            'pending' => POST_STATUS_PENDING,
+            'approved' => POST_STATUS_APPROVED,
+            'rejected' => POST_STATUS_REJECTED,
+            'hidden' => POST_STATUS_HIDDEN
+        ]);
+
+        $stats = [
+            'total_posts' => (int)($statsResult['total_posts'] ?? 0),
+            'pending_posts' => (int)($statsResult['pending_posts'] ?? 0),
+            'approved_posts' => (int)($statsResult['approved_posts'] ?? 0),
+            'rejected_posts' => (int)($statsResult['rejected_posts'] ?? 0),
+            'hidden_posts' => (int)($statsResult['hidden_posts'] ?? 0),
+            'total_views' => (int)($statsResult['total_views'] ?? 0)
+        ];
+
+        // Cache for 5 minutes
+        cache_set($statsCacheKey, $stats, 300);
+
+    } catch (Exception $e) {
+        error_log("Error fetching seller dashboard stats: " . $e->getMessage());
+        $stats = [
+            'total_posts' => 0,
+            'pending_posts' => 0,
+            'approved_posts' => 0,
+            'rejected_posts' => 0,
+            'hidden_posts' => 0,
+            'total_views' => 0
+        ];
+    }
 }
 
-// Get total views
-$viewsResult = $db->selectOne(
-    "SELECT SUM(LuotXem) as total_views FROM BaiDang WHERE NguoiDangID = :user_id",
-    ['user_id' => $currentUser['ID']]
-);
-$stats['total_views'] = (int)($viewsResult['total_views'] ?? 0);
+// Get recent posts with caching
+$recentPostsCacheKey = "seller_dashboard_recent_posts_" . $currentUser['ID'];
+$recentPosts = cache_get($recentPostsCacheKey);
 
-// Get recent contacts (if table exists)
-$recentContacts = [];
-try {
-    $recentContacts = $db->select(
-        "SELECT lh.*, bd.TieuDe 
-         FROM LienHeThueTro lh 
-         LEFT JOIN BaiDang bd ON lh.BaiDangID = bd.ID 
-         WHERE lh.NguoiChoThueID = :user_id 
-         ORDER BY lh.NgayTao DESC 
-         LIMIT 5",
-        ['user_id' => $currentUser['ID']]
-    );
-} catch (Exception $e) {
-    // Table might not exist yet
+if ($recentPosts === null) {
+    try {
+        $recentPosts = $post->getAll(1, 5, [
+            'user_id' => $currentUser['ID'],
+            'order_by' => 'NgayTao',
+            'order_direction' => 'DESC'
+        ]);
+
+        // Cache for 2 minutes
+        cache_set($recentPostsCacheKey, $recentPosts, 120);
+
+    } catch (Exception $e) {
+        error_log("Error fetching recent posts: " . $e->getMessage());
+        $recentPosts = [];
+    }
+}
+
+// Get recent contacts with caching (if table exists)
+$recentContactsCacheKey = "seller_dashboard_recent_contacts_" . $currentUser['ID'];
+$recentContacts = cache_get($recentContactsCacheKey);
+
+if ($recentContacts === null) {
+    try {
+        $recentContacts = $db->select(
+            "SELECT lh.*, bd.TieuDe
+             FROM LienHeThueTro lh
+             LEFT JOIN BaiDang bd ON lh.BaiDangID = bd.ID
+             WHERE lh.NguoiChoThueID = :user_id
+             ORDER BY lh.NgayTao DESC
+             LIMIT 5",
+            ['user_id' => $currentUser['ID']]
+        );
+
+        // Cache for 2 minutes
+        cache_set($recentContactsCacheKey, $recentContacts, 120);
+
+    } catch (Exception $e) {
+        // Table might not exist yet
+        $recentContacts = [];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -340,5 +401,6 @@ try {
     // Set current user role for session refresh (already handled in footer)
     // window.currentUserRole = <?= $_SESSION['user_role'] ?? 'null' ?>;
     </script>
+
 </body>
 </html>

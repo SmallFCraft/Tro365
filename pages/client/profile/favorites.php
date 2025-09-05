@@ -4,8 +4,15 @@
  * Tro365 - Website thuê trọ
  */
 
+// Performance optimization includes
+require_once __DIR__ . '/../../../includes/performance/optimization.php';
+
 use Tro365\Core\Auth;
 use Tro365\Core\Database;
+use Tro365\Services\PerformanceOptimizationService;
+
+// Initialize performance service
+$perfService = PerformanceOptimizationService::getInstance();
 
 $auth = new Auth();
 $db = Database::getInstance();
@@ -47,26 +54,40 @@ $favoritesQuery = "
     LIMIT $limit OFFSET $offset
 ";
 
-$favorites = $db->select($favoritesQuery, [
-    $userId,
-    POST_STATUS_APPROVED
-]);
+// Cache favorites data
+$cacheKey = 'user_favorites_' . $userId . '_page_' . $page;
+$favorites = cache_get($cacheKey);
 
-// Get total count for pagination
-$totalQuery = "
-    SELECT COUNT(*) as total
-    FROM YeuThich yt
-    INNER JOIN BaiDang bd ON yt.BaiDangID = bd.ID
-    WHERE yt.KhachHangID = ?
-    AND bd.TrangThai = ?
-";
+if ($favorites === null) {
+    $favorites = $db->select($favoritesQuery, [
+        $userId,
+        POST_STATUS_APPROVED
+    ]);
+    // Cache for 3 minutes (favorites change moderately)
+    cache_set($cacheKey, $favorites, 180);
+}
 
-$totalResult = $db->selectOne($totalQuery, [
-    $userId,
-    POST_STATUS_APPROVED
-]);
+// Get total count for pagination - with caching
+$totalCacheKey = 'user_favorites_count_' . $userId;
+$total = cache_get($totalCacheKey);
 
-$total = $totalResult['total'] ?? 0;
+if ($total === null) {
+    $totalQuery = "
+        SELECT COUNT(*) as total
+        FROM YeuThich yt
+        INNER JOIN BaiDang bd ON yt.BaiDangID = bd.ID
+        WHERE yt.KhachHangID = ?
+        AND bd.TrangThai = ?
+    ";
+
+    $totalResult = $db->selectOne($totalQuery, [
+        $userId,
+        POST_STATUS_APPROVED
+    ]);
+
+    $total = $totalResult['total'] ?? 0;
+    cache_set($totalCacheKey, $total, 180);
+}
 $totalPages = ceil($total / $limit);
 
 // Custom CSS for favorites page
@@ -492,3 +513,4 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Favorites page initialized');
 });
 </script>
+
