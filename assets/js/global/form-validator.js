@@ -17,6 +17,20 @@ class FormValidator {
     this.rules = new Map();
     this.errors = new Map();
 
+    // Load validation rules from server before initializing
+    this.initAsync();
+  }
+
+  /**
+   * Async initialization to load validation rules
+   */
+  async initAsync() {
+    try {
+      await FormValidator.loadValidationRules();
+    } catch (error) {
+      console.warn("Failed to load validation rules:", error);
+    }
+
     this.init();
     if (this.form) {
       this.form.dataset.fvInitialized = "1";
@@ -58,17 +72,64 @@ class FormValidator {
     return this;
   }
 
+  // Static property to cache validation rules from server
+  static validationRules = null;
+
+  /**
+   * Load validation rules from server
+   */
+  static async loadValidationRules() {
+    if (FormValidator.validationRules) {
+      return FormValidator.validationRules;
+    }
+
+    try {
+      const response = await fetch("/api/validation");
+      if (!response.ok) {
+        throw new Error("Failed to load validation rules");
+      }
+      FormValidator.validationRules = await response.json();
+      return FormValidator.validationRules;
+    } catch (error) {
+      console.warn(
+        "Failed to load server validation rules, using fallback:",
+        error
+      );
+      // Fallback to hardcoded rules
+      FormValidator.validationRules = {
+        patterns: {
+          phone:
+            "/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/",
+          email: "/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/",
+          username: "/^[a-zA-Z0-9_]{3,30}$/",
+        },
+      };
+      return FormValidator.validationRules;
+    }
+  }
+
   /**
    * Common validation rules
    */
   static rules = {
     required: value => value.trim() !== "",
-    email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-    // VN phone format to sync with backend/front-end auth.js
-    phone: value =>
-      /^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/.test(
-        value.trim()
-      ),
+    email: value => {
+      // Use canonical email pattern from server or fallback
+      const pattern =
+        FormValidator.validationRules?.patterns?.email ||
+        "/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/";
+      const regex = new RegExp(pattern.replace(/^\/|\/$/g, ""));
+      return regex.test(value);
+    },
+    // VN phone format - synchronized with server-side validation
+    phone: value => {
+      // Use canonical phone pattern from server or fallback
+      const pattern =
+        FormValidator.validationRules?.patterns?.phone ||
+        "/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/";
+      const regex = new RegExp(pattern.replace(/^\/|\/$/g, ""));
+      return regex.test(value.trim());
+    },
     minLength: min => value => value.length >= min,
     maxLength: max => value => value.length <= max,
     numeric: value => /^\d+$/.test(value),

@@ -59,12 +59,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('Vui lòng nhập đầy đủ thông tin bắt buộc');
         }
         
-        if (!isValidEmail($contactData['email'])) {
+        // Use ValidationHelper for standardized validation
+        $emailValidation = \Tro365\Helpers\ValidationHelper::validateEmail($contactData['email']);
+        if (!$emailValidation['valid']) {
             throw new Exception('Email không hợp lệ');
         }
-        
-        if (!empty($contactData['phone']) && !isValidPhone($contactData['phone'])) {
-            throw new Exception('Số điện thoại không hợp lệ');
+
+        if (!empty($contactData['phone'])) {
+            $phoneValidation = \Tro365\Helpers\ValidationHelper::validatePhone($contactData['phone']);
+            if (!$phoneValidation['valid']) {
+                throw new Exception('Số điện thoại không hợp lệ');
+            }
         }
 
         // Send contact email using helper function

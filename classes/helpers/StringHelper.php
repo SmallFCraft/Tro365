@@ -82,22 +82,7 @@ class StringHelper
         return strip_tags($string, $allowedTags);
     }
     
-    /**
-     * Convert string to title case
-     */
-    public static function titleCase($string)
-    {
-        return mb_convert_case($string, MB_CASE_TITLE, 'UTF-8');
-    }
-    
-    /**
-     * Convert string to sentence case
-     */
-    public static function sentenceCase($string)
-    {
-        return mb_strtoupper(mb_substr($string, 0, 1, 'UTF-8'), 'UTF-8') . 
-               mb_strtolower(mb_substr($string, 1, null, 'UTF-8'), 'UTF-8');
-    }
+
     
     /**
      * Generate random string
@@ -205,33 +190,9 @@ class StringHelper
      */
     public static function formatCurrency($amount, $currency = 'VND')
     {
-        return number_format($amount, 0, ',', '.') . ' ' . $currency;
+        // Standardize currency format site-wide: 4.000.000 ₫ (always use symbol for VND)
+        return number_format((float)$amount, 0, ',', '.') . ' ₫';
     }
-    
-    /**
-     * Extract numbers from string
-     */
-    public static function extractNumbers($string)
-    {
-        preg_match_all('/\d+/', $string, $matches);
-        return $matches[0];
-    }
-    
-    /**
-     * Mask sensitive information
-     */
-    public static function mask($string, $start = 2, $end = 2, $mask = '*')
-    {
-        $length = mb_strlen($string, 'UTF-8');
-        
-        if ($length <= $start + $end) {
-            return str_repeat($mask, $length);
-        }
-        
-        $maskLength = $length - $start - $end;
-        
-        return mb_substr($string, 0, $start, 'UTF-8') . 
-               str_repeat($mask, $maskLength) . 
-               mb_substr($string, -$end, null, 'UTF-8');
-    }
+
+
 }

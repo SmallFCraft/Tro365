@@ -105,11 +105,17 @@ window.Tro365Common = {
     // Fetch from API if not cached
     return fetch("/api/locations/provinces")
       .then(response => response.json())
-      .then(data => {
-        // Cache the data
-        this._cache.provinces = data;
-        this._populateProvinceSelect(provinceSelect, data, selectedValue);
-        return data;
+      .then(response => {
+        // Extract data from standardized API response
+        if (response.success && response.data) {
+          const data = response.data;
+          // Cache the data
+          this._cache.provinces = data;
+          this._populateProvinceSelect(provinceSelect, data, selectedValue);
+          return data;
+        } else {
+          throw new Error(response.message || "Failed to load provinces");
+        }
       })
       .catch(error => {
         console.error("Error loading provinces:", error);
@@ -171,13 +177,21 @@ window.Tro365Common = {
       if (selectedProvinceId) {
         fetch(`/api/locations/districts?province_id=${selectedProvinceId}`)
           .then(response => response.json())
-          .then(data => {
-            data.forEach(district => {
-              const option = document.createElement("option");
-              option.value = district.ID;
-              option.textContent = district.TenQH;
-              districtSelect.appendChild(option);
-            });
+          .then(response => {
+            // Extract data from standardized API response
+            if (response.success && response.data) {
+              response.data.forEach(district => {
+                const option = document.createElement("option");
+                option.value = district.ID;
+                option.textContent = district.TenQH;
+                districtSelect.appendChild(option);
+              });
+            } else {
+              console.error(
+                "Error loading districts:",
+                response.message || "Failed to load districts"
+              );
+            }
           })
           .catch(error => console.error("Error loading districts:", error));
       }
@@ -193,13 +207,21 @@ window.Tro365Common = {
       if (selectedDistrictId) {
         fetch(`/api/locations/wards?district_id=${selectedDistrictId}`)
           .then(response => response.json())
-          .then(data => {
-            data.forEach(ward => {
-              const option = document.createElement("option");
-              option.value = ward.ID;
-              option.textContent = ward.TenXP;
-              wardSelect.appendChild(option);
-            });
+          .then(response => {
+            // Extract data from standardized API response
+            if (response.success && response.data) {
+              response.data.forEach(ward => {
+                const option = document.createElement("option");
+                option.value = ward.ID;
+                option.textContent = ward.TenXP;
+                wardSelect.appendChild(option);
+              });
+            } else {
+              console.error(
+                "Error loading wards:",
+                response.message || "Failed to load wards"
+              );
+            }
           })
           .catch(error => console.error("Error loading wards:", error));
       }

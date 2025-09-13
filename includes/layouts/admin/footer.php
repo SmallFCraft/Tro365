@@ -94,6 +94,10 @@ function showAlert(message, type = 'info') {
 }
 
 function formatCurrency(amount) {
+    // Delegate to TroCurrency if available, fallback to Intl
+    if (window.TroCurrency && typeof window.TroCurrency.formatCurrency === 'function') {
+        return window.TroCurrency.formatCurrency(amount);
+    }
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'
@@ -101,6 +105,10 @@ function formatCurrency(amount) {
 }
 
 function formatNumber(number) {
+    // Delegate to TroCurrency if available, fallback to Intl
+    if (window.TroCurrency && typeof window.TroCurrency.formatNumber === 'function') {
+        return window.TroCurrency.formatNumber(number);
+    }
     return new Intl.NumberFormat('vi-VN').format(number);
 }
 

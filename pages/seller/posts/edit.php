@@ -14,7 +14,6 @@ require_once __DIR__ . '/../../../includes/performance/optimization.php';
 
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
-require_once __DIR__ . '/../../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Post;

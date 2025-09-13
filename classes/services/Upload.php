@@ -435,50 +435,8 @@ class Upload
                 throw new Exception("Không thể di chuyển file upload từ " . $file['tmp_name'] . " đến " . $filePath);
             }
 
-            // Auto-optimize image using SimpleImageOptimizer service
-            try {
-                $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-                if (in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
-
-                    // Use PerformanceOptimizationService for automatic optimization (consolidated)
-                    require_once __DIR__ . '/PerformanceOptimizationService.php';
-
-                    $optimizer = \Tro365\Services\PerformanceOptimizationService::getInstance();
-
-                    $results = $optimizer->optimizeUploadedImage($filePath, $type);
-
-                    if ($results['success']) {
-                        writeLog("Image optimized: " . basename($filePath));
-                    } else {
-                        writeLog("Optimization failed: " . basename($filePath));
-
-                        // Fallback to old method
-                        if (function_exists('resizeImageUnified')) {
-                            resizeImageUnified($filePath, $filePath, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, 85, false);
-                        }
-                    }
-
-                    // Try Spatie optimizer as additional optimization (best-effort)
-                    try {
-                        if (class_exists('\\Spatie\\ImageOptimizer\\OptimizerChainFactory')) {
-                            \Spatie\ImageOptimizer\OptimizerChainFactory::create()->optimize($filePath);
-                        }
-                    } catch (\Throwable $e) {
-                        // Silent fail for Spatie optimizer
-                    }
-                }
-            } catch (Exception $ie) {
-                writeLog("Auto image optimization failed: " . $ie->getMessage());
-
-                // Fallback to basic resize if auto-optimization fails
-                try {
-                    if (function_exists('resizeImageUnified')) {
-                        resizeImageUnified($filePath, $filePath, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, 85, false);
-                    }
-                } catch (Exception $fallbackError) {
-                    writeLog("Fallback optimization also failed: " . $fallbackError->getMessage());
-                }
-            }
+            // CONSOLIDATED: Auto-optimize image using unified pipeline
+            $this->optimizeUploadedImage($filePath, $type);
 
             // Generate web path
             $webPath = '/' . str_replace('\\', '/', $filePath);
@@ -531,23 +489,8 @@ class Upload
                 throw new Exception("Không thể di chuyển file upload");
             }
 
-            // Optimize avatar image (if applicable)
-            try {
-                $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-                if (in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
-                    if (class_exists('\Tro365\Helpers\ImageHelper')) {
-                        \Tro365\Helpers\ImageHelper::optimizeForWeb($filePath, 85, 512, 512);
-                    } else {
-                        resizeImageUnified($filePath, $filePath, 512, 512, 85, false);
-                    }
-                    // Try Spatie optimizer (best-effort)
-                    try {
-                        if (class_exists('\\Spatie\\ImageOptimizer\\OptimizerChainFactory')) {
-                            \Spatie\ImageOptimizer\OptimizerChainFactory::create()->optimize($filePath);
-                        }
-                    } catch (\Throwable $e) { /* Silent fail */ }
-                }
-            } catch (Exception $ie) {}
+            // CONSOLIDATED: Auto-optimize avatar using unified pipeline
+            $this->optimizeUploadedImage($filePath, 'avatar');
 
             // Generate web path
             $webPath = '/' . str_replace('\\', '/', $filePath);
@@ -650,15 +593,87 @@ class Upload
                 writeLog("Thumbnail created successfully (Legacy) using ImageHelper");
                 return $result;
             } else {
-                // Fallback to resizeImageUnified function
-                $result = resizeImageUnified($imagePath, null, $width, $height, 85, false);
-                writeLog("Thumbnail created successfully (Legacy) using resizeImageUnified");
-                return $result;
+                // Enhanced fallback using PerformanceOptimizationService
+                require_once __DIR__ . '/PerformanceOptimizationService.php';
+                $optimizer = \Tro365\Services\PerformanceOptimizationService::getInstance();
+                $optimizer->optimizeOriginalImage($imagePath);
+                writeLog("Thumbnail created successfully using PerformanceOptimizationService");
+                return $imagePath;
             }
 
         } catch (Exception $e) {
             writeLog("Create thumbnail exception (Legacy): " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * CONSOLIDATED: Unified image optimization pipeline
+     * Primary: PerformanceOptimizationService, Fallback: ImageHelper, Best-effort: Spatie
+     */
+    private function optimizeUploadedImage($filePath, $type = 'general')
+    {
+        try {
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
+                return; // Not an image file
+            }
+
+            // PRIMARY: Use PerformanceOptimizationService for comprehensive optimization
+            $optimizer = \Tro365\Services\PerformanceOptimizationService::getInstance();
+            $results = $optimizer->optimizeUploadedImage($filePath, $type);
+
+            if ($results['success']) {
+                writeLog("Image optimized successfully: " . basename($filePath) .
+                    " (saved: " . $this->formatBytes($results['savings']) . ")");
+
+                // BEST-EFFORT: Additional Spatie optimization (only if primary succeeded)
+                $this->applySpatieOptimization($filePath);
+                return;
+            }
+
+            // FALLBACK: Use ImageHelper for basic optimization
+            writeLog("Primary optimization failed, using ImageHelper fallback: " . basename($filePath));
+            $this->applyImageHelperFallback($filePath);
+
+        } catch (Exception $e) {
+            writeLog("Image optimization pipeline failed: " . $e->getMessage());
+            // Continue without optimization - file is still uploaded
+        }
+    }
+
+    /**
+     * Apply Spatie optimization as best-effort additional step
+     */
+    private function applySpatieOptimization($filePath)
+    {
+        try {
+            if (class_exists('\\Spatie\\ImageOptimizer\\OptimizerChainFactory')) {
+                \Spatie\ImageOptimizer\OptimizerChainFactory::create()->optimize($filePath);
+                writeLog("Spatie optimization applied: " . basename($filePath));
+            }
+        } catch (\Throwable $e) {
+            // Silent fail for Spatie optimizer - not critical
+        }
+    }
+
+    /**
+     * Apply ImageHelper fallback optimization
+     */
+    private function applyImageHelperFallback($filePath)
+    {
+        try {
+            if (class_exists('\Tro365\Helpers\ImageHelper')) {
+                \Tro365\Helpers\ImageHelper::optimizeForWeb($filePath);
+                writeLog("ImageHelper fallback optimization completed: " . basename($filePath));
+            } else {
+                // Last resort: basic PerformanceOptimizationService resize
+                $optimizer = \Tro365\Services\PerformanceOptimizationService::getInstance();
+                $optimizer->optimizeOriginalImage($filePath);
+                writeLog("Basic resize fallback completed: " . basename($filePath));
+            }
+        } catch (Exception $e) {
+            writeLog("Fallback optimization also failed: " . $e->getMessage());
         }
     }
 

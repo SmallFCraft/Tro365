@@ -17,6 +17,50 @@ class ValidationHelper
     private static ?ValidatorInterface $validator = null;
     private static ?RakitValidator $rakitValidator = null;
     private static bool $useEnhancedValidation = true;
+    private static ?array $validationRules = null;
+
+    /**
+     * Load canonical validation rules from config
+     */
+    private static function getValidationRules(): array
+    {
+        if (self::$validationRules === null) {
+            $configPath = __DIR__ . '/../../config/validation.php';
+            if (file_exists($configPath)) {
+                self::$validationRules = require $configPath;
+            } else {
+                // Fallback to default rules if config file doesn't exist
+                self::$validationRules = [
+                    'patterns' => [
+                        'phone' => '/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/',
+                        'email' => '/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+                        'username' => '/^[a-zA-Z0-9_]{3,30}$/'
+                    ],
+                    'messages' => ['vi' => []],
+                    'constraints' => []
+                ];
+            }
+        }
+        return self::$validationRules;
+    }
+
+    /**
+     * Get canonical phone pattern
+     */
+    public static function getPhonePattern(): string
+    {
+        $rules = self::getValidationRules();
+        return $rules['patterns']['phone'] ?? '/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/';
+    }
+
+    /**
+     * Get canonical email pattern
+     */
+    public static function getEmailPattern(): string
+    {
+        $rules = self::getValidationRules();
+        return $rules['patterns']['email'] ?? '/^[^\s@]+@[^\s@]+\.[^\s@]+$/';
+    }
 
     /**
      * Get Symfony validator instance (legacy)
@@ -108,7 +152,7 @@ class ValidationHelper
             'phone' => [
                 new Assert\NotBlank(message: 'Số điện thoại không được để trống'),
                 new Assert\Regex(
-                    pattern: '/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/',
+                    pattern: self::getPhonePattern(),
                     message: 'Số điện thoại không hợp lệ'
                 )
             ]
@@ -446,7 +490,7 @@ class ValidationHelper
             'password' => 'required|min:8|max:100',
             'password_confirmation' => 'required|same:password',
             // Standardize to Vietnam phone format (consistent with client-side)
-            'phone' => 'regex:/^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/'
+            'phone' => 'regex:' . self::getPhonePattern()
         ];
 
         $messages = [

@@ -481,6 +481,13 @@ class PerformanceOptimizationService
             return;
         }
 
+        // Guard: avoid invalidation when we don't have enough signal yet
+        $totalOps = ($this->cacheMetrics['hits'] ?? 0) + ($this->cacheMetrics['misses'] ?? 0);
+        if ($reason === 'low_hit_ratio' && $totalOps < 20) {
+            // Too few cache operations to judge reliability — skip invalidation
+            return;
+        }
+
         try {
             // Log the invalidation
             error_log("Performance-triggered cache invalidation: $reason at " . date('Y-m-d H:i:s'));
@@ -774,7 +781,7 @@ class PerformanceOptimizationService
     /**
      * Optimize original image (resize + compress)
      */
-    private function optimizeOriginalImage($imagePath): void
+    public function optimizeOriginalImage($imagePath): void
     {
         $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
 

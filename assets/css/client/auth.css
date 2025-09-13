@@ -484,11 +484,16 @@ body.auth-page {
     display: flex;
     align-items: center;
     flex-wrap: wrap; /* Allow feedback to wrap to next line to avoid squished input */
+    --auth-input-height: 3.25rem; /* Fixed input row height for stable toggle centering */
+    min-height: var(--auth-input-height);
 }
 
 .auth-input-group-enhanced .form-glass {
     flex: 1;
     padding-right: 3rem; /* Space for toggle button */
+    height: var(--auth-input-height);
+    display: flex;
+    align-items: center;
 }
 
 /* Ensure validation feedback appears below the input, not inline */
@@ -499,13 +504,17 @@ body.auth-page {
     width: 100%;
     order: 3;
     margin-top: 0.5rem;
+
+.auth-input-group-enhanced .input-status-indicator {
+    top: calc(var(--auth-input-height, 3.25rem) / 2);
+}
 }
 
 /* Auth Input Toggle */
 .auth-input-toggle {
     position: absolute;
     right: 0.75rem;
-    top: 50%;
+    top: calc(var(--auth-input-height, 3.25rem) / 2);
     transform: translateY(-50%);
     background: none;
     border: none;
@@ -542,6 +551,20 @@ body.auth-page {
 [data-theme="dark"] .auth-input-toggle:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+}
+
+/* Hide native password reveal/clear buttons (Edge/IE) to avoid duplicate icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+/* Hide some WebKit autofill/reveal controls */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-contacts-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
 }
 
 /* Enhanced Buttons */
@@ -725,10 +748,9 @@ body.auth-page {
 }
 
 
-/* Username inline status indicator & feedback (Glass Morphism) */
 .input-status-indicator {
     position: absolute;
-    top: 50%;
+    top: 40%;
     right: 0.75rem;
     transform: translateY(-50%);
     display: flex;
@@ -899,35 +921,30 @@ body.auth-page {
     position: relative;
 }
 
-/* Adjust toggle position when validation icon is present */
 .input-group-password .form-control.is-valid ~ .password-toggle,
 .input-group-password .form-control.is-invalid ~ .password-toggle {
     right: 2.25rem;
 }
 
-/* Form Animation */
 .form-control {
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-image 0.15s ease-in-out;
     position: relative;
 }
 
-/* Ensure validation icons don't interfere with other elements */
 .form-control.is-valid,
 .form-control.is-invalid {
     background-attachment: scroll;
     background-clip: padding-box;
 }
 
-/* Fix for input groups */
 .input-group .form-control.is-valid,
 .input-group .form-control.is-invalid {
     z-index: 2;
 }
 
-/* Specific adjustments for password fields with toggle */
 .input-group-password .form-control.is-valid,
 .input-group-password .form-control.is-invalid {
-    padding-right: 3.5rem; /* Extra space for both icon and toggle */
+    padding-right: 3.5rem;
 }
 
 .input-group-password .form-control.is-valid {
@@ -1113,6 +1130,9 @@ body.auth-page {
         right: 0.5rem;
         font-size: 1.1rem;
     }
+
+    /* Mobile override: input height for stable toggle centering */
+    .auth-input-group-enhanced { --auth-input-height: 3rem; }
 
     .auth-input-group-enhanced .form-glass {
         padding-right: 3.5rem; /* More space for larger touch target */

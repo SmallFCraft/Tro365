@@ -14,7 +14,6 @@ require_once __DIR__ . '/../../../includes/performance/optimization.php';
 
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
-require_once __DIR__ . '/../../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
@@ -630,7 +629,7 @@ if ($categories === null) {
 
                                     <div class="col-md-6 mb-3">
                                         <label for="price" class="form-label fw-semibold">
-                                            Giá thuê (VNĐ/tháng) <span class="text-danger">*</span>
+                                            Giá thuê (₫/tháng) <span class="text-danger">*</span>
                                         </label>
                                         <input type="number"
                                                class="form-control form-control-glass"
@@ -640,7 +639,7 @@ if ($categories === null) {
                                                placeholder="0"
                                                min="0"
                                                max="999999999"
-                                               data-pattern-message="Giá thuê phải từ 0 đến 999,999,999 VNĐ"
+                                               data-pattern-message="Giá thuê phải từ 0 đến 999,999,999 ₫"
                                                required>
                                         <div id="priceFeedback" class="invalid-feedback"></div>
                                     </div>
@@ -1000,7 +999,7 @@ if ($categories === null) {
                 title: { min: 10, max: 255, message: 'Tiêu đề phải có từ 10-255 ký tự' },
                 content: { min: 50, message: 'Mô tả phải có ít nhất 50 ký tự' },
                 category: { message: 'Vui lòng chọn danh mục' },
-                price: { min: 0, max: 999999999, message: 'Giá thuê phải từ 0 đến 999,999,999 VNĐ' },
+                price: { min: 0, max: 999999999, message: 'Giá thuê phải từ 0 đến 999,999,999 ₫' },
                 area: { min: 1, max: 10000, message: 'Diện tích phải từ 1 đến 10,000 m²' },
                 rooms: { min: 1, max: <?= $maxRooms ?>, message: 'Số phòng phải từ 1 đến <?= $maxRooms ?> phòng' },
                 address: { min: 10, max: 500, message: 'Địa chỉ phải có từ 10-500 ký tự' }

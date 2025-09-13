@@ -430,7 +430,7 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                                 <i class="fas fa-crown"></i>
                             </div>
                             <h6>VIP</h6>
-                            <p class="text-muted small mb-2">150,000đ/tháng</p>
+                            <p class="text-muted small mb-2">150.000 ₫/tháng</p>
                             <ul class="list-unstyled small">
                                 <li>✓ Đăng tin không giới hạn</li>
                                 <li>✓ Ưu tiên hiển thị</li>

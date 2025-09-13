@@ -44,7 +44,8 @@ function sanitizeHtml($html)
  */
 function formatCurrency($amount)
 {
-    return number_format($amount, 0, ',', '.') . ' VNĐ';
+    // Standardize currency format site-wide: 4.000.000 ₫
+    return number_format((float)$amount, 0, ',', '.') . ' ₫';
 }
 
 /**
@@ -147,20 +148,25 @@ function generateRandomString($length = 10)
 }
 
 /**
- * Validate email
+ * Validate email - Redirected to ValidationHelper (standardized)
  */
 function isValidEmail($email)
 {
-    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+    $validation = \Tro365\Helpers\ValidationHelper::validateEmail($email);
+    return $validation['valid'];
 }
 
 /**
- * Validate phone number (Vietnamese format)
+ * Validate phone number - Redirected to ValidationHelper (standardized)
  */
 function isValidPhone($phone)
 {
-    $phone = preg_replace('/[^0-9]/', '', $phone);
-    return preg_match('/^(0[3|5|7|8|9])+([0-9]{8})$/', $phone);
+    if (empty($phone)) {
+        return false;
+    }
+
+    $pattern = \Tro365\Helpers\ValidationHelper::getPhonePattern();
+    return preg_match($pattern, $phone);
 }
 
 /**
@@ -273,84 +279,87 @@ function dd($data)
 
 /**
  * Enhanced Log function with categories and context
+ * Now unified with LoggerHelper for consistent logging
  */
 function writeLog($message, $level = 'info', $category = 'general', $context = [])
 {
-    // Always log errors and critical messages
-    if ($level !== 'error' && $level !== 'critical') {
-        // Check if debug mode is enabled
-        $debugEnabled = false;
+    try {
+        // Use LoggerHelper for unified logging
+        $logger = \Tro365\Helpers\LoggerHelper::getLogger($category);
 
-        // Try multiple ways to check debug mode
-        if (defined('APP_DEBUG') && APP_DEBUG) {
-            $debugEnabled = true;
-        } elseif (function_exists('isDebugModeEnabled') && isDebugModeEnabled()) {
-            $debugEnabled = true;
-        } elseif (isset($_ENV['APP_DEBUG']) && filter_var($_ENV['APP_DEBUG'], FILTER_VALIDATE_BOOLEAN)) {
-            $debugEnabled = true;
-        }
-
-        if (!$debugEnabled) {
-            return;
-        }
-    }
-
-    // Resolve log directory and file
-    $logDir = rtrim(LOG_PATH, '/\\');
-
-    // Simple log files without dates
-    if ($level === 'debug' || $category === 'debug') {
-        $logFile = $logDir . '/debug.log';
-    } else {
-        $logFile = $logDir . '/app.log';
-    }
-
-    // Unified logging with full timestamp
-    $timestamp = date('Y-m-d H:i:s');
-    $requestInfo = '';
-    if (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])) {
-        $requestInfo = ' | ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
-    }
-
-    $contextStr = '';
-    if (!empty($context)) {
-        $contextStr = ' | ' . json_encode($context, JSON_UNESCAPED_UNICODE);
-    }
-
-    // Always include timestamp and level
-    $logMessage = "[{$timestamp}] [{$level}]{$requestInfo} {$message}{$contextStr}" . PHP_EOL;
-
-    // Respect open_basedir restrictions on shared hosting
-    $openBaseDir = ini_get('open_basedir');
-    if (!empty($openBaseDir)) {
-        $allowedPaths = preg_split('/[:;]/', $openBaseDir);
-        $isAllowed = false;
-        foreach ($allowedPaths as $p) {
-            $p = rtrim($p, '/\\') . DIRECTORY_SEPARATOR;
-            if (strpos($logDir . DIRECTORY_SEPARATOR, $p) === 0) {
-                $isAllowed = true;
+        // Map level strings to Monolog levels
+        switch (strtolower($level)) {
+            case 'debug':
+                $logger->debug($message, $context);
                 break;
-            }
+            case 'info':
+                $logger->info($message, $context);
+                break;
+            case 'notice':
+                $logger->notice($message, $context);
+                break;
+            case 'warning':
+                $logger->warning($message, $context);
+                break;
+            case 'error':
+                $logger->error($message, $context);
+                break;
+            case 'critical':
+                $logger->critical($message, $context);
+                break;
+            case 'alert':
+                $logger->alert($message, $context);
+                break;
+            case 'emergency':
+                $logger->emergency($message, $context);
+                break;
+            default:
+                $logger->info($message, $context);
+                break;
         }
-        if (!$isAllowed) {
-            // Fallback to PHP error_log to avoid open_basedir warnings
-            error_log($logMessage);
-            return;
+
+        // Also write to error log for critical issues (maintain backward compatibility)
+        if ($level === 'error' || $level === 'critical') {
+            error_log("[{$category}] {$message}");
         }
-    }
 
-    // Ensure directory exists and is writable
-    if (!is_dir($logDir)) {
-        @mkdir($logDir, 0755, true);
-    }
-    if (!is_writable($logDir)) {
-        // Fallback to PHP error_log if not writable
-        error_log($logMessage);
-        return;
-    }
+    } catch (Exception $e) {
+        // Fallback to legacy logging if LoggerHelper fails
+        $logDir = rtrim(LOG_PATH, '/\\');
 
-    // Write log file (suppress warnings and lock file)
-    @file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+        // Simple log files without dates
+        if ($level === 'debug' || $category === 'debug') {
+            $logFile = $logDir . '/debug.log';
+        } else {
+            $logFile = $logDir . '/app.log';
+        }
+
+        // Unified logging with full timestamp
+        $timestamp = date('Y-m-d H:i:s');
+        $requestInfo = '';
+        if (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])) {
+            $requestInfo = ' | ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
+        }
+
+        $contextStr = '';
+        if (!empty($context)) {
+            $contextStr = ' | ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+        }
+
+        // Always include timestamp and level
+        $logMessage = "[{$timestamp}] [{$level}]{$requestInfo} {$message}{$contextStr}" . PHP_EOL;
+
+        // Ensure directory exists and is writable
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+
+        // Write log file (suppress warnings and lock file)
+        @file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+
+        // Log the fallback usage
+        error_log("writeLog fallback used due to LoggerHelper error: " . $e->getMessage());
+    }
 }
 
 /**
@@ -1628,19 +1637,25 @@ if (!function_exists('cache_get')) {
         $c = cache_client();
         if ($c) {
             try {
-                // PSR-16 get with default
+                // PSR-16 get with default + instrumentation
                 $has = $c->has($key);
-                if ($has) return $c->get($key);
+                if ($has) {
+                    $val = $c->get($key);
+                    try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheHit((string)$key); } catch (\Throwable $e2) {}
+                    return $val;
+                }
+                try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheMiss((string)$key); } catch (\Throwable $e3) {}
                 return $default;
             } catch (\Throwable $e) { /* fallback */ }
         }
-        // Fallback minimal file cache
+        // Fallback minimal file cache + instrumentation
         $file = __DIR__ . '/../../var/cache/' . sha1((string)$key) . '.cache.json';
-        if (!is_file($file)) return $default;
+        if (!is_file($file)) { try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheMiss((string)$key); } catch (\Throwable $e4) {} return $default; }
         $ttl = $ttlSeconds ?? (defined('CACHE_LIFETIME') ? CACHE_LIFETIME : 3600);
         $meta = @json_decode(@file_get_contents($file), true);
-        if (!is_array($meta) || !array_key_exists('value', $meta) || !isset($meta['time'])) return $default;
-        if ((time() - (int)$meta['time']) > (int)$ttl) { @unlink($file); return $default; }
+        if (!is_array($meta) || !array_key_exists('value', $meta) || !isset($meta['time'])) { try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheMiss((string)$key); } catch (\Throwable $e5) {} return $default; }
+        if ((time() - (int)$meta['time']) > (int)$ttl) { @unlink($file); try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheMiss((string)$key); } catch (\Throwable $e6) {} return $default; }
+        try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheHit((string)$key); } catch (\Throwable $e7) {}
         return $meta['value'];
     }
 }
@@ -1651,15 +1666,20 @@ if (!function_exists('cache_set')) {
         if (!cache_is_enabled()) return false;
         $c = cache_client();
         if ($c) {
-            try { return $c->set($key, $value, $ttlSeconds ?? (defined('CACHE_LIFETIME') ? CACHE_LIFETIME : 3600)); }
-            catch (\Throwable $e) { /* fallback */ }
+            try {
+                $ok = $c->set($key, $value, $ttlSeconds ?? (defined('CACHE_LIFETIME') ? CACHE_LIFETIME : 3600));
+                if ($ok) { try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheSet((string)$key); } catch (\Throwable $e2) {} }
+                return $ok;
+            } catch (\Throwable $e) { /* fallback */ }
         }
         // Fallback minimal file cache
         $dir = __DIR__ . '/../../var/cache';
         if (!is_dir($dir)) @mkdir($dir, 0775, true);
         $file = $dir . '/' . sha1((string)$key) . '.cache.json';
         $payload = json_encode(['time' => time(), 'value' => $value]);
-        return (bool)@file_put_contents($file, $payload, LOCK_EX);
+        $ok = (bool)@file_put_contents($file, $payload, LOCK_EX);
+        if ($ok) { try { \Tro365\Services\PerformanceOptimizationService::getInstance()->trackCacheSet((string)$key); } catch (\Throwable $e3) {} }
+        return $ok;
     }
 }
 

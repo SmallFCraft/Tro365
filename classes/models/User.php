@@ -41,7 +41,7 @@ class User extends BaseModel
             'password' => 'required|min:8|max:100',
             'full_name' => 'required|min:2|max:100',
             // Standardize to Vietnam phone format (consistent with client-side)
-            'phone' => 'nullable|regex:/^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/',
+            'phone' => 'nullable|regex:' . \Tro365\Helpers\ValidationHelper::getPhonePattern(),
             'cccd' => 'nullable|regex:/^[0-9]{9,12}$/',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:Nam,Nữ,Khác'

@@ -93,24 +93,13 @@ window.Tro365Settings = {
   },
 
   /**
-   * Initialize form validation
+   * Initialize form validation - Using FormValidator (standardized)
    */
   initFormValidation: function () {
-    // Bootstrap validation
-    const forms = document.querySelectorAll(".needs-validation");
-    Array.prototype.slice.call(forms).forEach(function (form) {
-      form.addEventListener(
-        "submit",
-        function (event) {
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          form.classList.add("was-validated");
-        },
-        false
-      );
-    });
+    // FormValidator handles all validation automatically
+    // No need for manual Bootstrap validation setup
+    // Forms with .needs-validation or [data-validate] are auto-initialized by FormValidator
+    console.log("Form validation delegated to FormValidator");
   },
 
   /**

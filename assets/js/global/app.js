@@ -398,18 +398,12 @@ class ModernApp {
       .join("");
   }
 
-  /* initializeInfiniteScroll() method removed (unused) */
-
-  /* initializeImageGalleries() and openLightbox() methods removed (handled by dedicated ImageGallery class) */
-
   /**
    * Setup global events
    */
   setupGlobalEvents() {
     // AJAX navigation removed (unused - no data-ajax links in codebase)
   }
-
-  /* handleAjaxNavigation() method removed (unused) */
 
   /**
    * Show success notification - UNIFIED with TroToast

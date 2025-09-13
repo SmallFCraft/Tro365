@@ -121,13 +121,14 @@ class AssetManager
         $out[] = '<script src="' . $this->url('/assets/js/global/dom-utils.js') . $this->ver() . '" defer></script>';
         $out[] = '<script src="' . $this->url('/assets/js/global/form-validator.js') . $this->ver() . '" defer></script>';
         $out[] = '<script src="' . $this->url('/assets/js/global/toast.js') . $this->ver() . '" defer></script>';
+        $out[] = '<script src="' . $this->url('/assets/js/global/currency.js') . $this->ver() . '" defer></script>';
         $out[] = '<script src="' . $this->url('/assets/js/global/app.js') . $this->ver() . '" defer></script>';
 
         // Local vendor libs - async for non-critical functionality
         $out[] = '<!-- Modern JavaScript Libraries (Local) -->';
-        $out[] = '<script src="' . $this->url('/assets/js/vendor/alpine.min.js') . '" defer></script>';
-        // Replaced axios with modern fetch-based HTTP client to eliminate legacy JavaScript
-        $out[] = '<script src="' . $this->url('/assets/js/vendor/dayjs.min.js') . '" async></script>';
+
+        // Removed unused Alpine.js and Day.js from default bundle to reduce payload
+        // If needed on specific pages, enqueue via AssetManager->enqueueJS([...])
 
         // Initialize modern features with deferred execution
         $out[] = '<script>' . $this->jsInitOptimized() . '</script>';

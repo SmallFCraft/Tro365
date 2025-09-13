@@ -474,7 +474,7 @@ async function removeFavorite(postId) {
     }
     
     try {
-        const response = await fetch('/api/toggle-favorite', {
+        const response = await fetch('/api/favorites/toggle', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

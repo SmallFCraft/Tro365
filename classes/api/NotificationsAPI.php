@@ -20,36 +20,52 @@ class NotificationsAPI extends BaseAPI
             $method = $_SERVER['REQUEST_METHOD'];
             $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
             $pathParts = explode('/', trim($path, '/'));
-            
+
+            // Extract notification ID from URL
+            // URL patterns: /api/notifications or /api/notifications/123
+            $notificationId = null;
+
+            // Find 'notifications' in path and get next part as ID
+            $notificationsIndex = array_search('notifications', $pathParts);
+            if ($notificationsIndex !== false && isset($pathParts[$notificationsIndex + 1])) {
+                $notificationId = $pathParts[$notificationsIndex + 1];
+                // Remove .php extension if present
+                $notificationId = str_replace('.php', '', $notificationId);
+                // Validate it's numeric
+                if (!is_numeric($notificationId)) {
+                    $notificationId = null;
+                }
+            }
+
             switch ($method) {
                 case 'GET':
                     $this->handleGetNotifications();
                     break;
-                    
+
                 case 'POST':
                     $this->handleCreateNotification();
                     break;
-                    
+
                 case 'PUT':
-                    if (isset($pathParts[3])) {
-                        $this->handleUpdateNotification($pathParts[3]);
+                    if ($notificationId) {
+                        $this->handleUpdateNotification($notificationId);
                     } else {
                         $this->handleMarkAllAsRead();
                     }
                     break;
-                    
+
                 case 'DELETE':
-                    if (isset($pathParts[3])) {
-                        $this->handleDeleteNotification($pathParts[3]);
+                    if ($notificationId) {
+                        $this->handleDeleteNotification($notificationId);
                     } else {
                         $this->sendError('Notification ID required for deletion', 400);
                     }
                     break;
-                    
+
                 default:
                     $this->sendError('Method not allowed', 405);
             }
-            
+
         } catch (Exception $e) {
             $this->handleDatabaseError($e, 'notifications API operation');
         }

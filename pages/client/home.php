@@ -306,7 +306,7 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                         </h3>
 
                         <div class="price-section">
-                            <span class="price"><?= number_format($post['Gia']) ?> VNĐ/tháng</span>
+                            <span class="price"><?= formatCurrency($post['Gia']) ?>/tháng</span>
                             <?php if ($post['DienTich']): ?>
                                 <span class="area">
                                     <i class="fas fa-expand-arrows-alt me-1"></i>
@@ -438,30 +438,37 @@ $provinceImageMap = [
     'Khánh Hòa' => 'khanh_hoa'
 ];
 
-// Get post count by province
-$postCountByProvince = [];
-try {
-    $sql = "SELECT TinhThanhID, COUNT(*) as SoLuong
-            FROM BaiDang
-            WHERE TrangThai = 1 AND TinhThanhID IS NOT NULL
-            GROUP BY TinhThanhID
-            ORDER BY SoLuong DESC
-            LIMIT 12";
-    $postCounts = $db->select($sql);
-
-    foreach ($postCounts as $count) {
-        $provinceName = $locationService->getProvinceName($count['TinhThanhID']);
-        if ($provinceName) {
-            $postCountByProvince[] = [
-                'code' => $count['TinhThanhID'],
-                'name' => $provinceName,
-                'count' => $count['SoLuong']
-            ];
-        }
-    }
-} catch (Exception $e) {
-    writeLog("Error getting post count by province: " . $e->getMessage());
+// Get post count by province with caching (10 minutes)
+$postCountByProvince = cache_get('homepage_province_counts', null, 600);
+if ($postCountByProvince === null) {
     $postCountByProvince = [];
+    try {
+        $db = Database::getInstance();
+        $sql = "SELECT TinhThanhID, COUNT(*) as SoLuong
+                FROM BaiDang
+                WHERE TrangThai = 1 AND TinhThanhID IS NOT NULL
+                GROUP BY TinhThanhID
+                ORDER BY SoLuong DESC
+                LIMIT 12";
+        $postCounts = $db->select($sql);
+
+        foreach ($postCounts as $count) {
+            $provinceName = $locationService->getProvinceName($count['TinhThanhID']);
+            if ($provinceName) {
+                $postCountByProvince[] = [
+                    'code' => $count['TinhThanhID'],
+                    'name' => $provinceName,
+                    'count' => $count['SoLuong']
+                ];
+            }
+        }
+
+        // Cache the prepared list
+        cache_set('homepage_province_counts', $postCountByProvince, 600);
+    } catch (Exception $e) {
+        writeLog("Error getting post count by province: " . $e->getMessage());
+        $postCountByProvince = [];
+    }
 }
 ?>
 
@@ -579,7 +586,6 @@ if ($showCTA):
 <?php include __DIR__ . '/../../includes/layouts/client/footer.php'; ?>
 
 <!-- Additional JavaScript for Home Page -->
-<script src="/assets/js/global/common.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Load provinces for home search

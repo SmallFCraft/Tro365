@@ -18,7 +18,7 @@
     --seller-danger: #ef4444;
     --seller-info: #3b82f6;
     
-    /* Enhanced Glass Variables for Seller */
+    /* Glass Variables for Seller */
     --seller-glass-bg: rgba(255, 255, 255, 0.15);
     --seller-glass-bg-strong: rgba(255, 255, 255, 0.25);
     --seller-glass-border: rgba(255, 255, 255, 0.2);
@@ -65,7 +65,7 @@
     margin: var(--seller-spacing-md) 0;
 }
 
-/* Enhanced border visibility for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-glass-container,
 :root:not([data-theme="dark"]) .seller-glass-container {
     border: 2px solid rgba(0, 0, 0, 0.12);
@@ -99,7 +99,7 @@
     overflow: hidden;
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-stat-card,
 :root:not([data-theme="dark"]) .seller-stat-card {
     border: 2px solid rgba(0, 0, 0, 0.12);
@@ -165,7 +165,7 @@
     display: block;
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-action-card,
 :root:not([data-theme="dark"]) .seller-action-card {
     border: 2px solid rgba(0, 0, 0, 0.12);

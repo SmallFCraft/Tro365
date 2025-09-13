@@ -163,9 +163,6 @@ class Tro365PerformanceObserver {
 // Global instance (renamed to avoid conflict with native API)
 window.Tro365PerformanceObserver = new Tro365PerformanceObserver();
 
-// Backward compatibility alias (deprecated)
-window.PerformanceObserver = window.Tro365PerformanceObserver;
-
 // Auto-cleanup on page unload
 window.addEventListener("beforeunload", () => {
   window.Tro365PerformanceObserver.cleanup();

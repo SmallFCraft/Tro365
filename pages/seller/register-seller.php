@@ -60,16 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'TrangThai' => 1 // Active account
             ];
 
-            // Server-side validation using ModernValidator (Respect/Validation)
-            $validation = \Tro365\Helpers\ModernValidator::quick($userData + [
-                'confirm_password' => $_POST['confirm_password'] ?? ''
+            // Server-side validation using ValidationHelper (standardized)
+            $validation = \Tro365\Helpers\ValidationHelper::enhancedValidate($userData + [
+                'password_confirmation' => $_POST['confirm_password'] ?? ''
             ], [
-                'HoTen' => ['required' => true, 'length' => [3, 100]],
-                'TenDN' => ['required' => true, 'length' => [3, 50]],
-                'Email' => ['required' => true, 'email' => true],
-                'MatKhau' => ['required' => true, 'length' => [6, 255]],
-                'confirm_password' => ['confirm' => 'MatKhau'],
-                'SDT' => ['custom' => [function($v){ return empty($v) || preg_match('/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/', $v); }, 'Số điện thoại không hợp lệ']]
+                'HoTen' => 'required|min:3|max:100',
+                'TenDN' => 'required|min:3|max:50|regex:/^[a-zA-Z0-9_]+$/',
+                'Email' => 'required|email',
+                'MatKhau' => 'required|min:8|max:255',
+                'password_confirmation' => 'required|same:MatKhau',
+                'SDT' => 'regex:' . \Tro365\Helpers\ValidationHelper::getPhonePattern()
             ]);
 
             if (!$validation['valid']) {
@@ -811,14 +811,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            // Use canonical username pattern from FormValidator
+            const isValidPattern = FormValidator.rules.username ? FormValidator.rules.username(username) : /^[a-zA-Z0-9_]+$/.test(username);
+            if (!isValidPattern) {
                 showFeedback(feedback, 'Chỉ được sử dụng chữ, số và dấu gạch dưới', false);
                 return;
             }
 
             // Real API check for username availability
             showFeedback(feedback, 'Đang kiểm tra...', true, 'info');
-            fetch('/api/check-availability', {
+            fetch('/api/check-availability.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -843,15 +845,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const feedback = document.getElementById('emailFeedback');
             if (!feedback) return;
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showFeedback(feedback, 'Email không hợp lệ', false);
-                return;
-            }
+            // Basic email validation handled by FormValidator
+            // Only check availability here
 
             // Real API check for email availability
             showFeedback(feedback, 'Đang kiểm tra...', true, 'info');
-            fetch('/api/check-availability', {
+            fetch('/api/check-availability.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -876,12 +875,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const feedback = document.getElementById('phoneFeedback');
             if (!feedback || !phone) return;
 
-            const phoneRegex = /^0[3|5|7|8|9][0-9]{8}$/;
-            if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-                showFeedback(feedback, 'Số điện thoại không hợp lệ', false);
-                return;
-            }
-
+            // Phone validation handled by FormValidator (standardized)
             showFeedback(feedback, 'Số điện thoại hợp lệ', true);
         }
 

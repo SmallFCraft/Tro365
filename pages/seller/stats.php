@@ -10,7 +10,6 @@ require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../includes/functions/auth.php';
-require_once __DIR__ . '/../../includes/functions/validation.php';
 
 // Performance optimization includes
 require_once __DIR__ . '/../../includes/performance/optimization.php';

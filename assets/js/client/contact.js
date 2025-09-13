@@ -48,111 +48,20 @@ class ContactPageManager {
   }
 
   /**
-   * Initialize Form Validation and Enhancement
+   * Initialize Form Enhancement - Validation handled by FormValidator
    */
   initFormValidation() {
     const form = document.getElementById("contactForm");
     if (!form) return;
 
-    const inputs = form.querySelectorAll("input, textarea");
-    const submitButton = form.querySelector(".contact-form-submit");
-
-    // Add real-time validation
-    inputs.forEach(input => {
-      input.addEventListener("blur", () => this.validateField(input));
-      input.addEventListener("input", () => this.clearFieldError(input));
-    });
-
-    // Enhanced form submission
-    form.addEventListener("submit", e => {
-      if (!this.validateForm(form)) {
-        e.preventDefault();
-        return false;
-      }
-
-      this.showSubmissionState(submitButton, true);
-    });
+    // Ensure form has proper validation class for FormValidator
+    form.classList.add("needs-validation");
 
     // Add floating label effect
     this.initFloatingLabels();
   }
 
-  /**
-   * Validate individual form field
-   */
-  validateField(field) {
-    const value = field.value.trim();
-    const fieldName = field.name;
-    let isValid = true;
-    let errorMessage = "";
-
-    // Remove existing error
-    this.clearFieldError(field);
-
-    // Validation rules
-    switch (fieldName) {
-      case "name":
-        if (!value) {
-          isValid = false;
-          errorMessage = "Vui lòng nhập họ tên";
-        } else if (value.length < 2) {
-          isValid = false;
-          errorMessage = "Họ tên phải có ít nhất 2 ký tự";
-        }
-        break;
-
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!value) {
-          isValid = false;
-          errorMessage = "Vui lòng nhập email";
-        } else if (!emailRegex.test(value)) {
-          isValid = false;
-          errorMessage = "Email không hợp lệ";
-        }
-        break;
-
-      case "phone":
-        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-        if (value && !phoneRegex.test(value)) {
-          isValid = false;
-          errorMessage = "Số điện thoại không hợp lệ";
-        }
-        break;
-
-      case "message":
-        if (!value) {
-          isValid = false;
-          errorMessage = "Vui lòng nhập nội dung tin nhắn";
-        } else if (value.length < 10) {
-          isValid = false;
-          errorMessage = "Tin nhắn phải có ít nhất 10 ký tự";
-        }
-        break;
-    }
-
-    if (!isValid) {
-      this.showFieldError(field, errorMessage);
-    }
-
-    return isValid;
-  }
-
-  /**
-   * Validate entire form
-   */
-  validateForm(form) {
-    const requiredFields = form.querySelectorAll("[required]");
-    let isValid = true;
-
-    requiredFields.forEach(field => {
-      if (!this.validateField(field)) {
-        isValid = false;
-      }
-    });
-
-    return isValid;
-  }
+  // Field validation handled by FormValidator (standardized)
 
   /**
    * Show field error

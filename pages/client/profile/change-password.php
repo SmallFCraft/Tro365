@@ -16,7 +16,6 @@ require_once __DIR__ . '/../../../includes/performance/optimization.php';
 // Load helper functions
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
-require_once __DIR__ . '/../../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\User;

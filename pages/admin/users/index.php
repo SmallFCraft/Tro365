@@ -1607,7 +1607,7 @@ window.userAction = function(action, userId, confirmMessage) {
     button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
     button.disabled = true;
 
-    fetch('/pages/admin/ajax/user-actions.php', {
+    fetch('/admin/ajax/user-actions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

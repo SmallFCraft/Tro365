@@ -37,8 +37,13 @@ class Auth
             writeLog("Auth: Using legacy authentication - " . $e->getMessage());
             $this->useEnhancedAuth = false;
         }
+        // Auto-login from remember cookie if session not established yet
+        if (!$this->isLoggedIn()) {
+            $this->autoLoginFromCookie();
+        }
+
     }
-    
+
     /**
      * Login user
      */
@@ -73,7 +78,7 @@ class Auth
             }
 
             return $userData;
-            
+
         } catch (Exception $e) {
             // Log failed login attempt - try to find user ID first
             try {
@@ -91,7 +96,7 @@ class Auth
             throw $e;
         }
     }
-    
+
     /**
      * Logout user
      */
@@ -124,7 +129,7 @@ class Auth
         // Regenerate CSRF token
         $_SESSION[CSRF_TOKEN_NAME] = bin2hex(random_bytes(32));
     }
-    
+
     /**
      * Register new user
      */
@@ -173,7 +178,7 @@ class Auth
             throw new Exception("Lỗi đăng ký: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Check if user is logged in
      */
@@ -181,7 +186,7 @@ class Auth
     {
         return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     }
-    
+
     /**
      * Get current user data with auto-refresh
      */
@@ -236,7 +241,7 @@ class Auth
             writeLog("Session refresh error: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Check if user has role
      */
@@ -245,10 +250,10 @@ class Auth
         if (!$this->isLoggedIn()) {
             return false;
         }
-        
+
         return $_SESSION['user_role'] >= $role;
     }
-    
+
     /**
      * Check if user is admin
      */
@@ -256,7 +261,7 @@ class Auth
     {
         return $this->hasRole(ROLE_ADMIN);
     }
-    
+
     /**
      * Check if user is seller
      */
@@ -264,7 +269,7 @@ class Auth
     {
         return $this->hasRole(ROLE_SELLER);
     }
-    
+
     /**
      * Require login
      */
@@ -300,21 +305,21 @@ class Auth
             throw new Exception("Lỗi đăng nhập: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Require role
      */
     public function requireRole($role, $redirectUrl = null)
     {
         $this->requireLogin();
-        
+
         if (!$this->hasRole($role)) {
             $redirectUrl = $redirectUrl ?: app_url();
             setFlashMessage(MSG_ERROR, 'Bạn không có quyền truy cập trang này');
             redirect($redirectUrl);
         }
     }
-    
+
     /**
      * Require admin
      */
@@ -322,7 +327,7 @@ class Auth
     {
         $this->requireRole(ROLE_ADMIN, $redirectUrl);
     }
-    
+
     /**
      * Require seller
      */
@@ -339,7 +344,7 @@ class Auth
         $this->requireRole(ROLE_MODERATOR, $redirectUrl);
     }
 
-    
+
     /**
      * Generate password reset token
      */
@@ -350,24 +355,24 @@ class Auth
             if (!$userData) {
                 throw new Exception("Email không tồn tại trong hệ thống");
             }
-            
+
             $token = bin2hex(random_bytes(32));
             $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            
+
             $db = Database::getInstance();
             $db->insert('TokenResetPassword', [
                 'KhachHangID' => $userData['ID'],
                 'Token' => $token,
                 'NgayHetHan' => $expiry
             ]);
-            
+
             return $token;
-            
+
         } catch (Exception $e) {
             throw new Exception("Lỗi tạo token reset: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Reset password with token
      */
@@ -375,43 +380,43 @@ class Auth
     {
         try {
             $db = Database::getInstance();
-            
-            $sql = "SELECT * FROM TokenResetPassword 
-                    WHERE Token = :token 
-                    AND NgayHetHan > NOW() 
+
+            $sql = "SELECT * FROM TokenResetPassword
+                    WHERE Token = :token
+                    AND NgayHetHan > NOW()
                     AND DaSuDung = 0";
-            
+
             $tokenData = $db->selectOne($sql, ['token' => $token]);
-            
+
             if (!$tokenData) {
                 throw new Exception("Token không hợp lệ hoặc đã hết hạn");
             }
-            
+
             // Update password
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
             $this->user->update($tokenData['KhachHangID'], ['MatKhau' => $hashedPassword]);
-            
+
             // Mark token as used
-            $db->update('TokenResetPassword', 
-                ['DaSuDung' => 1], 
-                'ID = :id', 
+            $db->update('TokenResetPassword',
+                ['DaSuDung' => 1],
+                'ID = :id',
                 ['id' => $tokenData['ID']]
             );
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             throw new Exception("Lỗi reset mật khẩu: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Validate registration data
      */
     private function validateRegistrationData($data)
     {
         $errors = [];
-        
+
         // Required fields
         $required = ['TenDN', 'Email', 'MatKhau', 'HoTen'];
         foreach ($required as $field) {
@@ -419,7 +424,7 @@ class Auth
                 $errors[] = "Trường {$field} là bắt buộc";
             }
         }
-        
+
         // Username validation
         if (!empty($data['TenDN'])) {
             if (strlen($data['TenDN']) < MIN_USERNAME_LENGTH) {
@@ -432,12 +437,12 @@ class Auth
                 $errors[] = "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới";
             }
         }
-        
+
         // Email validation
         if (!empty($data['Email']) && !isValidEmail($data['Email'])) {
             $errors[] = "Email không hợp lệ";
         }
-        
+
         // Password validation
         if (!empty($data['MatKhau'])) {
             if (strlen($data['MatKhau']) < MIN_PASSWORD_LENGTH) {
@@ -447,17 +452,17 @@ class Auth
                 $errors[] = "Mật khẩu không được quá " . MAX_PASSWORD_LENGTH . " ký tự";
             }
         }
-        
+
         // Phone validation
         if (!empty($data['SDT']) && !isValidPhone($data['SDT'])) {
             $errors[] = "Số điện thoại không hợp lệ";
         }
-        
+
         if (!empty($errors)) {
             throw new Exception(implode(', ', $errors));
         }
     }
-    
+
     /**
      * Set session data
      */
@@ -492,21 +497,107 @@ class Auth
         $this->refreshSessionData();
         return true;
     }
-    
+
     /**
      * Set remember me cookie
      */
     private function setRememberMeCookie($userId)
     {
-        $token = bin2hex(random_bytes(32));
         $expiry = time() + (30 * 24 * 60 * 60); // 30 days
-        
-        setcookie('remember_token', $token, $expiry, '/');
-        
-        // Store token in database (you might want to create a table for this)
-        // For now, we'll skip this implementation
+        $token = $this->generateRememberToken((int)$userId, $expiry);
+
+        $cookieOptions = [
+            'expires'  => $expiry,
+            'path'     => '/',
+            'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ];
+
+        $result = setcookie('remember_token', $token, $cookieOptions);
+
+        if (!$result || headers_sent()) {
+            writeLog("Auth: Failed to set remember me cookie", 'warning', 'auth', [
+                'user_id' => $userId,
+                'headers_sent' => headers_sent()
+            ]);
+        }
     }
-    
+
+    /**
+     * Generate signed remember token (userId|expiry|nonce|hmac)
+     */
+    private function generateRememberToken(int $userId, int $expiry): string
+    {
+        $nonce = bin2hex(random_bytes(16));
+        $payload = $userId . '|' . $expiry . '|' . $nonce;
+        $sig = hash_hmac('sha256', $payload, APP_KEY);
+        return base64_encode($payload . '|' . $sig);
+    }
+
+    /**
+     * Validate remember token, return userId if valid, otherwise null
+     */
+    private function validateRememberToken(string $token): ?int
+    {
+        $decoded = base64_decode($token, true);
+        if ($decoded === false) {
+            return null;
+        }
+
+        $parts = explode('|', $decoded);
+        if (count($parts) !== 4) {
+            return null;
+        }
+
+        [$userId, $expiry, $nonce, $sig] = $parts;
+        if (!ctype_digit($userId) || !ctype_digit($expiry)) {
+            return null;
+        }
+
+        if ((int)$expiry < time()) {
+            return null;
+        }
+
+        $payload = $userId . '|' . $expiry . '|' . $nonce;
+        $expected = hash_hmac('sha256', $payload, APP_KEY);
+        if (!hash_equals($expected, $sig)) {
+            return null;
+        }
+
+        return (int)$userId;
+    }
+
+    /**
+     * Attempt auto-login using remember cookie (sliding expiration)
+     */
+    private function autoLoginFromCookie(): void
+    {
+        if ($this->isLoggedIn()) {
+            return;
+        }
+        if (empty($_COOKIE['remember_token'])) {
+            return;
+        }
+
+        $userId = $this->validateRememberToken($_COOKIE['remember_token']);
+        if (!$userId) {
+            return;
+        }
+
+        $userData = $this->user->getById($userId);
+        if (!$userData) {
+            return;
+        }
+
+        $this->setSessionData($userData);
+
+        // Sliding expiration: refresh cookie
+        $this->setRememberMeCookie($userId);
+
+        writeLog("Auth: Auto-login successful from remember me cookie", 'info', 'auth', ['user_id' => $userId]);
+    }
+
     /**
      * Log login attempt
      */
@@ -528,25 +619,13 @@ class Auth
 
     /**
      * Get database connection for delight-im/auth
+     * UNIFIED: Now uses Database::getInstance() for single source of truth
      */
     private function getDatabaseConnection(): \PDO
     {
-        // Use global constants defined in config
-        $host = defined('DB_HOST') ? DB_HOST : 'localhost';
-        $dbname = defined('DB_NAME') ? DB_NAME : 'tro365';
-        $username = defined('DB_USER') ? DB_USER : 'root';
-        $password = defined('DB_PASS') ? DB_PASS : '';
-        $charset = 'utf8mb4';
-
-        $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
-
-        $options = [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            \PDO::ATTR_EMULATE_PREPARES => false,
-        ];
-
-        return new \PDO($dsn, $username, $password, $options);
+        // Use unified Database connection to ensure consistency
+        // This eliminates config drift between auth and app layers
+        return Database::getInstance()->getConnection();
     }
 
     /**

@@ -256,7 +256,7 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" id="editUserForm">
+                    <form method="POST" id="editUserForm" class="needs-validation" novalidate>
                         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                         
                         <div class="row">
@@ -267,8 +267,10 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                         <i class="fas fa-user me-1"></i>
                                         Tên đăng nhập <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control" name="ten_dn" 
-                                           value="<?= e($_POST['ten_dn'] ?? $userData['TenDN']) ?>" required>
+                                    <input type="text" class="form-control" name="ten_dn"
+                                           value="<?= e($_POST['ten_dn'] ?? $userData['TenDN']) ?>" required
+                                           minlength="3" maxlength="50" pattern="[a-zA-Z0-9_]+">
+                                    <div class="invalid-feedback"></div>
                                     <div class="form-text">Tên đăng nhập duy nhất trong hệ thống</div>
                                 </div>
 
@@ -277,8 +279,9 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                         <i class="fas fa-envelope me-1"></i>
                                         Email <span class="text-danger">*</span>
                                     </label>
-                                    <input type="email" class="form-control" name="email" 
+                                    <input type="email" class="form-control" name="email"
                                            value="<?= e($_POST['email'] ?? $userData['Email']) ?>" required>
+                                    <div class="invalid-feedback"></div>
                                     <div class="form-text">Email duy nhất trong hệ thống</div>
                                 </div>
 
@@ -287,9 +290,10 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                         <i class="fas fa-lock me-1"></i>
                                         Mật khẩu mới
                                     </label>
-                                    <input type="password" class="form-control" name="mat_khau" 
-                                           placeholder="Để trống nếu không muốn thay đổi">
-                                    <div class="form-text">Ít nhất 6 ký tự. Để trống nếu không muốn thay đổi</div>
+                                    <input type="password" class="form-control" name="mat_khau"
+                                           placeholder="Để trống nếu không muốn thay đổi" minlength="8">
+                                    <div class="invalid-feedback"></div>
+                                    <div class="form-text">Ít nhất 8 ký tự. Để trống nếu không muốn thay đổi</div>
                                 </div>
 
                                 <div class="mb-3">
@@ -297,8 +301,10 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                         <i class="fas fa-id-card me-1"></i>
                                         Họ và tên <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control" name="ho_ten" 
-                                           value="<?= e($_POST['ho_ten'] ?? $userData['HoTen']) ?>" required>
+                                    <input type="text" class="form-control" name="ho_ten"
+                                           value="<?= e($_POST['ho_ten'] ?? $userData['HoTen']) ?>" required
+                                           minlength="2" maxlength="100">
+                                    <div class="invalid-feedback"></div>
                                 </div>
 
                                 <div class="mb-3">
@@ -340,8 +346,10 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                         <i class="fas fa-phone me-1"></i>
                                         Số điện thoại
                                     </label>
-                                    <input type="tel" class="form-control" name="sdt" 
-                                           value="<?= e($_POST['sdt'] ?? $userData['SDT']) ?>">
+                                    <input type="tel" class="form-control" name="sdt"
+                                           value="<?= e($_POST['sdt'] ?? $userData['SDT']) ?>"
+                                           pattern="(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}">
+                                    <div class="invalid-feedback"></div>
                                 </div>
 
                                 <div class="mb-3">
@@ -490,75 +498,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editUserForm');
     const submitBtn = form.querySelector('button[type="submit"]');
 
-    // Form validation
-    form.addEventListener('submit', function(e) {
-        const tenDN = form.querySelector('input[name="ten_dn"]').value.trim();
-        const email = form.querySelector('input[name="email"]').value.trim();
-        const hoTen = form.querySelector('input[name="ho_ten"]').value.trim();
-        const matKhau = form.querySelector('input[name="mat_khau"]').value;
+    // Initialize FormValidator for unified validation
+    const validator = new FormValidator(form, {
+        realTimeValidation: true,
+        showErrors: true,
+        errorClass: 'is-invalid',
+        successClass: 'is-valid',
+        errorContainer: '.invalid-feedback'
+    });
 
-        // Basic validation
-        if (!tenDN || tenDN.length < 3) {
-            e.preventDefault();
-            alert('Tên đăng nhập phải có ít nhất 3 ký tự');
-            return;
-        }
+    // Add custom validation rules using canonical patterns
+    validator.addRule('ten_dn', FormValidator.rules.username, 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới (3-30 ký tự)');
+    validator.addRule('email', FormValidator.rules.email, 'Email không hợp lệ');
+    validator.addRule('sdt', FormValidator.rules.phone, 'Số điện thoại không hợp lệ');
 
-        if (!email || !isValidEmail(email)) {
-            e.preventDefault();
-            alert('Vui lòng nhập email hợp lệ');
-            return;
-        }
-
-        if (!hoTen) {
-            e.preventDefault();
-            alert('Vui lòng nhập họ tên');
-            return;
-        }
-
-        if (matKhau && matKhau.length < 6) {
-            e.preventDefault();
-            alert('Mật khẩu phải có ít nhất 6 ký tự');
-            return;
-        }
-
+    // Handle form submission with loading state
+    form.addEventListener('form:valid', function(e) {
         // Show loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang cập nhật...';
+
+        // Allow form to submit normally
+        setTimeout(() => {
+            form.submit();
+        }, 100);
     });
 
-    // Email validation function
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    // Real-time validation feedback
-    const inputs = form.querySelectorAll('input[required], select[required]');
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.value.trim() === '') {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            }
-        });
-
-        input.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid') && this.value.trim() !== '') {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            }
-        });
-    });
-
-    // Password strength indicator
+    // Enhanced password strength indicator
     const passwordInput = form.querySelector('input[name="mat_khau"]');
     if (passwordInput) {
         passwordInput.addEventListener('input', function() {
             const password = this.value;
-            const formText = this.nextElementSibling;
+            const formText = this.parentNode.querySelector('.form-text');
 
             if (password.length === 0) {
                 formText.textContent = 'Ít nhất 8 ký tự. Để trống nếu không muốn thay đổi';
@@ -575,5 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    console.log('✅ Admin User Edit: FormValidator initialized with canonical validation patterns');
 });
 </script>

@@ -94,6 +94,20 @@ if (!isset($_SESSION[CSRF_TOKEN_NAME])) {
     $_SESSION[CSRF_TOKEN_NAME] = bin2hex(random_bytes(32));
 }
 
+
+// Auto-login via remember_token cookie (global bootstrap)
+if (empty($_SESSION['user_id']) && !empty($_COOKIE['remember_token'])) {
+    try {
+        if (class_exists('Tro365\\Core\\Auth')) {
+            // Auth constructor will attempt autoLoginFromCookie()
+            new \Tro365\Core\Auth();
+        }
+    } catch (\Throwable $e) {
+        // Silent: do not block request if auto-login fails
+        // Optionally: error_log('Auto-login error: ' . $e->getMessage());
+    }
+}
+
 // Helper function to get CSRF token
 function csrf_token()
 {

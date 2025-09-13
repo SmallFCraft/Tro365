@@ -184,7 +184,7 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
             <?php endif; ?>
 
             <!-- Create Form -->
-            <form method="POST" id="createUserForm">
+            <form method="POST" id="createUserForm" class="needs-validation" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                 
                 <div class="row">
@@ -206,7 +206,9 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                             </label>
                                             <input type="text" class="form-control" name="ten_dn"
                                                    placeholder="Nhập tên đăng nhập" required autocomplete="username"
-                                                   value="<?= e($_POST['ten_dn'] ?? '') ?>">
+                                                   value="<?= e($_POST['ten_dn'] ?? '') ?>" minlength="3" maxlength="50"
+                                                   pattern="[a-zA-Z0-9_]+">
+                                            <div class="invalid-feedback"></div>
                                             <div class="form-text">3-50 ký tự, chỉ chữ cái, số và dấu gạch dưới</div>
                                         </div>
                                     </div>
@@ -218,6 +220,7 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
                                             <input type="email" class="form-control" name="email"
                                                    placeholder="Nhập email" required autocomplete="email"
                                                    value="<?= e($_POST['email'] ?? '') ?>">
+                                            <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -358,44 +361,36 @@ include_once __DIR__ . '/../../../includes/layouts/admin/header.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('createUserForm');
-    
-    // Form validation
-    form.addEventListener('submit', function(e) {
-        const tenDN = document.querySelector('input[name="ten_dn"]').value.trim();
-        const email = document.querySelector('input[name="email"]').value.trim();
-        const matKhau = document.querySelector('input[name="mat_khau"]').value;
-        const hoTen = document.querySelector('input[name="ho_ten"]').value.trim();
-        
-        if (!tenDN || tenDN.length < 3 || tenDN.length > 50) {
-            e.preventDefault();
-            alert('Tên đăng nhập phải từ 3-50 ký tự');
-            return false;
-        }
-        
-        if (!/^[a-zA-Z0-9_]+$/.test(tenDN)) {
-            e.preventDefault();
-            alert('Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới');
-            return false;
-        }
-        
-        if (!email || !email.includes('@')) {
-            e.preventDefault();
-            alert('Vui lòng nhập email hợp lệ');
-            return false;
-        }
-        
-        if (!matKhau || matKhau.length < 6) {
-            e.preventDefault();
-            alert('Mật khẩu phải có ít nhất 6 ký tự');
-            return false;
-        }
-        
-        if (!hoTen) {
-            e.preventDefault();
-            alert('Vui lòng nhập họ tên');
-            return false;
-        }
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // Initialize FormValidator for unified validation
+    const validator = new FormValidator(form, {
+        realTimeValidation: true,
+        showErrors: true,
+        errorClass: 'is-invalid',
+        successClass: 'is-valid',
+        errorContainer: '.invalid-feedback'
     });
+
+    // Add custom validation rules using canonical patterns
+    validator.addRule('ten_dn', FormValidator.rules.username, 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới (3-30 ký tự)');
+    validator.addRule('email', FormValidator.rules.email, 'Email không hợp lệ');
+
+    // Handle form submission with loading state
+    form.addEventListener('form:valid', function(e) {
+        // Show loading state
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang tạo...';
+        }
+
+        // Allow form to submit normally
+        setTimeout(() => {
+            form.submit();
+        }, 100);
+    });
+
+    console.log('✅ Admin User Create: FormValidator initialized with canonical validation patterns');
 });
 </script>
 </body>

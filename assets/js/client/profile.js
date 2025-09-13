@@ -247,6 +247,12 @@ class ProfileManager {
   }
 
   formatNumber(num) {
+    if (
+      window.TroCurrency &&
+      typeof window.TroCurrency.formatNumber === "function"
+    ) {
+      return window.TroCurrency.formatNumber(num);
+    }
     return new Intl.NumberFormat("vi-VN").format(num);
   }
 
@@ -437,13 +443,22 @@ class ProfileManager {
 
     // Add click interactions to activity cards
     activityCards.forEach((card, index) => {
+      // Skip if already initialized
+      if (card.dataset.initialized === "true") {
+        return;
+      }
+
+      // Mark as initialized
+      card.dataset.initialized = "true";
+
       // Add ripple effect on click
       card.addEventListener("click", e => {
+        e.stopPropagation();
         this.createRippleEffect(e, card);
 
         // Optional: Add click action (e.g., show activity details)
         const activityType = card.dataset.activityType;
-        console.log(`Clicked activity: ${activityType}`);
+        // TODO: Implement activity detail modal or navigation
       });
 
       // Add intersection observer for scroll animations

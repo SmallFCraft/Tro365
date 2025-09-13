@@ -14,7 +14,6 @@ require_once __DIR__ . '/../../includes/performance/optimization.php';
 
 require_once __DIR__ . '/../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../includes/functions/auth.php';
-require_once __DIR__ . '/../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Contact;
@@ -292,7 +291,7 @@ include __DIR__ . '/../../includes/layouts/client/header.php';
                                                     <br>
                                                     <small class="text-muted">
                                                         <i class="fas fa-money-bill-wave me-1"></i>
-                                                        <?= number_format($contactItem['GiaBaiDang'] ?? 0, 0, ',', '.') ?> VNĐ/tháng
+                                                        <?= formatCurrency($contactItem['GiaBaiDang'] ?? 0) ?>/tháng
                                                     </small>
                                                 </div>
                                             </td>

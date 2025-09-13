@@ -4,6 +4,11 @@
  * Tro365 - Website thuê trọ
  */
 
+// Load dependencies
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/constants.php';
+
 // Performance optimization includes
 require_once __DIR__ . '/../../includes/performance/optimization.php';
 
@@ -296,10 +301,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                        name="phone"
                                        value="<?= e($_POST['phone'] ?? '') ?>"
                                        placeholder="Nhập số điện thoại"
-                                       pattern="[0-9]{10,11}"
-                                       data-pattern-message="Số điện thoại phải có 10-11 chữ số"
+                                       data-pattern-message="Số điện thoại không hợp lệ"
                                        autocomplete="tel"
-                                       title="Số điện thoại phải có 10-11 chữ số">
+                                       title="Số điện thoại không hợp lệ">
                                 <div class="invalid-feedback"></div>
                             </div>
                             

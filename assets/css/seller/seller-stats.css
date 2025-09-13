@@ -23,7 +23,7 @@
     margin-bottom: var(--seller-spacing-xl);
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-stats-header,
 :root:not([data-theme="dark"]) .seller-stats-header {
     border: 2px solid rgba(0, 0, 0, 0.12);
@@ -74,7 +74,7 @@
     overflow: hidden;
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-stats-card,
 :root:not([data-theme="dark"]) .seller-stats-card {
     border: 2px solid rgba(0, 0, 0, 0.12);
@@ -198,7 +198,7 @@
     padding: var(--seller-spacing-lg);
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-chart-container,
 :root:not([data-theme="dark"]) .seller-chart-container {
     border: 2px solid rgba(0, 0, 0, 0.12);
@@ -244,7 +244,7 @@
     margin-bottom: var(--seller-spacing-xl);
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-performance-table,
 :root:not([data-theme="dark"]) .seller-performance-table {
     border: 2px solid rgba(0, 0, 0, 0.12);
@@ -343,7 +343,7 @@
     margin-bottom: var(--seller-spacing-xl);
 }
 
-/* Enhanced borders for Light Mode */
+/* Border visibility for Light Mode */
 [data-theme="light"] .seller-insights,
 :root:not([data-theme="dark"]) .seller-insights {
     border: 2px solid rgba(0, 0, 0, 0.12);

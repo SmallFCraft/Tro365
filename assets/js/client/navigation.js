@@ -374,11 +374,19 @@ class ModernNavigation {
               );
               fetch("/api/locations/provinces")
                 .then(response => response.json())
-                .then(data => {
-                  if (window.Tro365Common && window.Tro365Common._cache) {
-                    window.Tro365Common._cache.provinces = data;
+                .then(response => {
+                  // Extract data from standardized API response
+                  if (response.success && response.data) {
+                    const data = response.data;
+                    if (window.Tro365Common && window.Tro365Common._cache) {
+                      window.Tro365Common._cache.provinces = data;
+                    }
+                    resolve(data);
+                  } else {
+                    reject(
+                      new Error(response.message || "Failed to load provinces")
+                    );
                   }
-                  resolve(data);
                 })
                 .catch(reject);
             }, 1000);
@@ -394,7 +402,7 @@ class ModernNavigation {
 
   populateProvinceSelects(provinces) {
     const provinceSelects = document.querySelectorAll(
-      "#searchProvince, #quick-search-province"
+      "#searchProvince, #quick-search-province, #filterProvince"
     );
 
     provinceSelects.forEach(select => {
@@ -436,7 +444,12 @@ class ModernNavigation {
     // Bind province change event
     provinceSelects.forEach(select => {
       select.addEventListener("change", e =>
-        this.loadDistricts(e.target.value)
+        this.loadDistricts(
+          e.target.value,
+          e.target.id && e.target.id.indexOf("filter") !== -1
+            ? "filter"
+            : "search"
+        )
       );
 
       // Add focus event to load all provinces when user interacts
@@ -489,9 +502,13 @@ class ModernNavigation {
     select._popularOnly = false;
   }
 
-  async loadDistricts(provinceId) {
-    const districtSelect = document.getElementById("searchDistrict");
-    const wardSelect = document.getElementById("searchWard");
+  async loadDistricts(provinceId, context = "search") {
+    const districtSelect = document.getElementById(
+      context === "filter" ? "filterDistrict" : "searchDistrict"
+    );
+    const wardSelect = document.getElementById(
+      context === "filter" ? "filterWard" : "searchWard"
+    );
 
     if (!districtSelect || !provinceId) return;
 
@@ -499,17 +516,25 @@ class ModernNavigation {
       const response = await fetch(
         `/api/locations/districts?province_id=${provinceId}`
       );
-      const districts = await response.json();
+      const result = await response.json();
 
       districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
       districtSelect.disabled = false;
 
-      districts.forEach(district => {
-        const option = document.createElement("option");
-        option.value = district.ID;
-        option.textContent = district.TenQH;
-        districtSelect.appendChild(option);
-      });
+      // Extract data from standardized API response
+      if (result.success && result.data) {
+        result.data.forEach(district => {
+          const option = document.createElement("option");
+          option.value = district.ID;
+          option.textContent = district.TenQH;
+          districtSelect.appendChild(option);
+        });
+      } else {
+        console.error(
+          "Error loading districts:",
+          result.message || "Failed to load districts"
+        );
+      }
 
       // Reset ward select
       if (wardSelect) {
@@ -519,15 +544,17 @@ class ModernNavigation {
 
       // Bind district change event
       districtSelect.addEventListener("change", e =>
-        this.loadWards(e.target.value)
+        this.loadWards(e.target.value, context)
       );
     } catch (error) {
       console.error("Error loading districts:", error);
     }
   }
 
-  async loadWards(districtId) {
-    const wardSelect = document.getElementById("searchWard");
+  async loadWards(districtId, context = "search") {
+    const wardSelect = document.getElementById(
+      context === "filter" ? "filterWard" : "searchWard"
+    );
 
     if (!wardSelect || !districtId) return;
 
@@ -535,17 +562,25 @@ class ModernNavigation {
       const response = await fetch(
         `/api/locations/wards?district_id=${districtId}`
       );
-      const wards = await response.json();
+      const result = await response.json();
 
       wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
       wardSelect.disabled = false;
 
-      wards.forEach(ward => {
-        const option = document.createElement("option");
-        option.value = ward.ID;
-        option.textContent = ward.TenXP;
-        wardSelect.appendChild(option);
-      });
+      // Extract data from standardized API response
+      if (result.success && result.data) {
+        result.data.forEach(ward => {
+          const option = document.createElement("option");
+          option.value = ward.ID;
+          option.textContent = ward.TenXP;
+          wardSelect.appendChild(option);
+        });
+      } else {
+        console.error(
+          "Error loading wards:",
+          result.message || "Failed to load wards"
+        );
+      }
     } catch (error) {
       console.error("Error loading wards:", error);
     }
@@ -880,9 +915,9 @@ class ModernNavigation {
           error && typeof error.code !== "undefined" ? error.code : "UNKNOWN";
         const errMsg = error && error.message ? error.message : "";
         // Chỉ log chi tiết khi bật debug, và log dạng chuỗi để tránh [object Object]
-        if (window.TRO365_DEBUG) {
-          console.warn(
-            `Geolocation error (code: ${errCode})${
+        if (window.TRO365_DEBUG && errCode !== 2) {
+          console.info(
+            `Geolocation notice (code: ${errCode})${
               errMsg ? ` - ${errMsg}` : ""
             }`
           );
@@ -1262,12 +1297,9 @@ class ModernNavigation {
     }
 
     try {
-      const response = await fetch(
-        `/router/api/notifications.php/${notificationId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/notifications/${notificationId}`, {
+        method: "DELETE",
+      });
 
       if (response.ok) {
         // Reload notifications to update UI
@@ -1280,7 +1312,7 @@ class ModernNavigation {
 
   async markAllAsRead() {
     try {
-      const response = await fetch("/router/api/notifications.php", {
+      const response = await fetch("/api/notifications", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

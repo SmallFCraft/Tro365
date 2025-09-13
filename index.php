@@ -18,7 +18,6 @@ require_once __DIR__ . '/includes/performance/optimization.php';
 // Load helper functions
 require_once __DIR__ . '/includes/functions/helpers.php';
 require_once __DIR__ . '/includes/functions/auth.php';
-require_once __DIR__ . '/includes/functions/validation.php';
 require_once __DIR__ . '/includes/middleware/maintenance.php';
 use Tro365\Core\Database;
 
@@ -56,11 +55,6 @@ try {
         $route = 'home';
     }
 
-    // Debug: Log the route
-    if (APP_DEBUG) {
-        error_log("Route: " . $route . " (from URI: " . $requestUri . ")");
-    }
-
     // Special handling for SEO files
     if ($route === 'robots.txt' || $route === 'sitemap.xml') {
         $filePath = ($route === 'robots.txt') ? 'robots.php' : 'sitemap.php';
@@ -83,11 +77,26 @@ try {
     $action = $routeParts[1] ?? 'index';
     $id = $routeParts[2] ?? null;
 
+    // Debug: Log the route (optional)
+    if (APP_DEBUG && false) { // Disabled for production
+        error_log("Route: " . $route . " (from URI: " . $requestUri . ")");
+        error_log("Controller: " . $controller . ", Action: " . $action . ", ID: " . ($id ?? 'null'));
+    }
+
     // Special handling for API routes
     if ($controller === 'router' && $action === 'api') {
         // Handle router/api/* routes directly
         $apiRoute = implode('/', array_slice($routeParts, 2));
         $route = 'api/' . $apiRoute;
+        if (APP_DEBUG) {
+            error_log("API Route (router/api): " . $route);
+        }
+    } elseif ($controller === 'api') {
+        // Handle direct api/* routes
+        $route = implode('/', $routeParts);
+        if (APP_DEBUG) {
+            error_log("API Route (direct): " . $route);
+        }
     }
 
     // Special handling for post detail URLs like /post/123
@@ -139,7 +148,7 @@ try {
         'seller/contacts' => 'pages/seller/contacts.php',
         'seller/transactions' => 'pages/seller/transactions.php',
         'seller/stats' => 'pages/seller/stats.php',
-        'register-seller' => 'pages/seller/register-seller.php',
+
 
         // Admin routes
         'admin' => 'pages/admin/dashboard.php',
@@ -161,9 +170,10 @@ try {
         'admin/transactions' => 'pages/admin/transactions/index.php',
         'admin/settings' => 'pages/admin/settings.php',
         'admin/ajax/settings-handler' => 'pages/admin/ajax/settings-handler.php',
+        'admin/ajax/user-actions' => 'pages/admin/ajax/user-actions.php',
         'admin/statistics' => 'pages/admin/statistics.php',
         'admin/cache/clear' => 'router/admin/cache-clear.php',
-        
+
         // API routes
         'api/auth' => 'router/api/auth.php',
         'api/auth/refresh-session' => 'router/api/auth.php',
@@ -184,10 +194,14 @@ try {
         'api/upload' => 'router/api/upload.php',
         'api/check-availability' => 'router/api/check-availability.php',
         'api/notifications' => 'router/api/notifications.php',
+        'api/notifications/{id}' => 'router/api/notifications.php',
         'api/toggle-favorite' => 'router/api/favorites.php',
         'api/favorites' => 'router/api/favorites.php',
         'api/favorites/toggle' => 'router/api/favorites.php',
         'api/check-favorite' => 'router/api/favorites.php',
+        'api/validation' => 'router/api/validation.php',
+
+        'api/validation-rules' => 'router/api/validation.php',
 
         // Static pages
         'help' => 'pages/client/help.php',
@@ -219,6 +233,11 @@ try {
             $filePath = $routes[$controllerAction];
         } else if (isset($routes[$controller])) {
             $filePath = $routes[$controller];
+        } else {
+            // Handle dynamic routes like api/notifications/{id}
+            if ($controller === 'api' && $action === 'notifications' && !empty($id)) {
+                $filePath = 'router/api/notifications.php';
+            }
         }
     }
 

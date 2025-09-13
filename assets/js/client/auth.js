@@ -242,56 +242,11 @@ window.Tro365Auth = {
   },
 
   /**
-   * Common validators for phone and CCCD across pages
+   * Common field validation - Delegated to FormValidator
    */
   initCommonFieldValidation: function () {
-    // Phone fields
-    const phoneSelectors = ["#phone", "#contact_phone"];
-    phoneSelectors.forEach(sel => {
-      const field = document.querySelector(sel);
-      const feedback = field
-        ? field.nextElementSibling &&
-          field.nextElementSibling.classList &&
-          field.nextElementSibling.classList.contains("invalid-feedback")
-          ? field.nextElementSibling
-          : document.getElementById(field.id + "Feedback")
-        : null;
-      if (!field) return;
-      this.ensureFeedbackARIA(feedback);
-      const setIndicator = this.setupStatusIndicator(field);
-      const vnPhone =
-        /^(84|0)(3[2-9]|5[6|8|9]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
-      const onValidate = () => {
-        const v = field.value.trim();
-        if (!v) {
-          field.classList.remove("is-valid", "is-invalid");
-          feedback && (feedback.textContent = "");
-          setIndicator("idle");
-          return;
-        }
-        if (vnPhone.test(v)) {
-          field.classList.remove("is-invalid");
-          field.classList.add("is-valid");
-          if (feedback) {
-            feedback.innerHTML =
-              '<i class="fas fa-check-circle"></i> Số điện thoại hợp lệ';
-            feedback.className = "valid-feedback show";
-          }
-          setIndicator("valid");
-        } else {
-          field.classList.remove("is-valid");
-          field.classList.add("is-invalid");
-          if (feedback) {
-            feedback.innerHTML =
-              '<i class="fas fa-exclamation-circle"></i> Số điện thoại không hợp lệ';
-            feedback.className = "invalid-feedback show";
-          }
-          setIndicator("invalid");
-        }
-      };
-      field.addEventListener("input", onValidate);
-      field.addEventListener("blur", onValidate);
-    });
+    // Phone and CCCD validation handled by FormValidator (standardized)
+    console.log("Field validation delegated to FormValidator");
 
     // CCCD fields
     const cccd = document.getElementById("cccd");
@@ -370,8 +325,10 @@ window.Tro365Auth = {
           }
           setIndicator("idle");
         } else {
-          // Username pattern
-          const ok = /^[A-Za-z0-9_]{3,30}$/.test(v);
+          // Username pattern - use canonical pattern from FormValidator
+          const ok = FormValidator.rules.username
+            ? FormValidator.rules.username(v)
+            : /^[A-Za-z0-9_]{3,30}$/.test(v);
           user.classList.toggle("is-invalid", !ok);
           user.classList.toggle("is-valid", ok);
           if (feedback) {
@@ -408,92 +365,18 @@ window.Tro365Auth = {
   },
 
   /**
-   * Initialize form validation - Enhanced to work with FormValidator
+   * Initialize form validation - Standardized with FormValidator
    */
   initFormValidation: function () {
+    // FormValidator handles all validation automatically
+    // Forms with .needs-validation or [data-validate] are auto-initialized by FormValidator
+    console.log("Form validation delegated to FormValidator");
+
+    // Ensure all forms have proper validation setup
     const forms = document.querySelectorAll(".needs-validation");
-
     forms.forEach(form => {
-      // Skip if FormValidator is already handling this form
-      if (form.dataset.fvInitialized === "1") {
-        console.log(
-          "FormValidator detected, skipping auth.js validation for form:",
-          form.id
-        );
-        // Disable HTML5 validation to prevent duplicate messages
-        form.noValidate = true;
-        return;
-      }
-
       // Disable HTML5 validation to prevent duplicate messages
       form.noValidate = true;
-
-      form.addEventListener("submit", function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-
-        form.classList.add("was-validated");
-      });
-
-      // Set custom Vietnamese validation messages
-      this.setValidationMessages(form);
-
-      // Enhanced real-time validation - only after meaningful interaction
-      const inputs = form.querySelectorAll("input, select, textarea");
-      inputs.forEach(input => {
-        let hasInteracted = false;
-
-        // Track meaningful interaction (typing or focus loss with content)
-        input.addEventListener("input", function () {
-          hasInteracted = true;
-          if (this.classList.contains("was-validated")) {
-            this.validateField();
-          }
-        });
-
-        // Only validate on blur if user has actually interacted and field has content or is required
-        input.addEventListener("blur", function () {
-          if (
-            hasInteracted ||
-            (this.value.trim() !== "" && this.hasAttribute("required"))
-          ) {
-            this.classList.add("was-validated");
-            this.validateField();
-          }
-        });
-
-        // Add validateField method to each input
-        input.validateField = function () {
-          const isValid = this.checkValidity();
-          const feedbacks =
-            this.parentNode.querySelectorAll(".invalid-feedback");
-
-          if (isValid) {
-            this.classList.remove("is-invalid");
-            this.classList.add("is-valid");
-            // Clear all feedback messages
-            feedbacks.forEach(feedback => (feedback.textContent = ""));
-          } else {
-            this.classList.remove("is-valid");
-            this.classList.add("is-invalid");
-            // Only show message in the first feedback element to avoid duplicates
-            if (feedbacks.length > 0) {
-              const primaryFeedback = feedbacks[0];
-              primaryFeedback.textContent =
-                this.validationMessage ||
-                this.getAttribute("title") ||
-                "Vui lòng nhập thông tin hợp lệ";
-
-              // Clear other feedback elements
-              for (let i = 1; i < feedbacks.length; i++) {
-                feedbacks[i].textContent = "";
-              }
-            }
-          }
-        };
-      });
     });
   },
 
@@ -511,10 +394,7 @@ window.Tro365Auth = {
       const password = passwordField.value;
       const confirmPassword = confirmField.value;
 
-      // Only validate if user has interacted with the field
-      if (!confirmField.classList.contains("was-validated")) {
-        return;
-      }
+      // Always validate password confirmation when called
 
       if (confirmPassword === "") {
         confirmField.classList.remove("is-valid", "is-invalid");
@@ -542,9 +422,7 @@ window.Tro365Auth = {
       }
     };
 
-    confirmField.addEventListener("blur", function () {
-      this.classList.add("was-validated");
-    });
+    // Password confirmation validation handled by FormValidator
 
     confirmField.addEventListener("input", validateConfirmation);
     passwordField.addEventListener("input", validateConfirmation);
@@ -807,7 +685,8 @@ window.Tro365Auth = {
     };
 
     const runEmailCheck = email => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // Use canonical email pattern from FormValidator
+      const emailRegex = FormValidator.rules.email;
       if (email === "") {
         emailField.classList.remove("is-valid", "is-invalid");
         if (emailFeedback) {
@@ -817,7 +696,7 @@ window.Tro365Auth = {
         setIndicator("idle");
         return;
       }
-      if (!emailRegex.test(email)) {
+      if (!emailRegex(email)) {
         emailField.classList.remove("is-valid");
         emailField.classList.add("is-invalid");
         setIndicator("invalid");
@@ -929,7 +808,8 @@ window.Tro365Auth = {
     };
 
     const runEmailCheck = email => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // Use canonical email pattern from FormValidator
+      const emailRegex = FormValidator.rules.email;
       if (email === "") {
         emailField.classList.remove("is-valid", "is-invalid");
         if (emailFeedback) {
@@ -939,7 +819,7 @@ window.Tro365Auth = {
         setIndicator("idle");
         return;
       }
-      if (!emailRegex.test(email)) {
+      if (!emailRegex(email)) {
         emailField.classList.remove("is-valid");
         emailField.classList.add("is-invalid");
         setIndicator("invalid");

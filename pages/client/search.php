@@ -1310,26 +1310,24 @@ function buildSearchUrl($params = []) {
                 card.style.cursor = 'pointer';
             });
 
-            // Favorite buttons functionality - use standardized toggleFavorite
-            document.querySelectorAll('.btn-favorite').forEach(btn => {
+            // Favorite buttons functionality - only bind to buttons that carry a post id
+            document.querySelectorAll('.btn-favorite[data-post-id]').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const postId = this.dataset.postId;
-                    if (!postId) {
-                        console.error('Post ID not found');
-                        return;
-                    }
-
-                    // Check if user is logged in
+                    // Check if user is logged in first (guest buttons don’t carry data-post-id)
                     <?php if (!$auth->isLoggedIn()): ?>
                         showToast('Vui lòng đăng nhập để sử dụng tính năng này', 'info');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 1500);
+                        setTimeout(() => { window.location.href = '/login'; }, 1500);
                         return;
                     <?php endif; ?>
+
+                    const postId = this.dataset.postId;
+                    if (!postId) {
+                        // Safety: do nothing for buttons without post id
+                        return;
+                    }
 
                     // Call the standardized toggle favorite function
                     toggleFavorite(postId, this);

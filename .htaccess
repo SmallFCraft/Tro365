@@ -43,6 +43,9 @@ RewriteRule ^favicon\.ico$ assets/images/logo/favicon.ico [L]
 # Allow access to assets
 RewriteRule ^assets/ - [L]
 
+# Allow access to router directory (for API endpoints)
+RewriteRule ^router/ - [L]
+
 # Allow access to vendor (if needed for public assets)
 # Note: Disabled by default for security. Uncomment specific asset subpaths only if required.
 # RewriteRule ^vendor/some-package/public/ - [L]

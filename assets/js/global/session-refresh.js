@@ -6,14 +6,25 @@
 // Check if SessionRefresh is already defined to prevent redeclaration
 if (typeof SessionRefresh === "undefined") {
   class SessionRefresh {
+    static instance = null; // Singleton pattern
     constructor(options = {}) {
+      // Singleton pattern - prevent multiple instances
+      if (SessionRefresh.instance) {
+        console.warn(
+          "SessionRefresh already exists, returning existing instance"
+        );
+        return SessionRefresh.instance;
+      }
+
       this.currentUserRole = options.currentUserRole || null;
       this.currentUserStatus = options.currentUserStatus || null;
-      this.refreshInterval = options.refreshInterval || 60000; // 1 minute for faster detection
+      this.refreshInterval = options.refreshInterval || 300000; // 5 minutes to reduce spam
       this.apiEndpoint = "/api/auth/refresh-session";
       this.debug = options.debug || false;
+      this.lastLogTime = 0; // Throttle debug logs
 
       this.intervalId = null;
+      SessionRefresh.instance = this;
       this.init();
     }
 
@@ -44,7 +55,9 @@ if (typeof SessionRefresh === "undefined") {
       ];
       const trueCount = indicators.filter(Boolean).length;
 
-      if (this.debug) {
+      // Throttle debug logging to reduce spam
+      if (this.debug && Date.now() - this.lastLogTime > 30000) {
+        // Only log every 30 seconds
         console.log("SessionRefresh: Login indicators:", {
           hasUserRole,
           hasGlobalUserRole,
@@ -55,6 +68,7 @@ if (typeof SessionRefresh === "undefined") {
           trueCount,
           isLoggedIn: trueCount >= 2,
         });
+        this.lastLogTime = Date.now();
       }
 
       return trueCount >= 2;
@@ -154,14 +168,28 @@ if (typeof SessionRefresh === "undefined") {
               credentials: "same-origin",
             }).then(res => res.json());
 
-        const data = window.http ? response : response;
+        // Normalize standardized API shape: { success, message, data: { user, ... } }
+        const payload = response;
+        const user =
+          payload && payload.success
+            ? (payload.data && payload.data.user) || payload.user || null
+            : null;
 
-        if (data.success && data.user) {
-          this.handleSuccessfulRefresh(data.user);
-        } else if (data.error === "Not authenticated") {
+        if (user) {
+          this.handleSuccessfulRefresh(user);
+        } else if (
+          payload &&
+          (payload.error === "Not authenticated" ||
+            payload.message === "Not authenticated")
+        ) {
           this.handleUnauthenticated();
+        } else if (payload && payload.success) {
+          // Successful response but missing user object — treat as benign
+          if (this.debug) {
+            console.info("Session refresh ok (no user payload)", payload);
+          }
         } else {
-          this.handleRefreshError(data);
+          this.handleRefreshError(payload || { error: "unknown_response" });
         }
       } catch (error) {
         this.handleNetworkError(error);
@@ -169,32 +197,49 @@ if (typeof SessionRefresh === "undefined") {
     }
 
     handleSuccessfulRefresh(user) {
-      // Check if role changed
-      if (this.currentUserRole !== null && this.currentUserRole !== user.role) {
-        this.handleRoleChange(user);
+      // Normalize numeric fields if present
+      const newRole =
+        typeof user.role !== "undefined" && user.role !== null
+          ? Number(user.role)
+          : null;
+      const newStatus =
+        typeof user.status !== "undefined" && user.status !== null
+          ? Number(user.status)
+          : null;
+      const oldRole =
+        this.currentUserRole !== null && this.currentUserRole !== undefined
+          ? Number(this.currentUserRole)
+          : null;
+      const oldStatus =
+        this.currentUserStatus !== null && this.currentUserStatus !== undefined
+          ? Number(this.currentUserStatus)
+          : null;
+
+      // Check if role changed (only when both values are available)
+      if (oldRole !== null && newRole !== null && oldRole !== newRole) {
+        this.handleRoleChange({ ...user, role: newRole });
         return;
       }
 
-      // Check if user status changed (active/inactive/banned)
-      if (
-        this.currentUserStatus !== null &&
-        this.currentUserStatus !== user.status
-      ) {
-        this.handleStatusChange(user);
+      // Check if user status changed (only when both values are available)
+      if (oldStatus !== null && newStatus !== null && oldStatus !== newStatus) {
+        this.handleStatusChange({ ...user, status: newStatus });
         return;
       }
 
-      // Update current role and status
-      this.currentUserRole = user.role;
-      this.currentUserStatus = user.status;
+      // Update current role and status (only set when present)
+      if (newRole !== null) this.currentUserRole = newRole;
+      if (newStatus !== null) this.currentUserStatus = newStatus;
 
-      if (this.debug) {
+      // Throttle debug logging and handle undefined fields properly
+      if (this.debug && Date.now() - this.lastLogTime > 30000) {
         console.log(
           "Session refreshed:",
-          user.role_name,
-          "Status:",
-          user.status
+          `Role: ${user.role || "N/A"}`,
+          `Status: ${user.status || "N/A"}`,
+          `User: ${user.username || user.id || "N/A"}`
         );
+        this.lastLogTime = Date.now();
       }
 
       // Trigger custom event for other components
@@ -364,6 +409,9 @@ if (typeof SessionRefresh === "undefined") {
       window.removeEventListener("beforeunload", this.beforeUnloadHandler);
       window.removeEventListener("userLogout", this.userLogoutHandler);
 
+      // Clear singleton instance
+      SessionRefresh.instance = null;
+
       if (this.debug) {
         console.log("SessionRefresh destroyed completely");
       }
@@ -390,24 +438,25 @@ document.addEventListener("DOMContentLoaded", function () {
   ) {
     // Get current user role and status from global variables
     const currentUserRole = window.currentUserRole;
-    const currentUserStatus = window.currentUserStatus || 1; // Default to active
+    const currentUserStatus =
+      typeof window.currentUserStatus !== "undefined"
+        ? window.currentUserStatus
+        : null; // Default to null to avoid false change detection
 
     // Initialize session refresh for all areas (only if not already initialized)
     if (!window.sessionRefresh) {
       window.sessionRefresh = new SessionRefresh({
         currentUserRole: currentUserRole,
         currentUserStatus: currentUserStatus,
-        debug: window.TRO365_DEBUG || false, // Use global debug flag
+        debug: false, // Disable debug to reduce spam - enable only when needed
       });
 
+      // Reduce initialization logging spam
       if (window.TRO365_DEBUG) {
-        console.log(
-          "Session auto-refresh initialized for role:",
-          currentUserRole,
-          "status:",
-          currentUserStatus,
-          "indicators:",
-          { hasUserRole, hasConfig, hasBodyClass }
+        console.info(
+          "Session auto-refresh initialized:",
+          `Role: ${currentUserRole || "N/A"}`,
+          `Status: ${currentUserStatus || "N/A"}`
         );
       }
     }

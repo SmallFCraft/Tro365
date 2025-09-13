@@ -16,7 +16,6 @@ require_once __DIR__ . '/../../../includes/performance/optimization.php';
 // Load helper functions
 require_once __DIR__ . '/../../../includes/functions/helpers.php';
 require_once __DIR__ . '/../../../includes/functions/auth.php';
-require_once __DIR__ . '/../../../includes/functions/validation.php';
 
 use Tro365\Core\Auth;
 use Tro365\Models\Post;
@@ -950,8 +949,7 @@ include __DIR__ . '/../../../includes/layouts/client/header.php';
 <!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Toast Notification System (unified with home.php and search.php) -->
-<script src="/assets/js/global/toast.js"></script>
+
 
 <!-- Profile Page JavaScript loaded via footer -->
 

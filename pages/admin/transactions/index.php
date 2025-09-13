@@ -403,7 +403,7 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                             </td>
                                             <td>
                                                 <strong class="text-success">
-                                                    <?= number_format($trans['GiaThue'], 0, ',', '.') ?> VNĐ
+                                                    <?= formatCurrency($trans['GiaThue']) ?>
                                                 </strong>
                                             </td>
                                             <td>

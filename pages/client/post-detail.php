@@ -1988,8 +1988,8 @@ if ($auth->isLoggedIn()) {
             favoriteText.textContent = 'Đang xử lý...';
             buttonElement.classList.add('loading');
 
-            // AJAX call to toggle favorite
-            fetch('/api/toggle-favorite', {
+            // AJAX call to toggle favorite (unified routing)
+            fetch('/api/favorites/toggle', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2112,39 +2112,12 @@ if ($auth->isLoggedIn()) {
             document.body.removeChild(textArea);
         }
 
-        // Enhanced form validation
-        function validateContactForm() {
-            const form = document.querySelector('form[method="POST"]');
-            if (!form) return;
-
-            const nameInput = form.querySelector('input[name="contact_name"]');
-            const phoneInput = form.querySelector('input[name="contact_phone"]');
-            const emailInput = form.querySelector('input[name="contact_email"]');
-
-            // Real-time validation
-            if (phoneInput) {
-                phoneInput.addEventListener('input', function() {
-                    const phoneRegex = /^[0-9]{10,11}$/;
-                    const isValid = phoneRegex.test(this.value.replace(/\s/g, ''));
-
-                    this.classList.toggle('is-valid', isValid && this.value.length > 0);
-                    this.classList.toggle('is-invalid', !isValid && this.value.length > 0);
-                });
-            }
-
-            if (emailInput) {
-                emailInput.addEventListener('input', function() {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    const isValid = emailRegex.test(this.value);
-
-                    this.classList.toggle('is-valid', isValid && this.value.length > 0);
-                    this.classList.toggle('is-invalid', !isValid && this.value.length > 0);
-                });
-            }
-
+        // Form validation handled by FormValidator (standardized)
+        const contactForm = document.querySelector('form[method="POST"]');
+        if (contactForm) {
             // Form submission enhancement
-            form.addEventListener('submit', function(e) {
-                const submitBtn = form.querySelector('button[type="submit"]');
+            contactForm.addEventListener('submit', function(e) {
+                const submitBtn = contactForm.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
@@ -2295,7 +2268,6 @@ if ($auth->isLoggedIn()) {
 
         // Initialize enhanced features
         document.addEventListener('DOMContentLoaded', function() {
-            validateContactForm();
             enhanceImageLoading();
             initThumbnailCarousel();
 
