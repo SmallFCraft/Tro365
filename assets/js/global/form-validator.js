@@ -122,13 +122,19 @@ class FormValidator {
       return regex.test(value);
     },
     // VN phone format - synchronized with server-side validation
+    // Nullable: allows empty values, only validates pattern if value is provided
     phone: value => {
+      const trimmedValue = value.trim();
+      // Allow empty values (nullable behavior)
+      if (trimmedValue === "") {
+        return true;
+      }
       // Use canonical phone pattern from server or fallback
       const pattern =
         FormValidator.validationRules?.patterns?.phone ||
         "/^(84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8|9]|9[0-4|6-9])[0-9]{7}$/";
       const regex = new RegExp(pattern.replace(/^\/|\/$/g, ""));
-      return regex.test(value.trim());
+      return regex.test(trimmedValue);
     },
     minLength: min => value => value.length >= min,
     maxLength: max => value => value.length <= max,

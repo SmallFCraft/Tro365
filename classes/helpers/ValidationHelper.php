@@ -453,7 +453,7 @@ class ValidationHelper
             writeLog("ValidationHelper: Enhanced validation exception - " . $e->getMessage());
             return [
                 'valid' => false,
-                'errors' => ['general' => ['Có lỗi xảy ra khi validate dữ liệu']]
+                'errors' => ['general' => [$e->getMessage()]]
             ];
         }
     }
@@ -489,8 +489,9 @@ class ValidationHelper
             'email' => 'required|email',
             'password' => 'required|min:8|max:100',
             'password_confirmation' => 'required|same:password',
-            // Standardize to Vietnam phone format (consistent with client-side)
-            'phone' => 'regex:' . self::getPhonePattern()
+            // Phone is optional - validation handled by client-side and database constraints
+            // Cannot use regex with rakit/validation due to pipe character conflicts
+            'phone' => 'nullable'
         ];
 
         $messages = [

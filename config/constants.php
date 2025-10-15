@@ -1,10 +1,12 @@
 <?php
 /**
- * System Constants
+ * System Constants - Backward Compatibility
  * Tro365 - Website thuê trọ
  *
- * Note: Status constants are kept for backward compatibility.
+ * DEPRECATED: These constants are kept for backward compatibility.
  * New code should use Tro365\Helpers\StatusHelper for consistent status management.
+ * 
+ * Status values are aliased to StatusHelper constants for consistency.
  */
 
 // User roles
@@ -14,22 +16,22 @@ define('ROLE_SUPPORTER', 3);
 define('ROLE_MODERATOR', 4);
 define('ROLE_ADMIN', 5);
 
-// User status
-define('USER_STATUS_ACTIVE', 1);
-define('USER_STATUS_INACTIVE', 0);
-define('USER_STATUS_BANNED', 2);
+// User status - aliased to StatusHelper constants
+define('USER_STATUS_ACTIVE', \Tro365\Helpers\StatusHelper::USER_ACTIVE);
+define('USER_STATUS_INACTIVE', \Tro365\Helpers\StatusHelper::USER_INACTIVE);
+define('USER_STATUS_BANNED', \Tro365\Helpers\StatusHelper::USER_BANNED);
 
-// Post status
-define('POST_STATUS_PENDING', 0);
-define('POST_STATUS_APPROVED', 1);
-define('POST_STATUS_REJECTED', 2);
-define('POST_STATUS_RENTED', 3);
-define('POST_STATUS_HIDDEN', 4);
+// Post status - aliased to StatusHelper constants
+define('POST_STATUS_PENDING', \Tro365\Helpers\StatusHelper::POST_PENDING);
+define('POST_STATUS_APPROVED', \Tro365\Helpers\StatusHelper::POST_APPROVED);
+define('POST_STATUS_REJECTED', \Tro365\Helpers\StatusHelper::POST_REJECTED);
+define('POST_STATUS_RENTED', \Tro365\Helpers\StatusHelper::POST_RENTED);
+define('POST_STATUS_HIDDEN', \Tro365\Helpers\StatusHelper::POST_HIDDEN);
 
-// Seller registration status
-define('SELLER_STATUS_PENDING', 0);
-define('SELLER_STATUS_APPROVED', 1);
-define('SELLER_STATUS_REJECTED', 2);
+// Seller registration status - aliased to StatusHelper constants
+define('SELLER_STATUS_PENDING', \Tro365\Helpers\StatusHelper::SELLER_PENDING);
+define('SELLER_STATUS_APPROVED', \Tro365\Helpers\StatusHelper::SELLER_APPROVED);
+define('SELLER_STATUS_REJECTED', \Tro365\Helpers\StatusHelper::SELLER_REJECTED);
 
 // Contact status
 define('CONTACT_STATUS_NEW', 0);
@@ -52,10 +54,7 @@ define('COMMISSION_STATUS_PAID', 1);
 // Note: Report, Notification, and Image type constants removed as they were unused
 
 // File upload limits (use UPLOAD_MAX_SIZE from app.php)
-define('MAX_IMAGE_WIDTH', 1920);
-define('MAX_IMAGE_HEIGHT', 1080);
-define('THUMBNAIL_WIDTH', 300);
-define('THUMBNAIL_HEIGHT', 200);
+// MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT removed - unused
 
 // Pagination
 define('DEFAULT_PAGE_SIZE', 20);
@@ -71,21 +70,16 @@ define('TIME_FORMAT', 'H:i');
 // Default values (moved to bottom of file)
 define('DEFAULT_POST_IMAGE', 'assets/images/default/post.jpg');
 
-// Validation rules
+// Validation rules - synchronized with config/validation.php
 define('MIN_PASSWORD_LENGTH', 8);
-define('MAX_PASSWORD_LENGTH', 50);
+define('MAX_PASSWORD_LENGTH', 100); // Updated to match validation.php
 define('MIN_USERNAME_LENGTH', 3);
 define('MAX_USERNAME_LENGTH', 30);
 define('MAX_TITLE_LENGTH', 255);
-define('MAX_DESCRIPTION_LENGTH', 1000);
+define('MAX_DESCRIPTION_LENGTH', 2000); // Updated to match validation.php
 
-// Search limits
-define('MIN_SEARCH_LENGTH', 2);
-define('MAX_SEARCH_RESULTS', 100);
-
-// Rate limiting
-define('MAX_LOGIN_ATTEMPTS', 5);
-define('LOGIN_LOCKOUT_TIME', 900); // 15 minutes
+// Search limits and rate limiting constants removed - unused in current implementation
+// If needed later, implement in proper service classes
 
 // Note: Email template constants removed as they were unused
 

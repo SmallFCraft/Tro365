@@ -20,10 +20,14 @@ class CheckAvailabilityAPI extends BaseAPI
      */
     public function handle()
     {
+        // Ensure we always return JSON
+        header('Content-Type: application/json; charset=utf-8');
+        
         $method = $_SERVER['REQUEST_METHOD'];
         
         if ($method !== 'POST') {
             $this->sendError('Method not allowed', 405);
+            return;
         }
 
         $this->handleCheckAvailability();

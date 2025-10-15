@@ -27,7 +27,7 @@ $auth->requireAdmin();
 $currentUser = $auth->getCurrentUser();
 
 // Get date range from filters
-$startDate = $_GET['start_date'] ?? date('Y-m-01'); // First day of current month
+$startDate = $_GET['start_date'] ?? '2025-08-01'; // Include existing data from August
 $endDate = $_GET['end_date'] ?? date('Y-m-d'); // Today
 $period = $_GET['period'] ?? 'month'; // month, week, year
 
@@ -354,7 +354,7 @@ include_once __DIR__ . '/../../includes/layouts/admin/header.php';
                             </h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="categoryChart" height="300"></canvas>
+                            <canvas id="categoryChart" style="height: 300px !important;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -369,7 +369,7 @@ include_once __DIR__ . '/../../includes/layouts/admin/header.php';
                             </h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="postsChart" height="300"></canvas>
+                            <canvas id="postsChart" style="height: 300px !important;"></canvas>
                         </div>
                     </div>
                 </div>

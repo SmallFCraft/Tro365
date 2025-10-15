@@ -206,14 +206,14 @@ if ($sellers === null) {
 }
 
 // Get total count for pagination - with caching
+$countSql = "SELECT COUNT(*) as total
+             FROM DangKySeller ds
+             LEFT JOIN KhachHang kh ON ds.KhachHangID = kh.ID
+             $whereClause";
 $countCacheKey = 'admin_sellers_count_' . md5($countSql . serialize(array_diff_key($params, ['limit' => '', 'offset' => ''])));
 $totalCount = cache_get($countCacheKey);
 
 if ($totalCount === null) {
-    $countSql = "SELECT COUNT(*) as total
-                 FROM DangKySeller ds
-                 LEFT JOIN KhachHang kh ON ds.KhachHangID = kh.ID
-                 $whereClause";
     $totalCount = $db->selectOne($countSql, array_diff_key($params, ['limit' => '', 'offset' => '']))['total'] ?? 0;
     cache_set($countCacheKey, $totalCount, 120);
 }

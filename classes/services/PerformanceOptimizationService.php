@@ -657,7 +657,8 @@ class PerformanceOptimizationService
             // Search page optimization
             // Removed preload of performance-observer.js; it will be conditionally loaded in footer if needed to avoid preload-not-used warning
             // header('Link: </assets/js/global/performance-observer.js>; rel=preload; as=script');
-            header('Link: </assets/js/client/lazy-loading.js>; rel=preload; as=script');
+            // Removed lazy-loading.js preload to avoid 'preloaded but not used' warnings; script is loaded with defer in header
+            // header('Link: </assets/js/client/lazy-loading.js>; rel=preload; as=script');
 
         } elseif ($this->isPostPage()) {
             // Post detail optimization

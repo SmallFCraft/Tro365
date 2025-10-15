@@ -341,7 +341,7 @@ class SettingsController
             $cleared = [];
 
             // Clear file cache if exists
-            $cacheDir = dirname(__DIR__, 2) . '/cache';
+            $cacheDir = dirname(__DIR__, 2) . '/var/cache';
             if (is_dir($cacheDir)) {
                 $files = glob($cacheDir . '/*');
                 foreach ($files as $file) {

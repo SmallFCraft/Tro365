@@ -271,6 +271,22 @@ class Auth
     }
 
     /**
+     * Check if user is moderator or higher
+     */
+    public function isModerator()
+    {
+        return $this->hasRole(ROLE_MODERATOR);
+    }
+
+    /**
+     * Check if user is supporter or higher
+     */
+    public function isSupporter()
+    {
+        return $this->hasRole(ROLE_SUPPORTER);
+    }
+
+    /**
      * Require login
      */
     public function requireLogin($redirectUrl = null)
@@ -337,13 +353,20 @@ class Auth
     }
 
     /**
-     * Require moderator
+     * Require moderator or higher
      */
     public function requireModerator($redirectUrl = null)
     {
         $this->requireRole(ROLE_MODERATOR, $redirectUrl);
     }
 
+    /**
+     * Require supporter or higher
+     */
+    public function requireSupporter($redirectUrl = null)
+    {
+        $this->requireRole(ROLE_SUPPORTER, $redirectUrl);
+    }
 
     /**
      * Generate password reset token

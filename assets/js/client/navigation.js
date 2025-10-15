@@ -522,7 +522,7 @@ class ModernNavigation {
       districtSelect.disabled = false;
 
       // Extract data from standardized API response
-      if (result.success && result.data) {
+      if (result.success && result.data && Array.isArray(result.data)) {
         result.data.forEach(district => {
           const option = document.createElement("option");
           option.value = district.ID;
@@ -568,7 +568,7 @@ class ModernNavigation {
       wardSelect.disabled = false;
 
       // Extract data from standardized API response
-      if (result.success && result.data) {
+      if (result.success && result.data && Array.isArray(result.data)) {
         result.data.forEach(ward => {
           const option = document.createElement("option");
           option.value = ward.ID;

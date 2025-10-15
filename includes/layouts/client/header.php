@@ -269,22 +269,22 @@ if (isset($_SESSION['user_id'])) {
                     </a>
                 </li>
                 <li class="nav-item" role="none">
-                    <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/search') === 0 ? 'active' : '' ?>"
-                       href="/search" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'], '/search') === 0 ? 'page' : 'false' ?>">
+                    <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/search') === 0 ? 'active' : '' ?>"
+                       href="/search" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'] ?? '', '/search') === 0 ? 'page' : 'false' ?>">
                         <i class="fas fa-search" aria-hidden="true"></i>
                         <span>Tìm kiếm</span>
                     </a>
                 </li>
                 <li class="nav-item" role="none">
-                    <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/about') === 0 ? 'active' : '' ?>"
-                       href="/about" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'], '/about') === 0 ? 'page' : 'false' ?>">
+                    <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/about') === 0 ? 'active' : '' ?>"
+                       href="/about" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'] ?? '', '/about') === 0 ? 'page' : 'false' ?>">
                         <i class="fas fa-info-circle" aria-hidden="true"></i>
                         <span>Giới thiệu</span>
                     </a>
                 </li>
                 <li class="nav-item" role="none">
-                    <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/contact') === 0 ? 'active' : '' ?>"
-                       href="/contact" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'], '/contact') === 0 ? 'page' : 'false' ?>">
+                    <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/contact') === 0 ? 'active' : '' ?>"
+                       href="/contact" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'] ?? '', '/contact') === 0 ? 'page' : 'false' ?>">
                         <i class="fas fa-phone" aria-hidden="true"></i>
                         <span>Liên hệ</span>
                     </a>
@@ -505,7 +505,7 @@ if (isset($_SESSION['user_id'])) {
             <i class="fas fa-home" aria-hidden="true"></i>
             <span>Trang chủ</span>
         </a>
-        <a href="/search" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'], '/search') === 0 ? 'active' : '' ?>" aria-label="Tìm kiếm">
+        <a href="/search" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/search') === 0 ? 'active' : '' ?>" aria-label="Tìm kiếm">
             <i class="fas fa-search" aria-hidden="true"></i>
             <span>Tìm kiếm</span>
         </a>

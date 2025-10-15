@@ -906,13 +906,18 @@ if ($categories === null) {
                         .then(response => response.json())
                         .then(data => {
                             const districtSelect = document.getElementById('district');
-                            data.forEach(district => {
-                                const option = document.createElement('option');
-                                option.value = district.ID;
-                                option.textContent = district.TenQH;
-                                option.selected = district.ID == selectedDistrict;
-                                districtSelect.appendChild(option);
-                            });
+                            // Ensure data is an array
+                            if (Array.isArray(data)) {
+                                data.forEach(district => {
+                                    const option = document.createElement('option');
+                                    option.value = district.ID;
+                                    option.textContent = district.TenQH;
+                                    option.selected = district.ID == selectedDistrict;
+                                    districtSelect.appendChild(option);
+                                });
+                            } else {
+                                console.warn('Districts data is not an array:', data);
+                            }
 
                             // Load wards for selected district
                             if (selectedWard) {
@@ -920,13 +925,18 @@ if ($categories === null) {
                                     .then(response => response.json())
                                     .then(data => {
                                         const wardSelect = document.getElementById('ward');
-                                        data.forEach(ward => {
-                                            const option = document.createElement('option');
-                                            option.value = ward.ID;
-                                            option.textContent = ward.TenXP;
-                                            option.selected = ward.ID == selectedWard;
-                                            wardSelect.appendChild(option);
-                                        });
+                                        // Ensure data is an array
+                                        if (Array.isArray(data)) {
+                                            data.forEach(ward => {
+                                                const option = document.createElement('option');
+                                                option.value = ward.ID;
+                                                option.textContent = ward.TenXP;
+                                                option.selected = ward.ID == selectedWard;
+                                                wardSelect.appendChild(option);
+                                            });
+                                        } else {
+                                            console.warn('Wards data is not an array:', data);
+                                        }
                                     });
                             }
                         });

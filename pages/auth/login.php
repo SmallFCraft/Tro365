@@ -6,6 +6,8 @@
 
 // Performance optimization includes
 require_once __DIR__ . '/../../includes/performance/optimization.php';
+require_once __DIR__ . '/../../classes/services/PerformanceOptimizationService.php';
+require_once __DIR__ . '/../../classes/core/Auth.php';
 
 use Tro365\Core\Auth;
 use Tro365\Services\PerformanceOptimizationService;
@@ -103,6 +105,30 @@ if ($flash) {
     <link rel="preload" href="<?= app_url('assets/css/client/layouts.css') ?>" as="style">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
     
+    <!-- Global Debug Configuration -->
+    <script>
+        // Set global debug flag based on PHP debug setting
+        window.TRO365_DEBUG = <?= isDebugModeEnabled() ? 'true' : 'false' ?>;
+
+        // Override console.log if debug is disabled
+        if (!window.TRO365_DEBUG) {
+            const originalConsole = {
+                log: console.log,
+                warn: console.warn,
+                error: console.error,
+                info: console.info
+            };
+
+            // Only disable log and info, keep warn and error for important messages
+            console.log = function() {};
+            console.info = function() {};
+
+            // Keep warn and error for important debugging
+            // console.warn = function() {};
+            // console.error = function() {};
+        }
+    </script>
+
     <!-- Modern Assets Integration (AssetManager) -->
     <?php
     $am = new \Tro365\Assets\AssetManager(app_url(''));

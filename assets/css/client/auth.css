@@ -747,10 +747,27 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
     display: block;
 }
 
+/* Auth: feedback visibility for enhanced controls (mobile-first) */
+.auth-form-enhanced .form-control-enhanced + .valid-feedback,
+.auth-form-enhanced .form-control-enhanced + .invalid-feedback {
+    display: none; /* hide by default until validated */
+}
+.auth-form-enhanced .form-control-enhanced.is-valid + .valid-feedback,
+.auth-form-enhanced .form-control-enhanced.is-invalid + .invalid-feedback {
+    display: block;
+}
+/* When feedback is not strictly adjacent (wrapped), allow general sibling */
+.auth-form-enhanced .form-control-enhanced.is-valid ~ .valid-feedback {
+    display: block;
+}
+.auth-form-enhanced .form-control-enhanced.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
 
 .input-status-indicator {
     position: absolute;
-    top: 40%;
+    top: 50%;
     right: 0.75rem;
     transform: translateY(-50%);
     display: flex;

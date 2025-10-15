@@ -623,29 +623,41 @@ if ($existingImages === null) {
                 setTimeout(() => {
                     fetch(`/api/locations/districts?province_id=${selectedProvince}`)
                         .then(response => response.json())
-                        .then(data => {
+                        .then(response => {
                             const districtSelect = document.getElementById('district');
-                            data.forEach(district => {
-                                const option = document.createElement('option');
-                                option.value = district.ID;
-                                option.textContent = district.TenQH;
-                                option.selected = district.ID == selectedDistrict;
-                                districtSelect.appendChild(option);
-                            });
+                            // Handle API response format {success: true, data: [...]}
+                            const data = response.data || response;
+                            if (Array.isArray(data)) {
+                                data.forEach(district => {
+                                    const option = document.createElement('option');
+                                    option.value = district.ID;
+                                    option.textContent = district.TenQH;
+                                    option.selected = district.ID == selectedDistrict;
+                                    districtSelect.appendChild(option);
+                                });
+                            } else {
+                                console.warn('Districts data is not an array:', response);
+                            }
 
                             // Load wards if district is selected
                             if (selectedDistrict) {
                                 fetch(`/api/locations/wards?district_id=${selectedDistrict}`)
                                     .then(response => response.json())
-                                    .then(data => {
+                                    .then(response => {
                                         const wardSelect = document.getElementById('ward');
-                                        data.forEach(ward => {
-                                            const option = document.createElement('option');
-                                            option.value = ward.ID;
-                                            option.textContent = ward.TenXP;
-                                            option.selected = ward.ID == selectedWard;
-                                            wardSelect.appendChild(option);
-                                        });
+                                        // Handle API response format {success: true, data: [...]}
+                                        const data = response.data || response;
+                                        if (Array.isArray(data)) {
+                                            data.forEach(ward => {
+                                                const option = document.createElement('option');
+                                                option.value = ward.ID;
+                                                option.textContent = ward.TenXP;
+                                                option.selected = ward.ID == selectedWard;
+                                                wardSelect.appendChild(option);
+                                            });
+                                        } else {
+                                            console.warn('Wards data is not an array:', response);
+                                        }
                                     });
                             }
                         });
@@ -666,13 +678,19 @@ if ($existingImages === null) {
             if (provinceId) {
                 fetch(`/api/locations/districts?province_id=${provinceId}`)
                     .then(response => response.json())
-                    .then(data => {
-                        data.forEach(district => {
-                            const option = document.createElement('option');
-                            option.value = district.ID;
-                            option.textContent = district.TenQH;
-                            districtSelect.appendChild(option);
-                        });
+                    .then(response => {
+                        // Handle API response format {success: true, data: [...]}
+                        const data = response.data || response;
+                        if (Array.isArray(data)) {
+                            data.forEach(district => {
+                                const option = document.createElement('option');
+                                option.value = district.ID;
+                                option.textContent = district.TenQH;
+                                districtSelect.appendChild(option);
+                            });
+                        } else {
+                            console.warn('Districts data is not an array:', response);
+                        }
                     });
             }
         });
@@ -687,13 +705,19 @@ if ($existingImages === null) {
             if (districtId) {
                 fetch(`/api/locations/wards?district_id=${districtId}`)
                     .then(response => response.json())
-                    .then(data => {
-                        data.forEach(ward => {
-                            const option = document.createElement('option');
-                            option.value = ward.ID;
-                            option.textContent = ward.TenXP;
-                            wardSelect.appendChild(option);
-                        });
+                    .then(response => {
+                        // Handle API response format {success: true, data: [...]}
+                        const data = response.data || response;
+                        if (Array.isArray(data)) {
+                            data.forEach(ward => {
+                                const option = document.createElement('option');
+                                option.value = ward.ID;
+                                option.textContent = ward.TenXP;
+                                wardSelect.appendChild(option);
+                            });
+                        } else {
+                            console.warn('Wards data is not an array:', response);
+                        }
                     });
             }
         });

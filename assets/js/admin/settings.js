@@ -58,7 +58,7 @@ window.Tro365Settings = {
           self.clearCache();
           break;
         case "export-settings":
-          exportSettings();
+          self.exportSettings();
           break;
         case "update-version":
           self.updateVersion();
@@ -670,6 +670,52 @@ window.Tro365Settings = {
         console.error("Clear cache error:", error);
         this.showToast("Có lỗi xảy ra khi xóa cache", "danger");
       });
+  },
+
+  /**
+   * Export settings configuration
+   */
+  exportSettings: function () {
+    // Create JSON export of current settings
+    const form = document.getElementById("settingsForm");
+    if (!form) {
+      this.showToast("Form không tìm thấy", "danger");
+      return;
+    }
+
+    const formData = new FormData(form);
+    const settings = {
+      website: {},
+      system: {},
+      email: {},
+      seo: {},
+      advanced: {},
+      exportTime: new Date().toISOString(),
+      version: "N/A", // Will be updated after collecting form data
+    };
+
+    // Collect all form data
+    for (let [key, value] of formData.entries()) {
+      settings.advanced[key] = value;
+    }
+
+    // Set version from app_version field if available
+    if (settings.advanced.app_version) {
+      settings.version = settings.advanced.app_version;
+    }
+
+    const dataStr = JSON.stringify(settings, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(dataBlob);
+    link.download =
+      "tro365-settings-" + new Date().toISOString().split("T")[0] + ".json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.showToast("Đã xuất cấu hình thành công!", "success");
   },
 
   /**

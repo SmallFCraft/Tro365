@@ -100,13 +100,32 @@ class AssetManager
         $out[] = '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
         $out[] = '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>';
 
-        // CSS Utilities + any enqueued CSS (defer non-critical utilities to eliminate render blocking)
-        $out[] = '<!-- Modern CSS Utilities (Deferred for Performance) -->';
-        $out[] = '<link rel="preload" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">';
-        $out[] = '<noscript><link rel="stylesheet" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '"></noscript>';
+        // CSS Utilities + any enqueued CSS (conditional preloading to avoid unused resources)
+        $out[] = '<!-- Modern CSS Utilities (Conditional Preloading) -->';
+        // Only preload utilities.css if it's actually needed
+        if (in_array('/assets/css/modern/utilities.css', $this->css)) {
+            $out[] = '<link rel="preload" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">';
+            $out[] = '<noscript><link rel="stylesheet" href="' . $this->url('/assets/css/modern/utilities.css') . $this->ver() . '"></noscript>';
+        }
         foreach ($this->css as $css) {
             $out[] = '<link rel="stylesheet" href="' . $this->url($css) . $this->ver() . '">';
         }
+
+        // Add CSS for lazy loading states
+        $out[] = '<style>
+            img.loading {
+                opacity: 0.6;
+                transition: opacity 0.3s ease;
+            }
+            img.loaded {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+            img.error {
+                opacity: 0.3;
+                filter: grayscale(100%);
+            }
+        </style>';
 
         return implode("\n", $out) . "\n";
     }
@@ -204,26 +223,55 @@ JS;
     private function lazyLoadingScript(): string
     {
         return <<<JS
-// Modern image lazy loading
+// Modern image lazy loading with intersection observer
 document.addEventListener('DOMContentLoaded', function() {
   if ('IntersectionObserver' in window) {
     const lazyImages = document.querySelectorAll('img[data-src]');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          img.classList.remove('loading');
-          img.classList.add('loaded');
-          img.removeAttribute('data-src');
-          observer.unobserve(img);
-        }
+    
+    if (lazyImages.length > 0) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            
+            // Add loading state
+            img.classList.add('loading');
+            
+            // Create a new image to preload
+            const newImg = new Image();
+            newImg.onload = function() {
+              img.src = img.dataset.src;
+              img.classList.remove('loading');
+              img.classList.add('loaded');
+              img.removeAttribute('data-src');
+              observer.unobserve(img);
+            };
+            newImg.onerror = function() {
+              img.classList.remove('loading');
+              img.classList.add('error');
+              img.removeAttribute('data-src');
+              observer.unobserve(img);
+            };
+            newImg.src = img.dataset.src;
+          }
+        });
+      }, { 
+        rootMargin: '50px 0px', 
+        threshold: 0.01 
       });
-    }, { rootMargin: '50px 0px', threshold: 0.01 });
-    lazyImages.forEach(img => { img.classList.add('loading'); imageObserver.observe(img); });
+      
+      lazyImages.forEach(img => { 
+        imageObserver.observe(img); 
+      });
+    }
   } else {
+    // Fallback for browsers without IntersectionObserver
     const lazyImages = document.querySelectorAll('img[data-src]');
-    lazyImages.forEach(img => { img.src = img.dataset.src; img.classList.add('loaded'); img.removeAttribute('data-src'); });
+    lazyImages.forEach(img => { 
+      img.src = img.dataset.src; 
+      img.classList.add('loaded'); 
+      img.removeAttribute('data-src'); 
+    });
   }
 });
 JS;

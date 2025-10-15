@@ -412,24 +412,39 @@ function buildSearchUrl($params = []) {
             height: auto;
             background: var(--glass-bg);
             backdrop-filter: var(--backdrop-filter);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            -webkit-backdrop-filter: var(--backdrop-filter);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--glass-shadow);
+            position: relative;
+        }
+
+        #resultsGrid[data-view-mode="list"] .post-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-glass);
+            pointer-events: none;
+            z-index: -1;
         }
 
         #resultsGrid[data-view-mode="list"] .post-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 35px rgba(var(--primary-rgb), 0.15);
-            border-color: rgba(var(--primary-rgb), 0.2);
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 16px 45px rgba(var(--primary-rgb), 0.2);
+            border-color: rgba(var(--primary-rgb), 0.3);
         }
 
         #resultsGrid[data-view-mode="list"] .post-image-container {
-            flex: 0 0 240px;
-            height: 180px;
+            flex: 0 0 260px;
+            height: 200px;
             position: relative;
             overflow: hidden;
+            border-radius: 16px 0 0 16px;
         }
 
         #resultsGrid[data-view-mode="list"] .post-image-container img,
@@ -438,60 +453,162 @@ function buildSearchUrl($params = []) {
             height: 100%;
             object-fit: cover;
             border-radius: 0;
+            transition: transform 0.4s ease;
+        }
+
+        #resultsGrid[data-view-mode="list"] .post-card:hover .post-image-container img,
+        #resultsGrid[data-view-mode="list"] .post-card:hover .post-image-container .card-img-top {
+            transform: scale(1.08);
+        }
+
+        /* Image Overlay for List View */
+        #resultsGrid[data-view-mode="list"] .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0.1) 0%,
+                rgba(0, 0, 0, 0) 30%,
+                rgba(0, 0, 0, 0) 70%,
+                rgba(0, 0, 0, 0.4) 100%
+            );
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #resultsGrid[data-view-mode="list"] .post-card:hover .image-overlay {
+            opacity: 1;
         }
 
         #resultsGrid[data-view-mode="list"] .post-content {
             flex: 1;
-            padding: 1.5rem;
+            padding: 2rem;
             display: flex;
             flex-direction: column;
             background: transparent;
             border: none;
+            justify-content: space-between;
         }
 
         #resultsGrid[data-view-mode="list"] .post-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
             color: var(--text-primary);
+            line-height: 1.3;
         }
 
         #resultsGrid[data-view-mode="list"] .post-title a {
             color: inherit;
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         #resultsGrid[data-view-mode="list"] .post-title a:hover {
             color: var(--primary-color);
+            text-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
         }
 
         #resultsGrid[data-view-mode="list"] .post-description {
             flex: 1;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.7;
+            font-size: 0.95rem;
         }
 
         #resultsGrid[data-view-mode="list"] .price-section {
-            margin-top: auto;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem 0;
+            border-top: 1px solid rgba(var(--glass-border-rgb), 0.3);
+            border-bottom: 1px solid rgba(var(--glass-border-rgb), 0.3);
+        }
+
+        #resultsGrid[data-view-mode="list"] .price {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #resultsGrid[data-view-mode="list"] .area {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            background: rgba(var(--primary-rgb), 0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
         }
 
         #resultsGrid[data-view-mode="list"] .card-meta {
-            margin-top: auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.875rem;
             color: var(--text-muted);
+            margin-bottom: 1rem;
         }
 
         #resultsGrid[data-view-mode="list"] .card-footer {
-            padding: 1rem 1.5rem;
+            padding: 0;
             background: transparent;
-            border-top: 1px solid var(--glass-border);
+            border: none;
             margin-top: auto;
+        }
+
+        #resultsGrid[data-view-mode="list"] .action-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1.5rem;
+            padding: 0 1rem;
+        }
+
+        #resultsGrid[data-view-mode="list"] .btn-favorite,
+        #resultsGrid[data-view-mode="list"] .btn-view {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #resultsGrid[data-view-mode="list"] .btn-favorite {
+            background: rgba(var(--warning-rgb), 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(var(--warning-rgb), 0.3);
+        }
+
+        #resultsGrid[data-view-mode="list"] .btn-favorite:hover {
+            background: var(--warning-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(var(--warning-rgb), 0.3);
+        }
+
+        #resultsGrid[data-view-mode="list"] .btn-view {
+            background: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+        }
+
+        #resultsGrid[data-view-mode="list"] .btn-view:hover {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.4);
         }
 
         /* Common Styles */
@@ -647,41 +764,97 @@ function buildSearchUrl($params = []) {
             box-shadow: 0 12px 35px rgba(var(--primary-color-rgb), 0.4);
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 575.98px) {
+        /* Mobile Responsive - Mobile First Approach (320px-768px priority) */
+        @media (max-width: 480px) {
             #resultsGrid[data-view-mode="grid"] {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
 
+            #resultsGrid[data-view-mode="list"] {
+                gap: 1rem;
+            }
+
             #resultsGrid[data-view-mode="list"] .post-card {
                 flex-direction: column;
+                border-radius: 16px;
+                border-width: 1.5px;
             }
 
             #resultsGrid[data-view-mode="list"] .post-image-container {
                 flex: none;
-                height: 200px;
+                height: 220px;
                 border-radius: 16px 16px 0 0;
             }
 
             #resultsGrid[data-view-mode="list"] .post-content {
-                padding: 1rem;
+                padding: 1.5rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .post-title {
+                font-size: 1.1rem;
+                margin-bottom: 0.75rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .post-description {
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .price {
+                font-size: 1.2rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .action-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .btn-favorite,
+            #resultsGrid[data-view-mode="list"] .btn-view {
+                width: 100%;
+                justify-content: center;
+                padding: 0.875rem 1rem;
             }
         }
 
-        @media (min-width: 576px) and (max-width: 767.98px) {
+        @media (min-width: 481px) and (max-width: 767.98px) {
             #resultsGrid[data-view-mode="grid"] {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 1.25rem;
             }
 
+            #resultsGrid[data-view-mode="list"] .post-card {
+                border-radius: 18px;
+            }
+
             #resultsGrid[data-view-mode="list"] .post-image-container {
-                flex: 0 0 180px;
-                height: 140px;
+                flex: 0 0 200px;
+                height: 160px;
+                border-radius: 16px 0 0 16px;
             }
 
             #resultsGrid[data-view-mode="list"] .post-content {
-                padding: 1.25rem;
+                padding: 1.75rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .post-title {
+                font-size: 1.2rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .price {
+                font-size: 1.3rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .action-buttons {
+                flex-direction: row;
+                gap: 0.75rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .btn-favorite,
+            #resultsGrid[data-view-mode="list"] .btn-view {
+                flex: 1;
+                justify-content: center;
             }
         }
 
@@ -691,9 +864,26 @@ function buildSearchUrl($params = []) {
                 gap: 1.5rem;
             }
 
+            #resultsGrid[data-view-mode="list"] .post-card {
+                border-radius: 20px;
+            }
+
             #resultsGrid[data-view-mode="list"] .post-image-container {
-                flex: 0 0 200px;
-                height: 160px;
+                flex: 0 0 240px;
+                height: 180px;
+                border-radius: 16px 0 0 16px;
+            }
+
+            #resultsGrid[data-view-mode="list"] .post-content {
+                padding: 1.875rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .post-title {
+                font-size: 1.3rem;
+            }
+
+            #resultsGrid[data-view-mode="list"] .price {
+                font-size: 1.35rem;
             }
         }
 

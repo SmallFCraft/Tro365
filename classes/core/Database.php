@@ -17,7 +17,10 @@ class Database
     
     public function __construct()
     {
-        require_once __DIR__ . '/../../config/database/connection.php';
+        // Use autoloaded DatabaseConnection class
+        if (!class_exists('DatabaseConnection')) {
+            require_once __DIR__ . '/../../config/database/connection.php';
+        }
         $this->connection = \DatabaseConnection::getInstance()->getConnection();
     }
     

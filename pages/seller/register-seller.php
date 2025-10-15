@@ -73,7 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             if (!$validation['valid']) {
-                throw new Exception(implode('. ', array_values($validation['errors'])));
+                // Flatten nested error array properly
+                $errors = [];
+                foreach ($validation['errors'] as $field => $fieldErrors) {
+                    if (is_array($fieldErrors)) {
+                        $errors = array_merge($errors, $fieldErrors);
+                    } else {
+                        $errors[] = $fieldErrors;
+                    }
+                }
+                throw new Exception(implode('. ', $errors));
             }
 
             // Check if username or email already exists (server-side uniqueness)
@@ -820,7 +829,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Real API check for username availability
             showFeedback(feedback, 'Đang kiểm tra...', true, 'info');
-            fetch('/api/check-availability.php', {
+            fetch('/api/check-availability', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -850,7 +859,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Real API check for email availability
             showFeedback(feedback, 'Đang kiểm tra...', true, 'info');
-            fetch('/api/check-availability.php', {
+            fetch('/api/check-availability', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

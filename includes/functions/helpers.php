@@ -1715,6 +1715,32 @@ function getDataConsistencyInstance() {
 }
 
 /**
+ * ========================================
+ * UPLOAD CONFIGURATION HELPER FUNCTIONS
+ * ========================================
+ * These functions provide consistent upload configuration across the system
+ */
+
+/**
+ * Get upload allowed extensions as array
+ */
+if (!function_exists('getUploadAllowedExtensionsArray')) {
+    function getUploadAllowedExtensionsArray() {
+        $types = UPLOAD_ALLOWED_TYPES;
+        return explode(',', str_replace(' ', '', $types));
+    }
+}
+
+/**
+ * Get upload max size in bytes
+ */
+if (!function_exists('getUploadMaxSizeBytes')) {
+    function getUploadMaxSizeBytes() {
+        return UPLOAD_MAX_SIZE;
+    }
+}
+
+/**
  * Get effective seller information (merged with user data)
  * This ensures consistent data display across the system
  */

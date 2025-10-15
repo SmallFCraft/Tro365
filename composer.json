@@ -17,7 +17,7 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-pdo_mysql": "*",
-        "delight-im/auth": "^8.3",
+        "delight-im/auth": "^9.0",
         "filp/whoops": "^2.18",
         "guzzlehttp/guzzle": "^7.9",
         "intervention/image": "^2.7",

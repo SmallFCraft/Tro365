@@ -222,7 +222,9 @@ window.Tro365Auth = {
   },
   setupStatusIndicator: function (input, idSuffix) {
     const group =
-      input.closest(".auth-form-group-enhanced") || input.parentElement;
+      input.closest(".auth-input-group-enhanced") ||
+      input.closest(".auth-form-group-enhanced") ||
+      input.parentElement;
     const id = `${input.id || input.name || "field"}${idSuffix || "Status"}`;
     let statusEl = document.getElementById(id);
     if (!statusEl) {
@@ -231,10 +233,30 @@ window.Tro365Auth = {
       statusEl.className = "input-status-indicator";
       group && group.appendChild(statusEl);
     }
+
+    // Recalculate vertical position to align with the actual input center
+    const recalcIndicatorPosition = () => {
+      if (!group || !statusEl || !input) return;
+      const groupRect = group.getBoundingClientRect();
+      const inputRect = input.getBoundingClientRect();
+      const top = inputRect.top - groupRect.top + inputRect.height / 2;
+      statusEl.style.top = `${top}px`;
+      statusEl.style.transform = "translateY(-50%)";
+      statusEl.style.right = statusEl.style.right || "0.75rem";
+    };
+
+    // Initial calculation and on resize (mobile-first safe)
+    recalcIndicatorPosition();
+    window.addEventListener("resize", recalcIndicatorPosition);
+
     return function setIndicator(state) {
       statusEl.className = `input-status-indicator ${state}`;
       if (state === "checking") {
         statusEl.innerHTML = '<span class="spinner"></span>';
+      } else if (state === "valid") {
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+      } else if (state === "invalid") {
+        statusEl.innerHTML = '<i class="fas fa-times-circle"></i>';
       } else {
         statusEl.innerHTML = "";
       }
@@ -301,6 +323,12 @@ window.Tro365Auth = {
         document.getElementById("usernameFeedback");
       this.ensureFeedbackARIA(feedback);
       const setIndicator = this.setupStatusIndicator(user);
+
+      // Get status element for checking state
+      const statusEl = document.getElementById(
+        `${user.id || user.name || "field"}Status`
+      );
+
       const validate = () => {
         const v = user.value.trim();
         if (!v) {
@@ -329,15 +357,20 @@ window.Tro365Auth = {
           const ok = FormValidator.rules.username
             ? FormValidator.rules.username(v)
             : /^[A-Za-z0-9_]{3,30}$/.test(v);
-          user.classList.toggle("is-invalid", !ok);
-          user.classList.toggle("is-valid", ok);
-          if (feedback) {
-            feedback.innerHTML = ok
-              ? '<i class="fas fa-check-circle"></i> Tên đăng nhập hợp lệ'
-              : '<i class="fas fa-exclamation-circle"></i> 3-30 ký tự, chữ/số/gạch dưới';
-            feedback.className = (ok ? "valid" : "invalid") + "-feedback show";
+
+          // Only set validation classes if we're not currently checking availability
+          if (statusEl && !statusEl.classList.contains("checking")) {
+            user.classList.toggle("is-invalid", !ok);
+            user.classList.toggle("is-valid", ok);
+            if (feedback) {
+              feedback.innerHTML = ok
+                ? '<i class="fas fa-check-circle"></i> Tên đăng nhập hợp lệ'
+                : '<i class="fas fa-exclamation-circle"></i> 3-30 ký tự, chữ/số/gạch dưới';
+              feedback.className =
+                (ok ? "valid" : "invalid") + "-feedback show";
+            }
+            setIndicator("idle");
           }
-          setIndicator("idle");
         }
       };
       user.addEventListener("input", validate);
@@ -385,7 +418,7 @@ window.Tro365Auth = {
    */
   initPasswordConfirmation: function () {
     const passwordField = document.getElementById("password");
-    const confirmField = document.getElementById("password_confirm");
+    const confirmField = document.getElementById("password_confirmation");
     const confirmFeedback = document.getElementById("confirmPasswordFeedback");
 
     if (!passwordField || !confirmField) return;
@@ -600,15 +633,36 @@ window.Tro365Auth = {
         },
         body: JSON.stringify({ type: "username", value: username }),
       })
-        .then(response => response.json())
+        .then(response => {
+          // Check if response is ok and content type is JSON
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("Response is not JSON");
+          }
+
+          return response.json();
+        })
         .then(data => {
-          if (data.available) {
+          // Normalize API responses that might invert boolean/message
+          const txt = (data && (data.message || data.msg || "")).toLowerCase();
+          const hintedAvailable =
+            /c thc sf deec|co the su dung|available|not\s+exists/.test(txt);
+          const hintedTaken = /113 tfn ta 9|in use|exists|ta 9 tbd/.test(txt);
+          let isAvailable = !!data?.available;
+          if (hintedAvailable && !isAvailable) isAvailable = true;
+          if (hintedTaken && isAvailable) isAvailable = false;
+
+          if (isAvailable) {
             usernameField.classList.remove("is-invalid");
             usernameField.classList.add("is-valid");
-            setIndicator("idle");
+            setIndicator("valid");
             if (usernameFeedback) {
               const msg = escapeHTML(
-                data.message || "Tên đăng nhập có thể sử dụng"
+                data?.message || "T ean 1103ng nhadp c43 thc sf deec"
               );
               usernameFeedback.innerHTML = `<i class=\"fas fa-check-circle\"></i> ${msg}`;
               usernameFeedback.className = "valid-feedback show";
@@ -616,10 +670,10 @@ window.Tro365Auth = {
           } else {
             usernameField.classList.remove("is-valid");
             usernameField.classList.add("is-invalid");
-            setIndicator("idle");
+            setIndicator("invalid");
             if (usernameFeedback) {
               const msg = escapeHTML(
-                data.message || "Tên đăng nhập đã tồn tại"
+                data?.message || "T ean 1103ng nhadp 11 e3 tdn ta 9"
               );
               usernameFeedback.innerHTML = `<i class=\"fas fa-times-circle\"></i> ${msg}`;
               usernameFeedback.className = "invalid-feedback show";
@@ -649,6 +703,36 @@ window.Tro365Auth = {
     usernameField.addEventListener("blur", function () {
       runAvailabilityCheck(this.value.trim());
     });
+
+    // Enforce visual consistency based on feedback text (handles backend message/boolean mismatch)
+    if (usernameFeedback) {
+      const enforceUsernameConsistency = () => {
+        const raw = (usernameFeedback.textContent || "").toString();
+        let txt = raw.toLowerCase();
+        try {
+          txt = txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        } catch (e) {}
+        const ok = /(co the su dung|available|khong ton tai|not\s+exists)/.test(
+          txt
+        );
+        const bad = /(da ton tai|in use|exists|ton tai)/.test(txt);
+        if (ok && !bad) {
+          usernameField.classList.remove("is-invalid");
+          usernameField.classList.add("is-valid");
+          setIndicator("valid");
+          usernameFeedback.className = "valid-feedback show";
+          if (!/fa-check-circle/.test(usernameFeedback.innerHTML)) {
+            usernameFeedback.innerHTML = `<i class="fas fa-check-circle"></i> ${raw}`;
+          }
+        }
+      };
+      const mo = new MutationObserver(enforceUsernameConsistency);
+      mo.observe(usernameFeedback, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    }
   },
 
   /**
@@ -731,7 +815,7 @@ window.Tro365Auth = {
           if (data.available) {
             emailField.classList.remove("is-invalid");
             emailField.classList.add("is-valid");
-            setIndicator("idle");
+            setIndicator("valid");
             if (emailFeedback) {
               emailFeedback.innerHTML = `<i class=\"fas fa-check-circle\"></i> ${
                 data.message || "Email có thể sử dụng"
@@ -741,7 +825,42 @@ window.Tro365Auth = {
           } else {
             emailField.classList.remove("is-valid");
             emailField.classList.add("is-invalid");
-            setIndicator("idle");
+            setIndicator("invalid");
+
+            // Enforce visual consistency for email availability (registration only)
+            if (emailFeedback) {
+              const enforceEmailConsistency = () => {
+                const raw = (emailFeedback.textContent || "").toString();
+                let txt = raw.toLowerCase();
+                try {
+                  txt = txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                } catch (e) {}
+                const ok =
+                  /(co the su dung|available|khong ton tai|not\s+exists)/.test(
+                    txt
+                  );
+                const bad =
+                  /(da duoc su dung|da ton tai|in use|exists|ton tai)/.test(
+                    txt
+                  );
+                if (ok && !bad) {
+                  emailField.classList.remove("is-invalid");
+                  emailField.classList.add("is-valid");
+                  setIndicator("valid");
+                  emailFeedback.className = "valid-feedback show";
+                  if (!/fa-check-circle/.test(emailFeedback.innerHTML)) {
+                    emailFeedback.innerHTML = `<i class=\"fas fa-check-circle\"></i> ${raw}`;
+                  }
+                }
+              };
+              const mo = new MutationObserver(enforceEmailConsistency);
+              mo.observe(emailFeedback, {
+                childList: true,
+                characterData: true,
+                subtree: true,
+              });
+            }
+
             if (emailFeedback) {
               emailFeedback.innerHTML = `<i class=\"fas fa-times-circle\"></i> ${
                 data.message || "Email đã được sử dụng"
@@ -1025,14 +1144,25 @@ window.Tro365Auth = {
     this.initFormValidation();
     this.initPasswordConfirmation();
     this.initPasswordStrength();
-    this.initUsernameChecker();
 
-    // Skip registration email validation on forgot password page
-    if (!window.location.pathname.includes("forgot-password")) {
-      this.initEmailValidation();
-    }
+    // Only run availability checks on registration pages (avoid on /login)
+    (function () {
+      const path = window.location.pathname || "";
+      const pageHint = (window.Tro365Config && window.Tro365Config.page) || "";
+      const isRegister =
+        /\/register(\/|$)/.test(path) || pageHint.includes("auth-register");
+      const isForgot = path.includes("forgot-password");
+      if (isRegister) {
+        // Username + Email availability real-time checks
+        window.Tro365Auth.initUsernameChecker();
+        if (!isForgot) {
+          window.Tro365Auth.initEmailValidation();
+        }
+      }
+    })();
 
     this.initCommonFieldValidation();
+    // Keep real-time simple format validation on login page
     this.initLoginRealtime();
     this.initFormSubmission();
 

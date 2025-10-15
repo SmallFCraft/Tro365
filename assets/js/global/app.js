@@ -354,7 +354,7 @@ class ModernApp {
    * Perform search
    */
   async performSearch(query, input) {
-    const searchUrl = input.dataset.searchUrl || "/api/search";
+    const searchUrl = input.dataset.searchUrl || "/api/posts/suggestions";
     const resultsContainer = DOM.$(
       input.dataset.resultsContainer || ".search-results"
     );
@@ -367,14 +367,28 @@ class ModernApp {
 
       const response = await http.get(searchUrl, { params: { q: query } });
 
-      if (response.results && response.results.length > 0) {
-        resultsContainer.innerHTML = this.renderSearchResults(response.results);
+      // Handle different response formats
+      let results = [];
+      if (response && response.suggestions) {
+        results = response.suggestions;
+      } else if (response && response.results) {
+        results = response.results;
+      } else if (response && response.data) {
+        results = response.data;
+      } else if (Array.isArray(response)) {
+        results = response;
+      }
+
+      if (Array.isArray(results) && results.length > 0) {
+        resultsContainer.innerHTML = this.renderSearchResults(results);
       } else {
         resultsContainer.innerHTML =
           '<div class="no-results">Không tìm thấy kết quả</div>';
       }
     } catch (error) {
+      console.error("Search error:", error);
       resultsContainer.innerHTML = '<div class="error">Lỗi tìm kiếm</div>';
+      this.handleError(error);
     }
   }
 
@@ -382,19 +396,48 @@ class ModernApp {
    * Render search results
    */
   renderSearchResults(results) {
+    // Ensure results is an array
+    if (!Array.isArray(results)) {
+      console.warn("renderSearchResults: results is not an array", results);
+      return '<div class="error">Dữ liệu tìm kiếm không hợp lệ</div>';
+    }
+
     return results
-      .map(
-        result => `
-            <div class="search-result-item">
-                <a href="${result.url}" class="search-result-link">
-                    <div class="search-result-title">${result.title}</div>
-                    <div class="search-result-description">${
-                      result.description || ""
-                    }</div>
-                </a>
-            </div>
-        `
-      )
+      .map(result => {
+        // Handle different result formats
+        if (result.text && result.type) {
+          // Suggestions format from API
+          return `
+              <div class="search-result-item suggestion-item" data-type="${
+                result.type
+              }">
+                  <div class="suggestion-content">
+                      <i class="${result.icon || "fas fa-search"}"></i>
+                      <span class="suggestion-text">${result.text}</span>
+                      ${
+                        result.count
+                          ? `<span class="suggestion-count">(${result.count})</span>`
+                          : ""
+                      }
+                  </div>
+              </div>
+            `;
+        } else {
+          // Standard result format
+          return `
+              <div class="search-result-item">
+                  <a href="${result.url || "#"}" class="search-result-link">
+                      <div class="search-result-title">${
+                        result.title || result.text || "Không có tiêu đề"
+                      }</div>
+                      <div class="search-result-description">${
+                        result.description || ""
+                      }</div>
+                  </a>
+              </div>
+            `;
+        }
+      })
       .join("");
   }
 

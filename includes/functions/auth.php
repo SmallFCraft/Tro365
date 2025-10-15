@@ -1,7 +1,11 @@
 <?php
 /**
- * Authentication Functions
+ * Authentication Functions - Backward Compatibility Wrappers
  * Tro365 - Website thuê trọ
+ * 
+ * These are legacy wrapper functions for backward compatibility.
+ * New code should use Tro365\Core\Auth class directly.
+ * These functions provide session-based authentication checks.
  */
 
 /**

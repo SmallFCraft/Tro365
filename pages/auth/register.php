@@ -11,6 +11,8 @@ require_once __DIR__ . '/../../config/constants.php';
 
 // Performance optimization includes
 require_once __DIR__ . '/../../includes/performance/optimization.php';
+require_once __DIR__ . '/../../classes/services/PerformanceOptimizationService.php';
+require_once __DIR__ . '/../../classes/core/Auth.php';
 
 use Tro365\Core\Auth;
 use Tro365\Services\PerformanceOptimizationService;
@@ -47,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'username' => cleanInput($_POST['username'] ?? ''),
             'email' => cleanInput($_POST['email'] ?? ''),
             'password' => $_POST['password'] ?? '',
-            'password_confirmation' => $_POST['password_confirm'] ?? '',
+            'password_confirmation' => $_POST['password_confirmation'] ?? '',
             'phone' => cleanInput($_POST['phone'] ?? '')
         ];
 
@@ -126,6 +128,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preload" href="<?= app_url('assets/css/client/layouts.css') ?>" as="style">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
     
+    <!-- Global Debug Configuration -->
+    <script>
+        // Set global debug flag based on PHP debug setting
+        window.TRO365_DEBUG = <?= isDebugModeEnabled() ? 'true' : 'false' ?>;
+
+        // Override console.log if debug is disabled
+        if (!window.TRO365_DEBUG) {
+            const originalConsole = {
+                log: console.log,
+                warn: console.warn,
+                error: console.error,
+                info: console.info
+            };
+
+            // Only disable log and info, keep warn and error for important messages
+            console.log = function() {};
+            console.info = function() {};
+
+            // Keep warn and error for important debugging
+            // console.warn = function() {};
+            // console.error = function() {};
+        }
+    </script>
+
     <!-- Modern Assets Integration (AssetManager) -->
     <?php
     $am = new \Tro365\Assets\AssetManager(app_url(''));
@@ -338,19 +364,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 <div class="col-md-6">
                                     <div class="auth-form-group-enhanced">
-                                        <label for="password_confirm" class="auth-form-label-enhanced">
+                                        <label for="password_confirmation" class="auth-form-label-enhanced">
                                             <i class="fas fa-lock"></i>
                                             Xác nhận mật khẩu <span class="text-danger">*</span>
                                         </label>
                                         <div class="auth-input-group-enhanced">
                                             <input type="password"
                                                    class="form-control-enhanced form-glass"
-                                                   id="confirm_password"
-                                                   name="password_confirm"
+                                                   id="password_confirmation"
+                                                   name="password_confirmation"
                                                    placeholder="Nhập lại mật khẩu"
                                                    autocomplete="new-password"
                                                    required>
-                                            <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('confirm_password', 'toggleIcon2')" aria-label="Hiện/ẩn mật khẩu">
+                                            <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('password_confirmation', 'toggleIcon2')" aria-label="Hiện/ẩn mật khẩu">
                                                 <i class="fas fa-eye" id="toggleIcon2"></i>
                                             </button>
                                         </div>

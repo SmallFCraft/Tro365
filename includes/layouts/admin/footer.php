@@ -8,6 +8,30 @@
 </div>
 <!-- End Main Content Wrapper -->
 
+<!-- Global Debug Configuration -->
+<script>
+    // Set global debug flag based on PHP debug setting
+    window.TRO365_DEBUG = <?= isDebugModeEnabled() ? 'true' : 'false' ?>;
+
+    // Override console.log if debug is disabled
+    if (!window.TRO365_DEBUG) {
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error,
+            info: console.info
+        };
+
+        // Only disable log and info, keep warn and error for important messages
+        console.log = function() {};
+        console.info = function() {};
+
+        // Keep warn and error for important debugging
+        // console.warn = function() {};
+        // console.error = function() {};
+    }
+</script>
+
 <!-- Modern JavaScript Libraries (AssetManager) -->
 <?php
 $am = new \Tro365\Assets\AssetManager(app_url(''));

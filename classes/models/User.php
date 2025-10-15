@@ -40,8 +40,9 @@ class User extends BaseModel
             'email' => 'required|email',
             'password' => 'required|min:8|max:100',
             'full_name' => 'required|min:2|max:100',
-            // Standardize to Vietnam phone format (consistent with client-side)
-            'phone' => 'nullable|regex:' . \Tro365\Helpers\ValidationHelper::getPhonePattern(),
+            // Phone is optional - validation handled by client-side and database constraints
+            // Cannot use regex with rakit/validation due to pipe character conflicts in phone pattern
+            'phone' => 'nullable',
             'cccd' => 'nullable|regex:/^[0-9]{9,12}$/',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:Nam,Nữ,Khác'

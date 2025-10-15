@@ -121,7 +121,7 @@ include __DIR__ . '/../../includes/layouts/admin/header.php';
 ?>
 
 <!-- Settings JavaScript - Load in head for immediate availability -->
-<script src="http://localhost:8000/assets/js/admin/settings.js"></script>
+<script src="<?= app_url('assets/js/admin/settings.js') ?>"></script>
 
 <div class="container-fluid">
     <div class="row">
@@ -628,39 +628,7 @@ function debounce(func, wait) {
     };
 }
 
-// Additional settings functions
-function exportSettings() {
-    // Create JSON export of current settings
-    const settings = {
-        website: {
-            name: document.querySelector('[name="website_name"]')?.value,
-            description: document.querySelector('[name="website_description"]')?.value,
-            keywords: document.querySelector('[name="website_keywords"]')?.value,
-            logo: document.querySelector('[name="website_logo"]')?.value
-        },
-        contact: {
-            email: document.querySelector('[name="contact_email"]')?.value,
-            phone: document.querySelector('[name="contact_phone"]')?.value,
-            address: document.querySelector('[name="contact_address"]')?.value
-        },
-        social: {
-            facebook: document.querySelector('[name="facebook_url"]')?.value,
-            youtube: document.querySelector('[name="youtube_url"]')?.value,
-            zalo: document.querySelector('[name="zalo_url"]')?.value
-        },
-        exportTime: new Date().toISOString()
-    };
-
-    const dataStr = JSON.stringify(settings, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = 'tro365-settings-' + new Date().toISOString().split('T')[0] + '.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+// Additional settings functions - exportSettings moved to settings.js
 
 function refreshSettings() {
     const refreshBtn = document.querySelector('[onclick="refreshSettings()"]');

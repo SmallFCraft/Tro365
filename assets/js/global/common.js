@@ -13,12 +13,17 @@ window.Tro365Common = {
     wards: {},
   },
   /**
-   * Password confirmation validation
+   * Password validation functions moved to FormValidator class
+   * These are kept for backward compatibility - deprecated
    */
   initPasswordConfirmation: function (
     passwordId = "password",
     confirmId = "confirm_password"
   ) {
+    console.warn(
+      "initPasswordConfirmation is deprecated. Use FormValidator class instead."
+    );
+    // Fallback for backward compatibility
     const passwordField = document.getElementById(passwordId);
     const confirmField = document.getElementById(confirmId);
 
@@ -36,13 +41,14 @@ window.Tro365Common = {
     });
   },
 
-  /**
-   * Password strength checker
-   */
   initPasswordStrength: function (
     passwordId = "password",
     strengthBarId = "passwordStrength"
   ) {
+    console.warn(
+      "initPasswordStrength is deprecated. Use FormValidator class instead."
+    );
+    // Fallback for backward compatibility
     const passwordField = document.getElementById(passwordId);
     const strengthBar = document.getElementById(strengthBarId);
 
@@ -134,6 +140,12 @@ window.Tro365Common = {
       provinceSelect.appendChild(firstOption);
     }
 
+    // Ensure data is an array
+    if (!Array.isArray(data)) {
+      console.warn("_populateProvinceSelect: data is not an array", data);
+      return;
+    }
+
     data.forEach(province => {
       const option = document.createElement("option");
       option.value = province.ID;
@@ -179,7 +191,11 @@ window.Tro365Common = {
           .then(response => response.json())
           .then(response => {
             // Extract data from standardized API response
-            if (response.success && response.data) {
+            if (
+              response.success &&
+              response.data &&
+              Array.isArray(response.data)
+            ) {
               response.data.forEach(district => {
                 const option = document.createElement("option");
                 option.value = district.ID;
@@ -209,7 +225,11 @@ window.Tro365Common = {
           .then(response => response.json())
           .then(response => {
             // Extract data from standardized API response
-            if (response.success && response.data) {
+            if (
+              response.success &&
+              response.data &&
+              Array.isArray(response.data)
+            ) {
               response.data.forEach(ward => {
                 const option = document.createElement("option");
                 option.value = ward.ID;
@@ -390,8 +410,7 @@ window.Tro365Common = {
    */
   init: function () {
     // Auto-initialize common features
-    this.initPasswordConfirmation();
-    this.initPasswordStrength();
+    // Password validation is now handled by FormValidator class
     this.initAutoDismissAlerts();
     this.initLocationDropdowns();
 

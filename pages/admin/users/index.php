@@ -355,7 +355,7 @@ include __DIR__ . '/../../../includes/layouts/admin/header.php';
                                 <button type="button" class="btn btn-outline-primary" onclick="selectAll()">
                                     <i class="fas fa-check-square me-1"></i>Chọn tất cả
                                 </button>
-                                <button type="button" class="btn btn-outline-success" onclick="bulkActivate()">
+                                <button type="button" class="btn btn-outline-success" onclick="bulkActivateUsers()">
                                     <i class="fas fa-check me-1"></i>Kích hoạt
                                 </button>
                                 <button type="button" class="btn btn-outline-warning" onclick="bulkDeactivate()">
@@ -1438,14 +1438,7 @@ function updateBulkActions() {
     });
 }
 
-function bulkActivate() {
-    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
-    if (checkedBoxes.length === 0) {
-        alert('Vui lòng chọn ít nhất một người dùng');
-        return;
-    }
-    // TODO: Implement bulk activate functionality
-}
+// bulkActivate() removed - duplicate of bulkActivateUsers() below
 
 // Role Management JS - Define as global functions
 window.openRoleModal = function(userId, currentRole){
